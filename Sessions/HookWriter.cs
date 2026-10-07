@@ -4,12 +4,15 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace AgentVitals;
 
 /// <summary>Режим hook: событие Claude Code из stdin превращается в файл состояния сессии.</summary>
 internal static class HookWriter
 {
+	private static readonly long _sameMoment = TimeSpan.FromMilliseconds(50).Ticks;
+
 	internal static readonly JsonSerializerOptions Json = new()
 	{
 		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -59,20 +62,57 @@ internal static class HookWriter
 			return;
 		}
 
-		// Async-hooks финишируют не по порядку: событие старше записанного уже устарело.
-		// ponytail: между чтением и записью окно в доли миллисекунды; два hook одной сессии в него на практике не попадают.
-		if (Read(file)?.At > at)
+		// PreToolUse и PermissionRequest одного вызова инструмента запускаются почти разом: чтение,
+		// сравнение и запись — под мьютексом сессии, иначе последним пишет тот, кто медленнее прогрелся.
+		using var mutex = new Mutex(false, $"AgentVitals.hook.{id}");
+		var owned = Acquire(mutex);
+
+		try
 		{
-			return;
+			if (Stale(Read(file), state, at))
+			{
+				return;
+			}
+
+			var tool = state == SessionState.Working ? (string?)payload["tool_name"] : null;
+			var session = new Session(state, tool, (string?)payload["cwd"] ?? "", at);
+
+			Directory.CreateDirectory(directory);
+			var temp = $"{file}.{Environment.ProcessId}.tmp";
+			File.WriteAllText(temp, JsonSerializer.Serialize(session, Json));
+			File.Move(temp, file, overwrite: true);
 		}
+		finally
+		{
+			if (owned)
+			{
+				mutex.ReleaseMutex();
+			}
+		}
+	}
 
-		var tool = state == SessionState.Working ? (string?)payload["tool_name"] : null;
-		var session = new Session(state, tool, (string?)payload["cwd"] ?? "", at);
+	/// <summary>Событие опоздало: записано более новое, или «ждёт» из того же мгновения.</summary>
+	/// <remarks>
+	/// Async-hooks финишируют не по порядку. Время старта процессов совпадает с точностью до тика таймера,
+	/// а из «ждёт» в «работает» без ответа человека не попасть — значит, это одно мгновение и «ждёт» главнее.
+	/// </remarks>
+	private static bool Stale(Session? recorded, SessionState state, long at) =>
+		recorded is not null
+		&& (recorded.At > at
+			|| (recorded.State == SessionState.Waiting && state != SessionState.Waiting && at - recorded.At < _sameMoment));
 
-		Directory.CreateDirectory(directory);
-		var temp = $"{file}.{Environment.ProcessId}.tmp";
-		File.WriteAllText(temp, JsonSerializer.Serialize(session, Json));
-		File.Move(temp, file, overwrite: true);
+	private static bool Acquire(Mutex mutex)
+	{
+		try
+		{
+			// Зависший сосед не должен держать Claude Code: через две секунды пишем без очереди.
+			return mutex.WaitOne(TimeSpan.FromSeconds(2));
+		}
+		catch (AbandonedMutexException)
+		{
+			// Прежний hook умер, держа мьютекс: теперь он наш.
+			return true;
+		}
 	}
 
 	internal static SessionState? Map(string? hookEvent, string? notificationType) => hookEvent switch

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Avalonia;
@@ -15,7 +16,9 @@ internal static class Program
 		// событие, записать состояние и выйти как можно быстрее.
 		if (args.FirstOrDefault() == "hook")
 		{
-			HookWriter.Run(Console.OpenStandardInput(), Paths.Sessions, DateTime.Now.Ticks);
+			// Время запуска процесса, а не входа в Main: прогрев рантайма скачет на сотни миллисекунд
+			// и переставил бы события, которые Claude Code запустил одно за другим.
+			HookWriter.Run(Console.OpenStandardInput(), Paths.Sessions, Process.GetCurrentProcess().StartTime.Ticks);
 
 			return 0;
 		}

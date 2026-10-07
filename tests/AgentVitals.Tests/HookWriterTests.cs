@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace AgentVitals.Tests;
@@ -51,6 +53,43 @@ public class HookWriterTests
 
 		Assert.Equal(SessionState.Idle, HookWriter.Read(temp.File("s1.json"))!.State);
 	}
+
+	[Fact]
+	public void WaitingSurvivesWorkingFromSameMoment() // PreToolUse и PermissionRequest стартуют почти разом
+	{
+		using var temp = new TempDirectory();
+		HookWriter.Apply(Event("PermissionRequest"), temp.Path, at: 1_000_000);
+		HookWriter.Apply(Event("PreToolUse"), temp.Path, at: 1_000_000);
+		HookWriter.Apply(Event("PreToolUse"), temp.Path, at: 1_000_000 + TimeSpan.TicksPerMillisecond * 20);
+
+		Assert.Equal(SessionState.Waiting, HookWriter.Read(temp.File("s1.json"))!.State);
+	}
+
+	[Fact]
+	public void WorkingReplacesWaitingOnceAnswered()
+	{
+		using var temp = new TempDirectory();
+		HookWriter.Apply(Event("PermissionRequest"), temp.Path, at: 1_000_000);
+		HookWriter.Apply(Event("PostToolUse"), temp.Path, at: 1_000_000 + TimeSpan.TicksPerSecond);
+
+		Assert.Equal(SessionState.Working, HookWriter.Read(temp.File("s1.json"))!.State);
+	}
+
+	[Fact]
+	public void SimultaneousHooksKeepNewest()
+	{
+		using var temp = new TempDirectory();
+
+		for (var round = 1; round <= 20; round++)
+		{
+			Parallel.For(0, 8, index => HookWriter.Apply(Event("PreToolUse"), temp.Path, at: round * 100 + index));
+
+			Assert.Equal(round * 100 + 7, HookWriter.Read(temp.File("s1.json"))!.At);
+		}
+	}
+
+	private static JsonNode Event(string name) =>
+		JsonNode.Parse($$"""{ "session_id": "s1", "hook_event_name": "{{name}}", "tool_name": "Bash", "cwd": "C:\\x" }""")!;
 
 	[Fact]
 	public void SessionEndRemovesFile()
