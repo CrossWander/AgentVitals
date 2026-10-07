@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -13,7 +14,7 @@ internal partial class Popover : Window
 {
 	private PixelRect _anchor;
 	private Vitals? _vitals;
-	private int _selected;
+	private string? _selected;
 
 	public Popover()
 	{
@@ -64,40 +65,51 @@ internal partial class Popover : Window
 	{
 		_vitals = vitals;
 		DataContext = vitals;
-		_selected = Math.Clamp(_selected, 0, Math.Max(0, vitals.Providers.Count - 1));
 
-		Tabs.Children.Clear();
+		var names = vitals.Providers.Select(provider => provider.Name).ToList();
+		_selected = Keep(_selected, names);
 
-		for (var index = 0; index < vitals.Providers.Count; index++)
+		// Render бывает раз в секунду, пока Claude работает: вкладки пересоздаются, только если сменился
+		// набор агентов, иначе щелчок по вкладке, попавший на пересоздание, теряется.
+		if (!Tabs.Children.Select(tab => tab.Tag as string).SequenceEqual(names))
 		{
-			var tab = new RadioButton
-			{
-				Theme = (ControlTheme)this.FindResource("Tab")!,
-				Content = vitals.Providers[index].Name,
-				GroupName = "providers",
-				IsChecked = index == _selected,
-				Tag = index,
-			};
+			Tabs.Children.Clear();
 
-			tab.IsCheckedChanged += OnTab;
-			Tabs.Children.Add(tab);
+			foreach (var name in names)
+			{
+				var tab = new RadioButton
+				{
+					Theme = (ControlTheme)this.FindResource("Tab")!,
+					Content = name,
+					GroupName = "providers",
+					IsChecked = name == _selected,
+					Tag = name,
+				};
+
+				tab.IsCheckedChanged += OnTab;
+				Tabs.Children.Add(tab);
+			}
 		}
 
 		ShowProvider();
 	}
 
+	/// <summary>Выбранная вкладка по имени: появился или пропал другой агент — выбор не съезжает.</summary>
+	internal static string? Keep(string? selected, IReadOnlyList<string> names) =>
+		selected is not null && names.Contains(selected) ? selected : names.FirstOrDefault();
+
 	private void OnTab(object? sender, RoutedEventArgs e)
 	{
-		if (sender is RadioButton { IsChecked: true, Tag: int index })
+		if (sender is RadioButton { IsChecked: true, Tag: string name })
 		{
-			_selected = index;
+			_selected = name;
 			ShowProvider();
 		}
 	}
 
 	private void ShowProvider()
 	{
-		var provider = _vitals?.Providers.ElementAtOrDefault(_selected);
+		var provider = _vitals?.Providers.FirstOrDefault(provider => provider.Name == _selected);
 
 		Cards.ItemsSource = provider?.Cards;
 		InfoLine.Text = string.Join(" · ", new[] { provider?.Updated, provider?.Info }.Where(text => !string.IsNullOrEmpty(text)));

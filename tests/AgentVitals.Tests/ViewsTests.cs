@@ -15,4 +15,11 @@ public class ViewsTests
 		Assert.Equal("langUpdatedNow", Views.Provider(claude, now).Updated);
 		Assert.Equal("", Views.Provider(codex, now).Updated);
 	}
+
+	[Theory]
+	[InlineData("Codex", "Codex")] // появился Gemini — выбор не съехал на соседа
+	[InlineData("Gemini", "Claude")] // выбранный пропал — первый
+	[InlineData(null, "Claude")]
+	public void TabSelectionFollowsTheName(string? selected, string expected) =>
+		Assert.Equal(expected, Popover.Keep(selected, ["Claude", "Codex"]));
 }
