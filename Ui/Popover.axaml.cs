@@ -21,7 +21,9 @@ internal partial class Popover : Window
 		Deactivated += (_, _) => Dismiss();
 
 		// Высота зависит от содержимого: после смены экрана или вкладки ставим окно заново.
-		SizeChanged += (_, _) => Placement.Place(this, _anchor);
+		// Resized, а не SizeChanged: при показе Windows возвращает окну прежний размер, Avalonia
+		// растягивает его снова, а Bounds при этом не меняются и SizeChanged молчит.
+		Resized += (_, _) => Placement.Place(this, _anchor);
 
 		Settings.Back += () => ShowSettings(false);
 		Settings.Changed += () => Changed?.Invoke();

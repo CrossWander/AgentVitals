@@ -26,7 +26,7 @@ internal partial class Toast : Window
 			Hide();
 		};
 
-		SizeChanged += (_, _) => Placement.Place(this, _anchor);
+		Resized += (_, _) => Placement.Place(this, _anchor);
 	}
 
 	public event Action? Clicked;

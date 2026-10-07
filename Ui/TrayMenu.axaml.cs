@@ -14,7 +14,7 @@ internal partial class TrayMenu : Window
 	{
 		InitializeComponent();
 		Deactivated += (_, _) => Hide();
-		SizeChanged += (_, _) => Placement.Place(this, _anchor);
+		Resized += (_, _) => Placement.Place(this, _anchor);
 	}
 
 	public event Action? RefreshRequested;

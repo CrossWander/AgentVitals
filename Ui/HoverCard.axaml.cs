@@ -11,7 +11,7 @@ internal partial class HoverCard : Window
 	public HoverCard()
 	{
 		InitializeComponent();
-		SizeChanged += (_, _) => Placement.Place(this, _anchor);
+		Resized += (_, _) => Placement.Place(this, _anchor);
 	}
 
 	public void Render(Vitals vitals) => DataContext = vitals;
