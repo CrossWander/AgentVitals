@@ -7,7 +7,7 @@
     <!-- Пилюля: обычная кнопка с подписью и значком -->
     <ControlTheme x:Key="Pill" TargetType="Button">
         <Setter Property="Foreground" Value="{DynamicResource Text}"/>
-        <Setter Property="Background" Value="{DynamicResource Pill}"/>
+        <Setter Property="Background" Value="{DynamicResource PillFill}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource PillLine}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="16"/>
@@ -44,10 +44,10 @@
     <!-- Главное действие экрана: фирменный градиент -->
     <ControlTheme x:Key="Brand" TargetType="Button" BasedOn="{StaticResource Pill}">
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="Background" Value="{DynamicResource Brand}"/>
+        <Setter Property="Background" Value="{DynamicResource BrandFill}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Style Selector="^:pointerover">
-            <Setter Property="Background" Value="{DynamicResource Brand}"/>
+            <Setter Property="Background" Value="{DynamicResource BrandFill}"/>
             <Setter Property="Opacity" Value="0.9"/>
         </Style>
     </ControlTheme>
@@ -94,7 +94,7 @@
     <!-- Вкладка провайдера: пилюля, выбранная — фирменным градиентом -->
     <ControlTheme x:Key="Tab" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource Text}"/>
-        <Setter Property="Background" Value="{DynamicResource Pill}"/>
+        <Setter Property="Background" Value="{DynamicResource PillFill}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource PillLine}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="14"/>
@@ -120,7 +120,7 @@
             <Setter Property="Background" Value="{DynamicResource CardHover}"/>
         </Style>
         <Style Selector="^:checked">
-            <Setter Property="Background" Value="{DynamicResource Brand}"/>
+            <Setter Property="Background" Value="{DynamicResource BrandFill}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>

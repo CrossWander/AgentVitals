@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <x:String x:Key="langSubtitle">AI agents monitor</x:String>
     <x:String x:Key="langUsed">used</x:String>
-    <x:String x:Key="langWindowSession">Session (5 h)</x:String>
+    <x:String x:Key="langWindowSession">Session</x:String>
     <x:String x:Key="langWindowWeek">Week</x:String>
     <x:String x:Key="langWindowWeekModel">Week · {0}</x:String>
     <x:String x:Key="langWindowModel">{0}</x:String>

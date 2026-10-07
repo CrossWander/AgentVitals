@@ -28,7 +28,7 @@
 
     <!-- Пилюля общего состояния в шапке: обводка и точка цвета состояния -->
     <Style Selector="Border.pill">
-        <Setter Property="Background" Value="{DynamicResource Pill}"/>
+        <Setter Property="Background" Value="{DynamicResource PillFill}"/>
         <Setter Property="BorderThickness" Value="1.5"/>
         <Setter Property="CornerRadius" Value="14"/>
         <Setter Property="Padding" Value="10,5"/>

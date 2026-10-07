@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <x:String x:Key="langSubtitle">Монитор AI-агентов</x:String>
     <x:String x:Key="langUsed">использовано</x:String>
-    <x:String x:Key="langWindowSession">Сессия (5 ч)</x:String>
+    <x:String x:Key="langWindowSession">Сессия</x:String>
     <x:String x:Key="langWindowWeek">Неделя</x:String>
     <x:String x:Key="langWindowWeekModel">Неделя · {0}</x:String>
     <x:String x:Key="langWindowModel">{0}</x:String>

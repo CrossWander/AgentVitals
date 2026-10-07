@@ -1,0 +1,309 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Versioning;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform;
+using Avalonia.Threading;
+
+namespace AgentVitals;
+
+/// <summary>Всё вокруг значка в трее: опрос, сессии, сам значок и окна, которые от него открываются.</summary>
+internal sealed class TrayApp
+{
+	// Мышь идёт через трей к часам и к чужим значкам — такой проход короче трети секунды.
+	private static readonly TimeSpan _hoverDelay = TimeSpan.FromMilliseconds(350);
+
+	// Щелчок по значку сперва уводит фокус с открытого поповера, и тот прячется сам.
+	private static readonly TimeSpan _refractory = TimeSpan.FromMilliseconds(400);
+
+	private readonly Poller _poller = new();
+	private readonly Popover _popover = new();
+	private readonly HoverCard _card = new();
+	private readonly TrayMenu _menu = new();
+	private readonly Toast _toast = new();
+
+	private readonly DispatcherTimer _hover = new()
+	{
+		Interval = _hoverDelay,
+	};
+
+	// Значок не сообщает, что мышь ушла, — пока карточка открыта, следим за курсором сами.
+	private readonly DispatcherTimer _watch = new()
+	{
+		Interval = TimeSpan.FromMilliseconds(150),
+	};
+
+	private readonly DispatcherTimer _sessionTimer = new()
+	{
+		Interval = TimeSpan.FromSeconds(1),
+	};
+
+	private readonly DispatcherTimer _frames = new()
+	{
+		Interval = TimeSpan.FromMilliseconds(120),
+	};
+
+	private Tray? _tray;
+	private IReadOnlyList<LiveSession> _sessions = [];
+	private bool _darkTaskbar = true;
+	private int _tick;
+	private Health? _lastKnown;
+	private string? _lastIndicator;
+
+	public void Start()
+	{
+		_poller.Changed += OnPolled;
+		_popover.RefreshRequested += Refresh;
+		_popover.Changed += Render;
+		_popover.ExitRequested += Exit;
+		_menu.RefreshRequested += Refresh;
+		_menu.SettingsRequested += () => OpenPopover(settings: true);
+		_menu.ExitRequested += Exit;
+		_toast.Clicked += () => OpenPopover(settings: false);
+		_hover.Tick += (_, _) => OnHoverTick();
+		_watch.Tick += (_, _) => OnWatchTick();
+		_sessionTimer.Tick += (_, _) => ReadSessions();
+		_frames.Tick += (_, _) => NextFrame();
+		Application.Current!.ActualThemeVariantChanged += (_, _) => Render();
+
+		if (OperatingSystem.IsWindows())
+		{
+			_darkTaskbar = Tray.DarkTaskbar;
+			_tray = new Tray(Glyph());
+			_tray.Moved += OnTrayMove;
+			_tray.Clicked += TogglePopover;
+			_tray.RightClicked += ShowMenu;
+			Journal.Add($"start, tray icon at {_tray.Bounds()}");
+		}
+		else
+		{
+			// На других системах — стандартный значок Avalonia: наведения и своего меню там нет.
+			var icon = new TrayIcon
+			{
+				Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://AgentVitals/app.png"))),
+				ToolTipText = "AgentVitals",
+			};
+
+			icon.Clicked += (_, _) => TogglePopover();
+			TrayIcon.SetIcons(Application.Current, new TrayIcons { icon });
+		}
+
+		ReadSessions();
+		Render();
+		_sessionTimer.Start();
+		_poller.Start();
+	}
+
+	private void OnPolled()
+	{
+		Render();
+		Notify();
+	}
+
+	private void Render()
+	{
+		var vitals = Views.Build(_poller, _sessions, DateTime.Now);
+		_popover.Render(vitals);
+		_card.Render(vitals);
+		ShowIcon();
+	}
+
+	private void ReadSessions()
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			// Тему панели задач меняют на ходу; реестр раз в секунду — дёшево, кадры значка в кэше.
+			_darkTaskbar = Tray.DarkTaskbar;
+		}
+
+		var sessions = SessionWatcher.Read(Paths.Sessions, DateTime.Now);
+
+		if (!sessions.SequenceEqual(_sessions))
+		{
+			_sessions = sessions;
+
+			if (SessionWatcher.Overall(sessions) == SessionState.Idle)
+			{
+				_frames.Stop();
+			}
+			else
+			{
+				_frames.Start();
+			}
+
+			Render();
+		}
+
+		ShowIcon();
+	}
+
+	private void NextFrame()
+	{
+		_tick++;
+		ShowIcon();
+	}
+
+	/// <summary>Тост, когда квоты стали хуже последнего известного или сменился статус Anthropic.</summary>
+	private void Notify()
+	{
+		var known = _poller.Providers
+			.Where(state => state.Provider.Available && state.Health != Health.Unknown)
+			.ToList();
+
+		if (known.MaxBy(state => state.Health) is { Snapshot: { } snapshot } worst)
+		{
+			if (_lastKnown is { } last
+				&& worst.Health > last
+				&& worst.Health >= Health.Warning
+				&& Quota.Bottleneck(snapshot.Windows) is { } window)
+			{
+				_toast.Say(Text.QuotaToast(worst.Provider.Name, window), Anchor());
+			}
+
+			_lastKnown = worst.Health;
+		}
+
+		if (_poller.Status is { } status)
+		{
+			if (_lastIndicator is { } previous && previous != status.Indicator)
+			{
+				_toast.Say(Text.StatusToast(status), Anchor());
+			}
+
+			_lastIndicator = status.Indicator;
+		}
+	}
+
+	private Health OverallHealth() =>
+		Quota.Worst(_poller.Providers
+			.Where(state => state.Provider.Available)
+			.Select(state => state.Health));
+
+	private void ShowIcon()
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			_tray?.SetIcon(Glyph());
+		}
+	}
+
+	[SupportedOSPlatform("windows")]
+	private IntPtr Glyph() =>
+		TrayGlyph.Get(OverallHealth(), SessionWatcher.Overall(_sessions), _tick, _darkTaskbar, Tray.IconSize);
+
+	private void OnTrayMove()
+	{
+		if (_popover.IsVisible || _menu.IsVisible || _card.IsVisible)
+		{
+			return;
+		}
+
+		_hover.Stop();
+		_hover.Start();
+	}
+
+	private void OnHoverTick()
+	{
+		_hover.Stop();
+
+		if (OverIcon() && !_popover.IsVisible && !_menu.IsVisible)
+		{
+			// Свежий снимок: «обновлено N мин назад» и «сброс через» сдвигаются со временем.
+			_card.Render(Views.Build(_poller, _sessions, DateTime.Now));
+			_card.Open(Anchor());
+			_watch.Start();
+		}
+	}
+
+	private void OnWatchTick()
+	{
+		if (!_card.IsVisible || (!OverIcon() && !_card.IsPointerOver))
+		{
+			_watch.Stop();
+			_card.Hide();
+		}
+	}
+
+	private bool OverIcon() =>
+		OperatingSystem.IsWindows()
+		&& _tray?.Bounds() is { } icon
+		&& new PixelRect(icon.X - 4, icon.Y - 4, icon.Width + 8, icon.Height + 8).Contains(Tray.Cursor());
+
+	private PixelRect Anchor()
+	{
+		if (OperatingSystem.IsWindows() && _tray?.Bounds() is { } icon)
+		{
+			return icon;
+		}
+
+		// Без своего значка — правый нижний угол основного экрана, где трей по умолчанию.
+		return _popover.Screens.Primary?.WorkingArea is { } work ? new PixelRect(work.Right - 1, work.Bottom, 1, 1) : default;
+	}
+
+	private void TogglePopover()
+	{
+		HideGlance();
+
+		if (_popover.IsVisible)
+		{
+			_popover.Dismiss();
+
+			return;
+		}
+
+		if (DateTime.Now - _popover.HiddenAt < _refractory)
+		{
+			return;
+		}
+
+		OpenPopover(settings: false);
+	}
+
+	private void OpenPopover(bool settings)
+	{
+		HideGlance();
+		_menu.Hide();
+		_popover.Render(Views.Build(_poller, _sessions, DateTime.Now));
+		_popover.Open(Anchor(), settings);
+
+		if (OperatingSystem.IsWindows())
+		{
+			Tray.Focus(_popover);
+		}
+	}
+
+	private void ShowMenu()
+	{
+		HideGlance();
+		_popover.Dismiss();
+		_menu.Open(Anchor());
+
+		if (OperatingSystem.IsWindows())
+		{
+			Tray.Focus(_menu);
+		}
+	}
+
+	private void HideGlance()
+	{
+		_hover.Stop();
+		_watch.Stop();
+		_card.Hide();
+	}
+
+	private void Refresh() => _ = _poller.RefreshAsync();
+
+	private void Exit()
+	{
+		// Без удаления значок висел бы в трее до первого наведения мыши.
+		if (OperatingSystem.IsWindows())
+		{
+			_tray?.Dispose();
+		}
+
+		(Application.Current!.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
+	}
+}
