@@ -22,4 +22,8 @@ public class ViewsTests
 	[InlineData(null, "Claude")]
 	public void TabSelectionFollowsTheName(string? selected, string expected) =>
 		Assert.Equal(expected, Popover.Keep(selected, ["Claude", "Codex"]));
+
+	[Fact]
+	public void TabOpensItsAgentsUsagePage() =>
+		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow).Dashboard);
 }

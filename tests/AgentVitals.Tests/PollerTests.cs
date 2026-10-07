@@ -105,6 +105,8 @@ public class PollerTests
 
 		public string Credentials => credentials;
 
+		public string? Dashboard => null;
+
 		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => throw new TokenExpiredException(Cli);
 	}
 }

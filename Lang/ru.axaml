@@ -42,6 +42,7 @@
     <x:String x:Key="langLiveWorking">Claude работает · {0}</x:String>
     <x:String x:Key="langLiveTool">Claude работает: {0} · {1}</x:String>
     <x:String x:Key="langLiveWaiting">Claude ждёт разрешения · {0}</x:String>
+    <x:String x:Key="langDashboard">Дашборд</x:String>
     <x:String x:Key="langRefresh">Обновить</x:String>
     <x:String x:Key="langSettings">Настройки</x:String>
     <x:String x:Key="langExit">Выход</x:String>

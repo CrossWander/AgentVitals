@@ -118,18 +118,24 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Низ: обновить слева, настройки и закрыть справа -->
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                    <Button Theme="{StaticResource Pill}" Click="OnRefresh">
+                <!-- Низ: дашборд агента и обновить слева, настройки и закрыть справа -->
+                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                    <Button Name="DashboardButton" Theme="{StaticResource Pill}" Margin="0,0,8,0" Click="OnDashboard">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Path Classes="icon" Data="{StaticResource IconCompass}" Stroke="{Binding $parent[Button].Foreground}"/>
+                            <TextBlock Text="{DynamicResource langDashboard}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="1" Theme="{StaticResource Pill}" Click="OnRefresh">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <Path Classes="icon" Data="{StaticResource IconRefresh}" Stroke="{Binding $parent[Button].Foreground}"/>
                             <TextBlock Text="{DynamicResource langRefresh}"/>
                         </StackPanel>
                     </Button>
-                    <Button Grid.Column="2" Theme="{StaticResource Round}" Click="OnSettings">
+                    <Button Grid.Column="3" Theme="{StaticResource Round}" Click="OnSettings">
                         <Path Classes="icon" Data="{StaticResource IconSliders}" Stroke="{Binding $parent[Button].Foreground}"/>
                     </Button>
-                    <Button Grid.Column="3" Theme="{StaticResource Round}" Margin="8,0,0,0" Click="OnClose">
+                    <Button Grid.Column="4" Theme="{StaticResource Round}" Margin="8,0,0,0" Click="OnClose">
                         <Path Classes="icon" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}"/>
                     </Button>
                 </Grid>

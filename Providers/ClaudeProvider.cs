@@ -27,6 +27,8 @@ internal sealed class ClaudeProvider : IProvider
 
 	public string Credentials => _credentials;
 
+	public string? Dashboard => "https://claude.ai/settings/usage";
+
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{

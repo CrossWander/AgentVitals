@@ -16,6 +16,9 @@ internal interface IProvider
 	/// <summary>Файл авторизации агента: его переписывает CLI, когда обновляет вход.</summary>
 	string Credentials { get; }
 
+	/// <summary>Страница расхода у самого агента, в браузере; null — такой нет.</summary>
+	string? Dashboard { get; }
+
 	/// <summary>Получить текущие квоты агента.</summary>
 	/// <param name="http">Общий HTTP-клиент программы.</param>
 	/// <param name="cancellation">Отмена запроса.</param>

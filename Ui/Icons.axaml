@@ -9,5 +9,6 @@
     <StreamGeometry x:Key="IconClose">M6,6 L18,18 M18,6 L6,18</StreamGeometry>
     <StreamGeometry x:Key="IconBack">M15,5 L8,12 L15,19</StreamGeometry>
     <StreamGeometry x:Key="IconTerminal">M4,6 L9,11 L4,16 M11,18 H20</StreamGeometry>
+    <StreamGeometry x:Key="IconCompass">M12,3 A9,9 0 1 0 12.01,3 Z M15.5,8.5 L13.4,13.4 L8.5,15.5 L10.6,10.6 Z</StreamGeometry>
     <StreamGeometry x:Key="IconPower">M12,3 V11 M6.3,6.3 A8,8 0 1 0 17.7,6.3</StreamGeometry>
 </ResourceDictionary>

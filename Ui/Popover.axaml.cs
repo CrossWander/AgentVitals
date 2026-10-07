@@ -107,6 +107,7 @@ internal partial class Popover : TrayWindow
 		InfoLine.Text = string.Join(" · ", new[] { provider?.Updated, provider?.Info }.Where(text => !string.IsNullOrEmpty(text)));
 		ErrorLine.Text = provider?.Error;
 		ErrorLine.IsVisible = provider?.HasError == true;
+		DashboardButton.IsVisible = provider?.Dashboard is not null;
 	}
 
 	private void ShowSettings(bool settings)
@@ -125,6 +126,14 @@ internal partial class Popover : TrayWindow
 	private void OnSettings(object? sender, RoutedEventArgs e) => ShowSettings(true);
 
 	private void OnClose(object? sender, RoutedEventArgs e) => Dismiss();
+
+	private async void OnDashboard(object? sender, RoutedEventArgs e)
+	{
+		if (_vitals?.Providers.FirstOrDefault(provider => provider.Name == _selected)?.Dashboard is { } dashboard)
+		{
+			await Launcher.LaunchUriAsync(new Uri(dashboard));
+		}
+	}
 
 	private async void OnStatus(object? sender, PointerReleasedEventArgs e) =>
 		await Launcher.LaunchUriAsync(new Uri(StatusPage.Url));

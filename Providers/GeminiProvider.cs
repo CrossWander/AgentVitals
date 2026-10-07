@@ -25,6 +25,9 @@ internal sealed class GeminiProvider : IProvider
 
 	public string Credentials => _credentials;
 
+	// У Gemini CLI нет страницы с квотами — кнопки не будет.
+	public string? Dashboard => null;
+
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{

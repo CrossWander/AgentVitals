@@ -27,7 +27,7 @@ internal sealed record CardView(
 	public string Display => Value + Unit;
 }
 
-internal sealed record ProviderView(string Name, string Info, string Updated, IReadOnlyList<CardView> Cards, string Error)
+internal sealed record ProviderView(string Name, string Info, string Updated, IReadOnlyList<CardView> Cards, string Error, string? Dashboard)
 {
 	/// <summary>Для карточки по наведению — только окна, которые блокируют всю работу.</summary>
 	public IReadOnlyList<CardView> Glance => [.. Cards.Where(card => card.Limiting)];
@@ -119,7 +119,7 @@ internal static class Views
 
 		var info = string.Join(" · ", new[] { state.Snapshot?.Plan, state.Snapshot?.Account }.Where(text => !string.IsNullOrEmpty(text)));
 
-		return new(state.Provider.Name, info, Text.Ago(state.Updated, now), cards, state.Error is { } error ? Text.Error(error) : "");
+		return new(state.Provider.Name, info, Text.Ago(state.Updated, now), cards, state.Error is { } error ? Text.Error(error) : "", state.Provider.Dashboard);
 	}
 
 	private static CardView Card(QuotaWindow window, DateTime now)
