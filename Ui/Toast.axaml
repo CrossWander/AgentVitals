@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AgentVitals.Toast"
+        x:ClassModifier="internal"
+        Title="AgentVitals"
+        Width="372" SizeToContent="Height" CanResize="False"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True" ShowActivated="False">
+
+    <Border Classes="window" Margin="16,12,16,20" Padding="14,12" Cursor="Hand" PointerReleased="OnClick">
+        <Grid ColumnDefinitions="Auto,*">
+            <Image Source="avares://AgentVitals/app.png" Width="36" Height="36" VerticalAlignment="Top"/>
+            <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="2">
+                <TextBlock Text="AgentVitals" FontWeight="Bold"/>
+                <TextBlock Name="Message" Classes="caption" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

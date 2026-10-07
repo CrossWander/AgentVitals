@@ -1,0 +1,13 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StreamGeometry x:Key="IconBolt">M13,2 L4,14 H11 L10,22 L20,9 H13 Z</StreamGeometry>
+    <StreamGeometry x:Key="IconCalendar">M7,3 V6 M17,3 V6 M4,9 H20 M5,5 H19 A1,1 0 0 1 20,6 V19 A1,1 0 0 1 19,20 H5 A1,1 0 0 1 4,19 V6 A1,1 0 0 1 5,5 Z</StreamGeometry>
+    <StreamGeometry x:Key="IconSpark">M12,3 L13.8,10.2 L21,12 L13.8,13.8 L12,21 L10.2,13.8 L3,12 L10.2,10.2 Z</StreamGeometry>
+    <StreamGeometry x:Key="IconCoin">M12,3 A9,9 0 1 0 12.01,3 Z M12,7 V17 M15,9.5 H10.75 A1.75,1.75 0 0 0 10.75,13 H13.25 A1.75,1.75 0 0 1 13.25,16.5 H9</StreamGeometry>
+    <StreamGeometry x:Key="IconRefresh">M20,12 A8,8 0 1 1 17.7,6.3 M20,4 V9 H15</StreamGeometry>
+    <StreamGeometry x:Key="IconSliders">M4,7 H20 M4,17 H20 M9,4.5 A2.5,2.5 0 1 1 8.99,4.5 Z M15,14.5 A2.5,2.5 0 1 1 14.99,14.5 Z</StreamGeometry>
+    <StreamGeometry x:Key="IconClose">M6,6 L18,18 M18,6 L6,18</StreamGeometry>
+    <StreamGeometry x:Key="IconBack">M15,5 L8,12 L15,19</StreamGeometry>
+    <StreamGeometry x:Key="IconTerminal">M4,6 L9,11 L4,16 M11,18 H20</StreamGeometry>
+    <StreamGeometry x:Key="IconPower">M12,3 V11 M6.3,6.3 A8,8 0 1 0 17.7,6.3</StreamGeometry>
+</ResourceDictionary>

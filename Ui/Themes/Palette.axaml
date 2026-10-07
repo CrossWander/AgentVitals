@@ -1,0 +1,85 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Роли цветов по образцу ClaudeBar. Разметка обращается к ролям через DynamicResource,
+         а значения Avalonia подставляет по варианту темы — о теме разметка не знает вовсе. -->
+
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+            <!-- Глубокий фиолетовый с уходом в пурпур, как тёмная тема ClaudeBar -->
+            <LinearGradientBrush x:Key="Window" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Offset="0" Color="#2A1A3F"/>
+                <GradientStop Offset="1" Color="#3D1D4F"/>
+            </LinearGradientBrush>
+            <!-- Карточки — «стекло»: полупрозрачный белый поверх градиента -->
+            <SolidColorBrush x:Key="Card" Color="#12FFFFFF"/>
+            <SolidColorBrush x:Key="CardHover" Color="#24FFFFFF"/>
+            <SolidColorBrush x:Key="CardLine" Color="#1FFFFFFF"/>
+            <SolidColorBrush x:Key="Pill" Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="PillLine" Color="#2EFFFFFF"/>
+            <SolidColorBrush x:Key="Track" Color="#26FFFFFF"/>
+            <SolidColorBrush x:Key="SegmentOn" Color="#33FFFFFF"/>
+            <SolidColorBrush x:Key="SwitchOff" Color="#40FFFFFF"/>
+            <SolidColorBrush x:Key="Text" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="TextDim" Color="#BCAFCC"/>
+            <SolidColorBrush x:Key="TextFaint" Color="#8E80A0"/>
+            <SolidColorBrush x:Key="Good" Color="#34D399"/>
+            <SolidColorBrush x:Key="Warn" Color="#FBBF24"/>
+            <SolidColorBrush x:Key="Bad" Color="#F87171"/>
+            <SolidColorBrush x:Key="Muted" Color="#8E80A0"/>
+            <SolidColorBrush x:Key="Blue" Color="#60A5FA"/>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Light">
+            <!-- Лавандово-розовый, как светлая тема ClaudeBar -->
+            <LinearGradientBrush x:Key="Window" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Offset="0" Color="#F6F1FB"/>
+                <GradientStop Offset="1" Color="#FBEFF5"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="Card" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="CardHover" Color="#F4EFFA"/>
+            <SolidColorBrush x:Key="CardLine" Color="#ECE4F3"/>
+            <SolidColorBrush x:Key="Pill" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="PillLine" Color="#E2D8EC"/>
+            <SolidColorBrush x:Key="Track" Color="#ECE6F2"/>
+            <SolidColorBrush x:Key="SegmentOn" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="SwitchOff" Color="#DCD3E6"/>
+            <SolidColorBrush x:Key="Text" Color="#1E1A2B"/>
+            <SolidColorBrush x:Key="TextDim" Color="#6F6680"/>
+            <SolidColorBrush x:Key="TextFaint" Color="#A39AB2"/>
+            <SolidColorBrush x:Key="Good" Color="#10B981"/>
+            <SolidColorBrush x:Key="Warn" Color="#D97706"/>
+            <SolidColorBrush x:Key="Bad" Color="#E11D48"/>
+            <SolidColorBrush x:Key="Muted" Color="#A39AB2"/>
+            <SolidColorBrush x:Key="Blue" Color="#2563EB"/>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- Общие для обеих тем: фирменный градиент (он же у иконки), полоски, бейджи, значки карточек -->
+    <LinearGradientBrush x:Key="Brand" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#FF7A59"/>
+        <GradientStop Offset="1" Color="#FF2D55"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="MeterGood" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Offset="0" Color="#8B5CF6"/>
+        <GradientStop Offset="1" Color="#34D399"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="MeterWarn" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Offset="0" Color="#8B5CF6"/>
+        <GradientStop Offset="1" Color="#F59E0B"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="MeterBad" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Offset="0" Color="#EC4899"/>
+        <GradientStop Offset="1" Color="#EF4444"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="MeterNone" Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="BadgeGood" Color="#22C55E"/>
+    <SolidColorBrush x:Key="BadgeWarn" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="BadgeBad" Color="#EF4444"/>
+    <SolidColorBrush x:Key="BadgeNone" Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="Switch" Color="#34C759"/>
+    <SolidColorBrush x:Key="IconSession" Color="#34D399"/>
+    <SolidColorBrush x:Key="IconWeek" Color="#A78BFA"/>
+    <SolidColorBrush x:Key="IconModel" Color="#2DD4BF"/>
+    <SolidColorBrush x:Key="IconExtra" Color="#FBBF24"/>
+</ResourceDictionary>

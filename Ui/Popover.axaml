@@ -1,0 +1,138 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AgentVitals"
+        x:Class="AgentVitals.Popover"
+        x:ClassModifier="internal"
+        x:DataType="local:Vitals"
+        Title="AgentVitals"
+        Width="432" SizeToContent="Height" CanResize="False"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True">
+
+    <!-- Внешние поля — место для тени: окно прозрачное, и тень рисуется внутри него -->
+    <Border Classes="window" Margin="16,12,16,20" Padding="16,14">
+        <Panel>
+            <StackPanel Name="MainView" Spacing="12">
+                <!-- Шапка: значок, имя и общее состояние -->
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Image Source="avares://AgentVitals/app.png" Width="40" Height="40"/>
+                    <StackPanel Grid.Column="1" Margin="10,0" VerticalAlignment="Center">
+                        <TextBlock Text="AgentVitals" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Classes="caption" Text="{DynamicResource langSubtitle}"/>
+                    </StackPanel>
+                    <Border Grid.Column="2" Classes="pill" BorderBrush="{Binding HealthBrush}" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <Ellipse Width="9" Height="9" Fill="{Binding HealthBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding HealthText}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Вкладки провайдеров строятся в коде: их столько, сколько агентов установлено -->
+                <StackPanel Name="Tabs" Orientation="Horizontal" Spacing="6"/>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Name="InfoLine" Classes="faint"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6" Background="Transparent" Cursor="Hand"
+                                PointerReleased="OnStatus">
+                        <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Classes="faint" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBlock Classes="caption" Text="{DynamicResource langNoAgents}" TextWrapping="Wrap"
+                           IsVisible="{Binding NoAgents}"/>
+
+                <ItemsControl Name="Cards" Margin="-4,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="2"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:CardView">
+                            <Border Classes="card" Margin="4">
+                                <StackPanel Spacing="6">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <Path Classes="icon" Width="11" Height="11" Data="{Binding Icon}"
+                                              Stroke="{Binding IconBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Classes="label" Text="{Binding Title}" Margin="6,0"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        <Border Grid.Column="2" Classes="badge" Background="{Binding BadgeBrush}"
+                                                IsVisible="{Binding Badge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                            <TextBlock Text="{Binding Badge}"/>
+                                        </Border>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Classes="big" Text="{Binding Value}"/>
+                                            <TextBlock Text="{Binding Unit}" FontSize="15" FontWeight="SemiBold"
+                                                       VerticalAlignment="Bottom" Margin="2,0,0,5"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Classes="caption" Text="{Binding Note}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="6,0,0,6"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </Grid>
+                                    <ProgressBar Theme="{StaticResource Meter}" Value="{Binding Fill}" Foreground="{Binding Meter}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="5"
+                                                IsVisible="{Binding Resets, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                        <Ellipse Width="5" Height="5" Fill="{DynamicResource TextFaint}" VerticalAlignment="Center"/>
+                                        <TextBlock Classes="faint" Text="{Binding Resets}" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Name="ErrorLine" Classes="error"/>
+
+                <!-- Сессии Claude Code: карточка во всю ширину -->
+                <Border Classes="card">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Path Classes="icon" Width="11" Height="11" Data="{StaticResource IconTerminal}"
+                                  Stroke="{DynamicResource IconModel}" VerticalAlignment="Center"/>
+                            <TextBlock Classes="label" Text="{DynamicResource langSessions}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding Sessions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="local:SessionView">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3">
+                                        <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1" Margin="9,0" Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding Folder}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Classes="faint" Text="{Binding Branch}" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Classes="caption" Text="{Binding State}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Classes="caption" Text="{Binding SessionsHint}" TextWrapping="Wrap"
+                                   IsVisible="{Binding SessionsHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Низ: обновить слева, настройки и закрыть справа -->
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                    <Button Theme="{StaticResource Pill}" Click="OnRefresh">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Path Classes="icon" Data="{StaticResource IconRefresh}" Stroke="{Binding $parent[Button].Foreground}"/>
+                            <TextBlock Text="{DynamicResource langRefresh}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="2" Theme="{StaticResource Round}" Click="OnSettings">
+                        <Path Classes="icon" Data="{StaticResource IconSliders}" Stroke="{Binding $parent[Button].Foreground}"/>
+                    </Button>
+                    <Button Grid.Column="3" Theme="{StaticResource Round}" Margin="8,0,0,0" Click="OnClose">
+                        <Path Classes="icon" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}"/>
+                    </Button>
+                </Grid>
+            </StackPanel>
+
+            <local:SettingsPanel Name="Settings" IsVisible="False"/>
+        </Panel>
+    </Border>
+</Window>

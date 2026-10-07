@@ -1,0 +1,95 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Шрифт и цвет текста задаются окну и наследуются вниз: стиль на всех TextBlock
+         перебил бы цвет подписей внутри кнопок. -->
+    <Style Selector="Window">
+        <Setter Property="FontFamily" Value="Segoe UI Variable Display, Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+    </Style>
+
+    <!-- Подложка окна: градиент темы, скругление и своя тень — окно прозрачное, тень внутри полей -->
+    <Style Selector="Border.window">
+        <Setter Property="Background" Value="{DynamicResource Window}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardLine}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="18"/>
+        <Setter Property="BoxShadow" Value="0 10 30 0 #59000000"/>
+    </Style>
+
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource Card}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardLine}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Padding" Value="12,10"/>
+    </Style>
+
+    <!-- Пилюля общего состояния в шапке: обводка и точка цвета состояния -->
+    <Style Selector="Border.pill">
+        <Setter Property="Background" Value="{DynamicResource Pill}"/>
+        <Setter Property="BorderThickness" Value="1.5"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Padding" Value="10,5"/>
+    </Style>
+
+    <Style Selector="Border.badge">
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="6,2"/>
+    </Style>
+
+    <Style Selector="Border.badge > TextBlock">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="9"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+
+    <!-- Дорожка под сегментами: она и делает их сегментами -->
+    <Style Selector="Border.track">
+        <Setter Property="Background" Value="{DynamicResource Track}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="2"/>
+    </Style>
+
+    <Style Selector="Border.rule">
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Background" Value="{DynamicResource CardLine}"/>
+    </Style>
+
+    <Style Selector="TextBlock.label">
+        <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+        <Setter Property="FontSize" Value="10.5"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="TextBlock.caption">
+        <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+        <Setter Property="FontSize" Value="11.5"/>
+    </Style>
+
+    <Style Selector="TextBlock.faint">
+        <Setter Property="Foreground" Value="{DynamicResource TextFaint}"/>
+        <Setter Property="FontSize" Value="11"/>
+    </Style>
+
+    <Style Selector="TextBlock.error">
+        <Setter Property="Foreground" Value="{DynamicResource Bad}"/>
+        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style Selector="TextBlock.big">
+        <Setter Property="FontSize" Value="30"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+
+    <Style Selector="Path.icon">
+        <Setter Property="Width" Value="13"/>
+        <Setter Property="Height" Value="13"/>
+        <Setter Property="Stretch" Value="Uniform"/>
+        <Setter Property="StrokeThickness" Value="1.8"/>
+        <Setter Property="StrokeLineCap" Value="Round"/>
+        <Setter Property="StrokeJoin" Value="Round"/>
+    </Style>
+</Styles>

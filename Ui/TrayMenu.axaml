@@ -1,0 +1,33 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AgentVitals.TrayMenu"
+        x:ClassModifier="internal"
+        Title="AgentVitals"
+        Width="264" SizeToContent="Height" CanResize="False"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True">
+
+    <Border Classes="window" Margin="16,12,16,20" Padding="6">
+        <StackPanel>
+            <Button Theme="{StaticResource MenuRow}" Click="OnRefresh">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Path Classes="icon" Data="{StaticResource IconRefresh}" Stroke="{Binding $parent[Button].Foreground}"/>
+                    <TextBlock Text="{DynamicResource langRefresh}"/>
+                </StackPanel>
+            </Button>
+            <Button Theme="{StaticResource MenuRow}" Click="OnSettings">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Path Classes="icon" Data="{StaticResource IconSliders}" Stroke="{Binding $parent[Button].Foreground}"/>
+                    <TextBlock Text="{DynamicResource langSettings}"/>
+                </StackPanel>
+            </Button>
+            <Border Classes="rule" Margin="10,4"/>
+            <Button Theme="{StaticResource MenuRow}" Click="OnExit">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Path Classes="icon" Data="{StaticResource IconPower}" Stroke="{Binding $parent[Button].Foreground}"/>
+                    <TextBlock Text="{DynamicResource langExit}"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Border>
+</Window>

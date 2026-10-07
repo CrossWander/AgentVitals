@@ -1,0 +1,77 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AgentVitals"
+        x:Class="AgentVitals.HoverCard"
+        x:ClassModifier="internal"
+        x:DataType="local:Vitals"
+        Title="AgentVitals"
+        Width="352" SizeToContent="Height" CanResize="False"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True" ShowActivated="False">
+
+    <Border Classes="window" Margin="16,12,16,20" Padding="14,12">
+        <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Image Source="avares://AgentVitals/app.png" Width="24" Height="24"/>
+                <TextBlock Grid.Column="1" Text="AgentVitals" FontSize="14" FontWeight="Bold" Margin="8,0"
+                           VerticalAlignment="Center"/>
+                <Border Grid.Column="2" Classes="pill" BorderBrush="{Binding HealthBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="8" Height="8" Fill="{Binding HealthBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding HealthText}" FontSize="10.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <TextBlock Classes="caption" Text="{DynamicResource langNoAgents}" TextWrapping="Wrap"
+                       IsVisible="{Binding NoAgents}"/>
+
+            <ItemsControl ItemsSource="{Binding Providers}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:ProviderView">
+                        <Border Classes="card" Margin="0,0,0,8">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Classes="faint" Text="{Binding Info}" Margin="8,0,0,0"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Glance}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="local:CardView">
+                                            <StackPanel Spacing="4" Margin="0,0,0,6">
+                                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                                    <Path Classes="icon" Width="11" Height="11" Data="{Binding Icon}"
+                                                          Stroke="{Binding IconBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Classes="label" Text="{Binding Title}" Margin="6,0"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Display}" FontWeight="Bold"/>
+                                                </Grid>
+                                                <ProgressBar Theme="{StaticResource Meter}" Height="4" Value="{Binding Fill}"
+                                                             Foreground="{Binding Meter}"/>
+                                                <TextBlock Classes="faint" Text="{Binding Resets}"
+                                                           IsVisible="{Binding Resets, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Classes="error" Text="{Binding Error}" IsVisible="{Binding HasError}"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Orientation="Horizontal" Spacing="7"
+                        IsVisible="{Binding LiveText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <Ellipse Width="8" Height="8" Fill="{Binding LiveBrush}" VerticalAlignment="Center"/>
+                <TextBlock Classes="caption" Text="{Binding LiveText}" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="7">
+                <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" VerticalAlignment="Center"/>
+                <TextBlock Classes="faint" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>
