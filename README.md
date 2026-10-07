@@ -12,7 +12,8 @@ Ukrainian and Russian, light and dark.
   percentage used, a bar and the time left until it resets. Extra usage, if enabled.
 - **The tray icon** is a pulse line coloured by the window that limits you most: green under 50%,
   amber to 80%, red above, grey when there is no data. An exhausted week turns it red even with an
-  empty session.
+  empty session. A toast comes once when the session or the week reaches 90%, and again only
+  after that window resets.
 - **Live sessions.** With the hooks connected, the pulse runs while Claude is working and a blue
   dot blinks while it waits for your permission.
 - **Anthropic status** from status.claude.com, with a toast when it changes.

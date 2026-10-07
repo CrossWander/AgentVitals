@@ -36,6 +36,38 @@ internal sealed class RateLimitedException(DateTime until) : Exception($"rate li
 	public DateTime Until { get; } = until;
 }
 
+/// <summary>Один тост за цикл окна: сессия или неделя дошли до 90%. Порог снова взводится после сброса.</summary>
+internal sealed class QuotaAlarm
+{
+	private const double _threshold = 90;
+
+	private readonly HashSet<string> _fired = [];
+	private readonly HashSet<string> _seen = [];
+
+	/// <summary>Окна провайдера, которые только что дошли до порога; первый снимок — точка отсчёта.</summary>
+	public IReadOnlyList<QuotaWindow> Check(string provider, IReadOnlyList<QuotaWindow> windows)
+	{
+		var first = _seen.Add(provider);
+		var reached = new List<QuotaWindow>();
+
+		foreach (var window in windows.Where(window => window.Limiting))
+		{
+			var key = $"{provider}/{window.Key}/{window.Label}";
+
+			if (window.Used < _threshold)
+			{
+				_fired.Remove(key);
+			}
+			else if (_fired.Add(key) && !first)
+			{
+				reached.Add(window);
+			}
+		}
+
+		return reached;
+	}
+}
+
 internal static class Quota
 {
 	/// <summary>Окно, которое ограничивает сильнее всех: среди блокирующих всё, а если таких нет — среди всех.</summary>

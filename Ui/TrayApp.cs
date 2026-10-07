@@ -24,6 +24,7 @@ internal sealed class TrayApp
 	private readonly HoverCard _card = new();
 	private readonly TrayMenu _menu = new();
 	private readonly Toast _toast = new();
+	private readonly QuotaAlarm _alarm = new();
 
 	private readonly DispatcherTimer _hover = new()
 	{
@@ -50,7 +51,6 @@ internal sealed class TrayApp
 	private IReadOnlyList<LiveSession> _sessions = [];
 	private bool _darkTaskbar = true;
 	private int _tick;
-	private Health? _lastKnown;
 	private string? _lastIndicator;
 
 	public void Start()
@@ -146,24 +146,19 @@ internal sealed class TrayApp
 		ShowIcon();
 	}
 
-	/// <summary>Тост, когда квоты стали хуже последнего известного или сменился статус Anthropic.</summary>
+	/// <summary>Тост, когда сессия или неделя дошли до 90% или сменился статус Anthropic.</summary>
 	private void Notify()
 	{
-		var known = _poller.Providers
-			.Where(state => state.Provider.Available && state.Health != Health.Unknown)
+		var reached = _poller.Providers
+			.Where(state => state.Provider.Available && state.Snapshot is not null)
+			.SelectMany(state => _alarm.Check(state.Provider.Name, state.Snapshot!.Windows).Select(window => (state.Provider.Name, window)))
 			.ToList();
 
-		if (known.MaxBy(state => state.Health) is { Snapshot: { } snapshot } worst)
+		// Два окна за один опрос почти не доходят до порога — тост одного, того, что ближе к потолку.
+		if (reached.Count > 0)
 		{
-			if (_lastKnown is { } last
-				&& worst.Health > last
-				&& worst.Health >= Health.Warning
-				&& Quota.Bottleneck(snapshot.Windows) is { } window)
-			{
-				_toast.Say(Text.QuotaToast(worst.Provider.Name, window), Anchor());
-			}
-
-			_lastKnown = worst.Health;
+			var (provider, window) = reached.MaxBy(item => item.window.Used);
+			_toast.Say(Text.QuotaToast(provider, window), Anchor());
 		}
 
 		if (_poller.Status is { } status)
