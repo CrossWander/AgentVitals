@@ -16,9 +16,6 @@ internal sealed class TrayApp
 	// Мышь идёт через трей к часам и к чужим значкам — такой проход короче трети секунды.
 	private static readonly TimeSpan _hoverDelay = TimeSpan.FromMilliseconds(350);
 
-	// Щелчок по значку сперва уводит фокус с открытого поповера, и тот прячется сам.
-	private static readonly TimeSpan _refractory = TimeSpan.FromMilliseconds(400);
-
 	private readonly Poller _poller = new();
 	private readonly Popover _popover = new();
 	private readonly HoverCard _card = new();
@@ -241,13 +238,8 @@ internal sealed class TrayApp
 
 		if (_popover.IsVisible)
 		{
-			_popover.Dismiss();
+			_popover.Hide();
 
-			return;
-		}
-
-		if (DateTime.UtcNow - _popover.HiddenAt < _refractory)
-		{
 			return;
 		}
 
@@ -270,7 +262,7 @@ internal sealed class TrayApp
 	private void ShowMenu()
 	{
 		HideGlance();
-		_popover.Dismiss();
+		_popover.Hide();
 		_menu.Open(Anchor());
 
 		if (OperatingSystem.IsWindows())

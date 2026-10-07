@@ -21,7 +21,7 @@ Ukrainian and Russian, light and dark.
   dot blinks while it waits for your permission.
 - **Anthropic status** from status.claude.com, with a toast when it changes.
 
-Hover the icon for a quick card, click it for the full popover, right-click for the menu.
+Hover the icon for a quick card, click it for the full popover, right-click for the menu. The popover stays open while you work in other windows: close it with ✕, another click on the icon or Esc.
 
 ## Where the data comes from
 

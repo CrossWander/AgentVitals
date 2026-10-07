@@ -9,7 +9,8 @@ using Avalonia.Styling;
 
 namespace AgentVitals;
 
-/// <summary>Окно по щелчку на значке: квоты выбранного агента, сессии и настройки.</summary>
+/// <summary>Окно по щелчку на значке: квоты выбранного агента, сессии и настройки.
+/// Щелчок в другое окно его не закрывает — только ✕, повторный щелчок по значку или Esc.</summary>
 internal partial class Popover : TrayWindow
 {
 	private Vitals? _vitals;
@@ -18,7 +19,6 @@ internal partial class Popover : TrayWindow
 	public Popover()
 	{
 		InitializeComponent();
-		Deactivated += (_, _) => Dismiss();
 
 		Settings.Back += () => ShowSettings(false);
 		Settings.Changed += () => Changed?.Invoke();
@@ -32,9 +32,6 @@ internal partial class Popover : TrayWindow
 
 	public event Action? ExitRequested;
 
-	/// <summary>Когда окно спряталось: щелчок по значку сразу после этого — тот же щелчок, что увёл фокус.</summary>
-	public DateTime HiddenAt { get; private set; }
-
 	public void Open(PixelRect anchor, bool settings)
 	{
 		ShowSettings(settings);
@@ -42,15 +39,15 @@ internal partial class Popover : TrayWindow
 		Activate();
 	}
 
-	public void Dismiss()
+	protected override void OnKeyDown(KeyEventArgs e)
 	{
-		if (!IsVisible)
+		if (e.Key == Key.Escape)
 		{
-			return;
+			Hide();
+			e.Handled = true;
 		}
 
-		Hide();
-		HiddenAt = DateTime.UtcNow;
+		base.OnKeyDown(e);
 	}
 
 	public void Render(Vitals vitals)
@@ -125,7 +122,7 @@ internal partial class Popover : TrayWindow
 
 	private void OnSettings(object? sender, RoutedEventArgs e) => ShowSettings(true);
 
-	private void OnClose(object? sender, RoutedEventArgs e) => Dismiss();
+	private void OnClose(object? sender, RoutedEventArgs e) => Hide();
 
 	private async void OnDashboard(object? sender, RoutedEventArgs e)
 	{
