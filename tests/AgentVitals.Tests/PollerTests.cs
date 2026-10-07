@@ -48,10 +48,25 @@ public class PollerTests
 		File.WriteAllText(credentials, "{}");
 		var state = new ProviderState(new SignedOut(credentials)) { Started = _now };
 
-		state.Record(new TokenExpiredException("fake"));
+		state.Record(new TokenExpiredException("fake"), File.GetLastWriteTimeUtc(credentials));
 		Assert.Equal(DateTime.MaxValue, state.NextFetch(60));
 
 		File.SetLastWriteTimeUtc(credentials, DateTime.UtcNow.AddMinutes(1)); // CLI агента обновил вход
+		Assert.Equal(_now, state.NextFetch(60));
+	}
+
+	[Fact]
+	public void SignInRefreshedDuringRequestIsTriedAgain() // Claude Code обновил вход, пока шёл запрос с 401
+	{
+		using var temp = new TempDirectory();
+		var credentials = temp.File("auth.json");
+		File.WriteAllText(credentials, "{}");
+		var state = new ProviderState(new SignedOut(credentials)) { Started = _now };
+		var before = File.GetLastWriteTimeUtc(credentials);
+
+		File.SetLastWriteTimeUtc(credentials, DateTime.UtcNow.AddMinutes(1));
+		state.Record(new TokenExpiredException("fake"), before);
+
 		Assert.Equal(_now, state.NextFetch(60));
 	}
 

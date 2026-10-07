@@ -28,17 +28,21 @@ internal sealed class ProviderState(IProvider provider)
 	private DateTime? _rejected;
 
 	/// <summary>Запомнить исход запроса; null — удача.</summary>
-	public void Record(Exception? error)
+	/// <param name="error">Ошибка запроса или null.</param>
+	/// <param name="credentials">Время записи файла входа до запроса: если CLI переписал его, пока шёл
+	/// запрос, отказ относился к старому входу и новый надо попробовать.</param>
+	public void Record(Exception? error, DateTime credentials)
 	{
 		Error = error;
-		_rejected = error is TokenExpiredException ? Stamp() : null;
+		_rejected = error is TokenExpiredException ? credentials : null;
 	}
+
+	/// <summary>Время записи файла входа — снимать до запроса и передавать в <see cref="Record"/>.</summary>
+	public DateTime Stamp() => File.GetLastWriteTimeUtc(Provider.Credentials);
 
 	/// <summary>Считается при каждом тике, а не запоминается: новый интервал из настроек действует сразу.</summary>
 	public DateTime NextFetch(int intervalSeconds) =>
 		_rejected is { } rejected && rejected == Stamp() ? DateTime.MaxValue : Poller.Schedule(Error, intervalSeconds, Started);
-
-	private DateTime Stamp() => File.GetLastWriteTimeUtc(Provider.Credentials);
 
 	/// <summary>Истёкший вход — серое: старые проценты уже ничего не говорят о том, можно ли работать.</summary>
 	public Health Health => Snapshot is null || Error is TokenExpiredException ? Health.Unknown : Quota.Rate(Snapshot.Windows);
@@ -132,10 +136,12 @@ internal sealed class Poller
 
 	private async Task FetchAsync(ProviderState state, DateTime started)
 	{
+		var credentials = state.Stamp();
+
 		try
 		{
 			state.Snapshot = await state.Provider.FetchAsync(_http, CancellationToken.None);
-			state.Record(null);
+			state.Record(null, credentials);
 			state.Updated = DateTime.UtcNow;
 		}
 		catch (Exception exception)
@@ -146,7 +152,7 @@ internal sealed class Poller
 				Journal.Add($"{state.Provider.Name}: {exception.GetType().Name}: {exception.Message}");
 			}
 
-			state.Record(exception);
+			state.Record(exception, credentials);
 		}
 
 		state.Started = started;
