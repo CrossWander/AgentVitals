@@ -15,9 +15,9 @@
     <x:String x:Key="langHoursMinutes">{0} ч {1} мин</x:String>
     <x:String x:Key="langMinutes">{0} мин</x:String>
     <x:String x:Key="langMinutes1">1 мин</x:String>
+    <x:String x:Key="langMinutes2">2 мин</x:String>
     <x:String x:Key="langMinutes5">5 мин</x:String>
-    <x:String x:Key="langMinutes15">15 мин</x:String>
-    <x:String x:Key="langMinutes30">30 мин</x:String>
+    <x:String x:Key="langMinutes10">10 мин</x:String>
     <x:String x:Key="langUpdatedNow">Обновлено только что</x:String>
     <x:String x:Key="langUpdatedAgo">Обновлено {0} мин назад</x:String>
     <x:String x:Key="langHealthGood">НОРМА</x:String>

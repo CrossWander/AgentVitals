@@ -30,7 +30,7 @@ Hover the icon for a quick card, click it for the full popover, right-click for 
 The token is only ever read. AgentVitals never refreshes it: Claude Code does that itself, and a
 refresh token spent by someone else would sign Claude Code out. If the token has expired, the card
 says so — open `claude` and the data comes back within a minute. Quotas are checked every
-15 minutes by default (1/5/15/30 in settings); `Retry-After` is respected.
+minute by default (1/2/5/10 minutes in settings); `Retry-After` is respected.
 
 Agents whose credential file is missing are simply not shown.
 

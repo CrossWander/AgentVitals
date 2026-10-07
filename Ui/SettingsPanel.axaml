@@ -47,12 +47,12 @@
                         <StackPanel Orientation="Horizontal">
                             <RadioButton Name="Interval1" Theme="{StaticResource Segment}" GroupName="interval" Tag="1"
                                          Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnInterval"/>
+                            <RadioButton Name="Interval2" Theme="{StaticResource Segment}" GroupName="interval" Tag="2"
+                                         Content="{DynamicResource langMinutes2}" IsCheckedChanged="OnInterval"/>
                             <RadioButton Name="Interval5" Theme="{StaticResource Segment}" GroupName="interval" Tag="5"
                                          Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Name="Interval15" Theme="{StaticResource Segment}" GroupName="interval" Tag="15"
-                                         Content="{DynamicResource langMinutes15}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Name="Interval30" Theme="{StaticResource Segment}" GroupName="interval" Tag="30"
-                                         Content="{DynamicResource langMinutes30}" IsCheckedChanged="OnInterval"/>
+                            <RadioButton Name="Interval10" Theme="{StaticResource Segment}" GroupName="interval" Tag="10"
+                                         Content="{DynamicResource langMinutes10}" IsCheckedChanged="OnInterval"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
