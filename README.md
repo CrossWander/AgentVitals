@@ -62,4 +62,15 @@ Requires the .NET 10 SDK.
 
 ## License
 
-Apache-2.0
+Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+Copyright 2026 Dykalo Pavlo. Forks and derivative works must keep the contents of `NOTICE`
+and mark the files they changed (sections 4b and 4d of the license).
+
+Claude and Anthropic are trademarks of Anthropic PBC. This project is independent, not
+affiliated with or supported by Anthropic, OpenAI or Google; the names identify the services
+the software reads.
+
+## Author
+
+Developed by Dykalo Pavlo, 2026.

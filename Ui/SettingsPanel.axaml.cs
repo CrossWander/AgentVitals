@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Security;
 using System.Text.Json;
 using Avalonia.Controls;
@@ -14,7 +15,11 @@ internal partial class SettingsPanel : UserControl
 	// Пока переключатели выставляются по сохранённому, их события — не выбор человека.
 	private bool _loading;
 
-	public SettingsPanel() => InitializeComponent();
+	public SettingsPanel()
+	{
+		InitializeComponent();
+		Credits.Text = $"Developed by Dykalo Pavlo, 2026 · {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)}";
+	}
 
 	public event Action? Back;
 
