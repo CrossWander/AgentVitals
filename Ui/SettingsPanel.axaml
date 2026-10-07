@@ -45,6 +45,8 @@
                     <TextBlock Classes="label" Text="{DynamicResource langInterval}"/>
                     <Border Classes="track" HorizontalAlignment="Left">
                         <StackPanel Orientation="Horizontal">
+                            <RadioButton Name="Interval1" Theme="{StaticResource Segment}" GroupName="interval" Tag="1"
+                                         Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnInterval"/>
                             <RadioButton Name="Interval5" Theme="{StaticResource Segment}" GroupName="interval" Tag="5"
                                          Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnInterval"/>
                             <RadioButton Name="Interval15" Theme="{StaticResource Segment}" GroupName="interval" Tag="15"

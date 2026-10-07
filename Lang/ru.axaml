@@ -14,6 +14,7 @@
     <x:String x:Key="langResetsSoon">сбрасывается</x:String>
     <x:String x:Key="langHoursMinutes">{0} ч {1} мин</x:String>
     <x:String x:Key="langMinutes">{0} мин</x:String>
+    <x:String x:Key="langMinutes1">1 мин</x:String>
     <x:String x:Key="langMinutes5">5 мин</x:String>
     <x:String x:Key="langMinutes15">15 мин</x:String>
     <x:String x:Key="langMinutes30">30 мин</x:String>

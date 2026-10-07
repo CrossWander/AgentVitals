@@ -32,9 +32,10 @@ internal partial class SettingsPanel : UserControl
 		ThemeAuto.IsChecked = Store.Current.Theme == ThemeMode.Auto;
 		ThemeLight.IsChecked = Store.Current.Theme == ThemeMode.Light;
 		ThemeDark.IsChecked = Store.Current.Theme == ThemeMode.Dark;
+		Interval1.IsChecked = Store.Current.IntervalMinutes == 1;
 		Interval5.IsChecked = Store.Current.IntervalMinutes == 5;
 		Interval30.IsChecked = Store.Current.IntervalMinutes == 30;
-		Interval15.IsChecked = Store.Current.IntervalMinutes is not (5 or 30);
+		Interval15.IsChecked = Store.Current.IntervalMinutes is not (1 or 5 or 30);
 		AutostartCard.IsVisible = OperatingSystem.IsWindows();
 
 		if (OperatingSystem.IsWindows())

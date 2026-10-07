@@ -90,14 +90,16 @@ internal sealed class Poller
 				.Where(state => state.Provider.Available && (now >= state.NextFetch || (force && state.Error is not RateLimitedException)))
 				.ToList();
 
+			// Следующий запрос считается от начала тика, а не от ответа: иначе минутный тик приходит
+			// на долю секунды раньше срока и интервал молча вырастает на целую минуту.
 			foreach (var state in due)
 			{
-				await FetchAsync(state);
+				await FetchAsync(state, now);
 			}
 
 			if (force || now >= _nextStatus)
 			{
-				await FetchStatusAsync();
+				await FetchStatusAsync(now);
 			}
 		}
 		finally
@@ -107,7 +109,7 @@ internal sealed class Poller
 		}
 	}
 
-	private async Task FetchAsync(ProviderState state)
+	private async Task FetchAsync(ProviderState state, DateTime started)
 	{
 		try
 		{
@@ -126,10 +128,10 @@ internal sealed class Poller
 			state.Error = exception;
 		}
 
-		state.NextFetch = Schedule(state.Error, Store.Current.IntervalMinutes, DateTime.Now);
+		state.NextFetch = Schedule(state.Error, Store.Current.IntervalMinutes, started);
 	}
 
-	private async Task FetchStatusAsync()
+	private async Task FetchStatusAsync(DateTime started)
 	{
 		try
 		{
@@ -140,6 +142,6 @@ internal sealed class Poller
 			Status = null;
 		}
 
-		_nextStatus = DateTime.Now + _statusEvery;
+		_nextStatus = started + _statusEvery;
 	}
 }

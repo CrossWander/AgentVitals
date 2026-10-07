@@ -29,6 +29,7 @@ public class PollerTests
 		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new HttpRequestException(), 15, _now));
 
 	[Theory]
+	[InlineData(1, 1)]
 	[InlineData(0, 1)]
 	[InlineData(-5, 1)]
 	[InlineData(5000, 1440)]
