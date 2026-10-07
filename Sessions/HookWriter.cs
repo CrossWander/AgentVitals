@@ -48,16 +48,18 @@ internal static class HookWriter
 		}
 
 		var file = Path.Combine(directory, id + ".json");
+		var cwd = (string?)payload["cwd"] ?? "";
 		var hookEvent = (string?)payload["hook_event_name"];
 
-		if (hookEvent == "SessionEnd")
-		{
-			File.Delete(file);
+		// SessionEnd не удаляет файл, а оставляет отметку: async-событие, запущенное перед выходом
+		// и финишировавшее после, иначе воскресило бы сессию. Отметку через минуту убирает трей.
+		var session = hookEvent == "SessionEnd"
+			? new Session(SessionState.Idle, null, cwd, at, Ended: true)
+			: Map(hookEvent, (string?)payload["notification_type"]) is { } state
+				? new Session(state, state == SessionState.Working ? (string?)payload["tool_name"] : null, cwd, at)
+				: null;
 
-			return;
-		}
-
-		if (Map(hookEvent, (string?)payload["notification_type"]) is not { } state)
+		if (session is null)
 		{
 			return;
 		}
@@ -69,13 +71,10 @@ internal static class HookWriter
 
 		try
 		{
-			if (Stale(Read(file), state, at))
+			if (Stale(Read(file), session))
 			{
 				return;
 			}
-
-			var tool = state == SessionState.Working ? (string?)payload["tool_name"] : null;
-			var session = new Session(state, tool, (string?)payload["cwd"] ?? "", at);
 
 			Directory.CreateDirectory(directory);
 			var temp = $"{file}.{Environment.ProcessId}.tmp";
@@ -105,10 +104,13 @@ internal static class HookWriter
 	/// Async-hooks финишируют не по порядку. Время старта процессов совпадает с точностью до тика таймера,
 	/// а из «ждёт» в «работает» без ответа человека не попасть — значит, это одно мгновение и «ждёт» главнее.
 	/// </remarks>
-	private static bool Stale(Session? recorded, SessionState state, long at) =>
+	private static bool Stale(Session? recorded, Session next) =>
 		recorded is not null
-		&& (recorded.Utc > at
-			|| (recorded.State == SessionState.Waiting && state != SessionState.Waiting && at - recorded.Utc < _sameMoment));
+		&& (recorded.Utc > next.Utc
+			|| (!next.Ended
+				&& recorded.State == SessionState.Waiting
+				&& next.State != SessionState.Waiting
+				&& next.Utc - recorded.Utc < _sameMoment));
 
 	// Пока трей читает файл (раз в секунду, доли миллисекунды), Windows не даёт подменить его переименованием.
 	private static void Replace(string temp, string file)

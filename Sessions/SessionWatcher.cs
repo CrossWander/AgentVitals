@@ -16,6 +16,9 @@ internal static class SessionWatcher
 	private static readonly TimeSpan _waitingStale = TimeSpan.FromHours(2);
 	private static readonly TimeSpan _idleForgotten = TimeSpan.FromHours(1);
 
+	// Отметка о закрытии нужна, пока могут финишировать async-hooks, запущенные перед выходом.
+	private static readonly TimeSpan _endedForgotten = TimeSpan.FromMinutes(1);
+
 	public static IReadOnlyList<LiveSession> Read(string directory, DateTime now)
 	{
 		if (!Directory.Exists(directory))
@@ -33,6 +36,17 @@ internal static class SessionWatcher
 			}
 
 			var age = now - session.Time;
+
+			if (session.Ended)
+			{
+				if (age > _endedForgotten)
+				{
+					Forget(file);
+				}
+
+				continue;
+			}
+
 			var state = Effective(session.State, age);
 
 			if (state == SessionState.Idle && age > _idleForgotten)

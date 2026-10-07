@@ -61,6 +61,18 @@ public class SessionWatcherTests
 	}
 
 	[Fact]
+	public void ForgetsEndedSessionsAfterAMinute() // отметке хватает минуты, чтобы опоздавшие hooks её увидели
+	{
+		using var temp = new TempDirectory();
+		File.WriteAllText(temp.File("fresh.json"), JsonSerializer.Serialize(new Session(SessionState.Idle, null, "C:\\x", _now.AddSeconds(-30).Ticks, Ended: true), HookWriter.Json));
+		File.WriteAllText(temp.File("old.json"), JsonSerializer.Serialize(new Session(SessionState.Idle, null, "C:\\x", _now.AddMinutes(-2).Ticks, Ended: true), HookWriter.Json));
+
+		Assert.Empty(SessionWatcher.Read(temp.Path, _now));
+		Assert.True(File.Exists(temp.File("fresh.json")));
+		Assert.False(File.Exists(temp.File("old.json")));
+	}
+
+	[Fact]
 	public void ReadsBranchFromParentRepository()
 	{
 		using var temp = new TempDirectory();

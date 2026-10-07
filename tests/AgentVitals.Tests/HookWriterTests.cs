@@ -92,13 +92,36 @@ public class HookWriterTests
 		JsonNode.Parse($$"""{ "session_id": "s1", "hook_event_name": "{{name}}", "tool_name": "Bash", "cwd": "C:\\x" }""")!;
 
 	[Fact]
-	public void SessionEndRemovesFile()
+	public void SessionEndHidesSession()
 	{
 		using var temp = new TempDirectory();
-		HookWriter.Apply(JsonNode.Parse("""{ "session_id": "s1", "hook_event_name": "SessionStart", "cwd": "C:\\x" }"""), temp.Path, at: 1);
-		HookWriter.Apply(JsonNode.Parse("""{ "session_id": "s1", "hook_event_name": "SessionEnd" }"""), temp.Path, at: 2);
+		var now = DateTime.UtcNow;
+		HookWriter.Apply(Event("SessionStart"), temp.Path, at: now.AddSeconds(-2).Ticks);
+		HookWriter.Apply(Event("SessionEnd"), temp.Path, at: now.AddSeconds(-1).Ticks);
 
-		Assert.False(File.Exists(temp.File("s1.json")));
+		Assert.Empty(SessionWatcher.Read(temp.Path, now));
+	}
+
+	[Fact]
+	public void EventFinishingAfterSessionEndDoesNotRevive() // async PostToolUse, запущенный перед выходом
+	{
+		using var temp = new TempDirectory();
+		var now = DateTime.UtcNow;
+		HookWriter.Apply(Event("SessionEnd"), temp.Path, at: now.AddSeconds(-1).Ticks);
+		HookWriter.Apply(Event("PostToolUse"), temp.Path, at: now.AddSeconds(-2).Ticks);
+
+		Assert.Empty(SessionWatcher.Read(temp.Path, now));
+	}
+
+	[Fact]
+	public void ResumedSessionComesBack() // claude --resume продолжает ту же сессию
+	{
+		using var temp = new TempDirectory();
+		var now = DateTime.UtcNow;
+		HookWriter.Apply(Event("SessionEnd"), temp.Path, at: now.AddMinutes(-5).Ticks);
+		HookWriter.Apply(Event("SessionStart"), temp.Path, at: now.AddSeconds(-1).Ticks);
+
+		Assert.Single(SessionWatcher.Read(temp.Path, now));
 	}
 
 	[Theory]
