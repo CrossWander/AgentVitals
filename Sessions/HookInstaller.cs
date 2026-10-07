@@ -124,6 +124,10 @@ internal static class HookInstaller
 	}
 
 	/// <summary>Убрать свои записи и только те контейнеры, что опустели из-за этого.</summary>
+	/// <remarks>
+	/// Пустой контейнер, в который мы писали, был ли он до нас — уже не узнать; для Claude Code
+	/// пустой и отсутствующий раздел значат одно и то же, поэтому такой удаляется.
+	/// </remarks>
 	internal static void Strip(JsonObject root)
 	{
 		if (root["hooks"] is not JsonObject hooks)
@@ -131,12 +135,16 @@ internal static class HookInstaller
 			return;
 		}
 
+		var emptiedAny = false;
+
 		foreach (var (name, node) in hooks.ToList())
 		{
 			if (node is not JsonArray groups)
 			{
 				continue;
 			}
+
+			var emptied = false;
 
 			foreach (var group in groups.OfType<JsonObject>().ToList())
 			{
@@ -151,16 +159,18 @@ internal static class HookInstaller
 				if (ours.Count > 0 && list.Count == 0)
 				{
 					groups.Remove(group);
+					emptied = true;
 				}
 			}
 
-			if (groups.Count == 0)
+			if (emptied && groups.Count == 0)
 			{
 				hooks.Remove(name);
+				emptiedAny = true;
 			}
 		}
 
-		if (hooks.Count == 0)
+		if (emptiedAny && hooks.Count == 0)
 		{
 			root.Remove("hooks");
 		}
@@ -171,10 +181,10 @@ internal static class HookInstaller
 		// Разбор первым: испорченный файл бросит здесь, до бэкапа и до записи.
 		var root = File.Exists(settings) ? Load(settings) : new JsonObject();
 
-		var backup = settings + ".agentvitals.bak";
-		if (File.Exists(settings) && !File.Exists(backup))
+		// Копия перед каждой записью: перезапись теряет комментарии, а человек мог дописать их после прошлой.
+		if (File.Exists(settings))
 		{
-			File.Copy(settings, backup);
+			File.Copy(settings, settings + ".agentvitals.bak", overwrite: true);
 		}
 
 		change(root);

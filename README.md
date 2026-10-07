@@ -38,10 +38,16 @@ Agents whose credential file is missing are simply not shown.
 
 ## Live sessions
 
-Settings → *Live sessions* → **Connect** adds AgentVitals hooks to `~/.claude/settings.json`
-(a backup is kept as `settings.json.agentvitals.bak`). Each hook runs `AgentVitals.exe hook`
-in the background, which writes one small state file per session into `sessions\` next to the exe.
-**Disconnect** removes only AgentVitals' entries. If you move the exe, settings say so — reconnect.
+Settings → *Live sessions* → **Connect** adds AgentVitals hooks to `~/.claude/settings.json`.
+Each hook runs `AgentVitals.exe hook` in the background, which writes one small state file per
+session into `sessions\` next to the exe. **Disconnect** removes only AgentVitals' entries.
+
+- Claude Code reads hooks when a session starts: sessions that were already open show up after
+  you restart them.
+- AgentVitals rewrites `settings.json` as plain JSON, so comments in it are not kept. Before every
+  change the file is copied to `settings.json.agentvitals.bak`, comments included.
+- If you move the exe, settings say so — reconnect. Before deleting the exe, press **Disconnect**:
+  otherwise Claude Code keeps calling a program that is no longer there.
 
 ## Files
 

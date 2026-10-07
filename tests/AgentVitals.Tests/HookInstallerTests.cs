@@ -101,6 +101,47 @@ public class HookInstallerTests
 	}
 
 	[Fact]
+	public void UninstallKeepsContainersThatWereEmptyBefore()
+	{
+		using var temp = new TempDirectory();
+		var settings = temp.File("settings.json");
+		File.WriteAllText(settings, """{ "hooks": { "PreCompact": [] } }"""); // в PreCompact мы не пишем
+		var original = HookInstaller.Load(settings);
+
+		HookInstaller.Install(settings, _exe);
+		HookInstaller.Uninstall(settings);
+
+		Assert.True(JsonNode.DeepEquals(original, HookInstaller.Load(settings)));
+	}
+
+	[Fact]
+	public void UninstallKeepsEmptyHooksObject()
+	{
+		using var temp = new TempDirectory();
+		var settings = temp.File("settings.json");
+		File.WriteAllText(settings, """{ "model": "opus", "hooks": {} }""");
+
+		HookInstaller.Uninstall(settings);
+
+		Assert.NotNull(HookInstaller.Load(settings)["hooks"]);
+	}
+
+	[Fact]
+	public void BackupHoldsTheFileBeforeTheLatestChange() // комментарии при перезаписи теряются — их хранит копия
+	{
+		using var temp = new TempDirectory();
+		var settings = temp.File("settings.json");
+		File.WriteAllText(settings, _foreign);
+		HookInstaller.Install(settings, _exe);
+
+		var edited = File.ReadAllText(settings).Replace("\"opus\"", "\"sonnet\" /* поменял руками */");
+		File.WriteAllText(settings, edited);
+		HookInstaller.Uninstall(settings);
+
+		Assert.Equal(edited, File.ReadAllText(settings + ".agentvitals.bak"));
+	}
+
+	[Fact]
 	public void MovedExeIsReported()
 	{
 		using var temp = new TempDirectory();
