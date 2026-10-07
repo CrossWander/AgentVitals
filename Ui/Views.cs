@@ -27,7 +27,7 @@ internal sealed record CardView(
 	public string Display => Value + Unit;
 }
 
-internal sealed record ProviderView(string Name, string Info, IReadOnlyList<CardView> Cards, string Error)
+internal sealed record ProviderView(string Name, string Info, string Updated, IReadOnlyList<CardView> Cards, string Error)
 {
 	/// <summary>Для карточки по наведению — только окна, которые блокируют всю работу.</summary>
 	public IReadOnlyList<CardView> Glance => [.. Cards.Where(card => card.Limiting)];
@@ -42,7 +42,6 @@ internal sealed record Vitals(
 	string HealthText,
 	IBrush HealthBrush,
 	IReadOnlyList<ProviderView> Providers,
-	string Updated,
 	string StatusText,
 	IBrush StatusBrush,
 	IReadOnlyList<SessionView> Sessions,
@@ -82,7 +81,6 @@ internal static class Views
 			health == Health.Unknown ? Text.HealthName(health) : Text.Badge(tightest),
 			Brush(Tone(health)),
 			[.. available.Select(state => Provider(state, now))],
-			Text.Ago(available.Max(state => state.Updated), now),
 			Text.Status(poller.Status),
 			Brush(poller.Status is { } status ? Tone(status.Health) : "Muted"),
 			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session), Brush(Dot(session.State))))],
@@ -108,7 +106,7 @@ internal static class Views
 		}
 	}
 
-	private static ProviderView Provider(ProviderState state, DateTime now)
+	internal static ProviderView Provider(ProviderState state, DateTime now)
 	{
 		List<CardView> cards = [];
 
@@ -124,7 +122,7 @@ internal static class Views
 
 		var info = string.Join(" · ", new[] { state.Snapshot?.Plan, state.Snapshot?.Account }.Where(text => !string.IsNullOrEmpty(text)));
 
-		return new(state.Provider.Name, info, cards, state.Error is { } error ? Text.Error(error) : "");
+		return new(state.Provider.Name, info, Text.Ago(state.Updated, now), cards, state.Error is { } error ? Text.Error(error) : "");
 	}
 
 	private static CardView Card(QuotaWindow window, DateTime now)

@@ -100,7 +100,7 @@ internal partial class Popover : Window
 		var provider = _vitals?.Providers.ElementAtOrDefault(_selected);
 
 		Cards.ItemsSource = provider?.Cards;
-		InfoLine.Text = string.Join(" · ", new[] { _vitals?.Updated, provider?.Info }.Where(text => !string.IsNullOrEmpty(text)));
+		InfoLine.Text = string.Join(" · ", new[] { provider?.Updated, provider?.Info }.Where(text => !string.IsNullOrEmpty(text)));
 		ErrorLine.Text = provider?.Error;
 		ErrorLine.IsVisible = provider?.HasError == true;
 	}
