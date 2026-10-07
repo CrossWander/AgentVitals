@@ -49,7 +49,7 @@ public class SharedFileTests
 		HookWriter.Apply(Stop, temp.Path, at: 1);
 
 		var reader = SharedFile.Open(file);
-		var write = Task.Run(() => HookWriter.Apply(Stop, temp.Path, at: 2));
+		var write = Task.Run(() => HookWriter.Apply(Stop, temp.Path, at: 2), TestContext.Current.CancellationToken);
 		await Task.Delay(30, TestContext.Current.CancellationToken);
 		await reader.DisposeAsync();
 		await write;

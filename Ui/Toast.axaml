@@ -11,7 +11,7 @@
         <Grid ColumnDefinitions="Auto,*">
             <Image Source="avares://AgentVitals/app.png" Width="36" Height="36" VerticalAlignment="Top"/>
             <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="2">
-                <TextBlock Text="AgentVitals" FontWeight="Bold"/>
+                <TextBlock Name="Heading" Text="AgentVitals" FontWeight="Bold"/>
                 <TextBlock Name="Message" Classes="caption" TextWrapping="Wrap"/>
             </StackPanel>
         </Grid>

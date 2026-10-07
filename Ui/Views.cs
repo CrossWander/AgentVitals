@@ -63,6 +63,14 @@ internal static class Views
 			.ToList();
 
 		var health = Quota.Worst(available.Select(state => state.Health));
+
+		// Шапка говорит о самом узком окне: исчерпано оно — «исчерпано», как на его карточке.
+		var tightest = available
+			.Where(state => state.Health != Health.Unknown)
+			.Select(state => Quota.Bottleneck(state.Snapshot!.Windows)?.Used ?? 0)
+			.DefaultIfEmpty(0)
+			.Max();
+
 		var live = SessionWatcher.Overall(sessions);
 		var focus = sessions.FirstOrDefault(session => session.State == live);
 
@@ -71,7 +79,7 @@ internal static class Views
 			: "";
 
 		return new(
-			Text.HealthName(health),
+			health == Health.Unknown ? Text.HealthName(health) : Text.Badge(tightest),
 			Brush(Tone(health)),
 			[.. available.Select(state => Provider(state, now))],
 			Text.Ago(available.Max(state => state.Updated), now),
@@ -133,7 +141,7 @@ internal static class Views
 			Text.Title(window).ToUpper(Localization.Culture),
 			Shape(icon),
 			Brush(tint),
-			Text.HealthName(health),
+			Text.Badge(window.Used),
 			Brush(Badge(health)),
 			Math.Round(window.Used).ToString(CultureInfo.InvariantCulture),
 			"%",
@@ -198,7 +206,7 @@ internal static class Views
 		_ => throw new NotImplementedException("SessionState switch error"),
 	};
 
-	private static IBrush Brush(string key) => Find(key) as IBrush ?? Brushes.Gray;
+	internal static IBrush Brush(string key) => Find(key) as IBrush ?? Brushes.Gray;
 
 	private static Geometry? Shape(string key) => Find(key) as Geometry;
 

@@ -24,6 +24,7 @@
     <x:String x:Key="langHealthWarning">УВАГА</x:String>
     <x:String x:Key="langHealthCritical">КРИТИЧНО</x:String>
     <x:String x:Key="langHealthUnknown">НЕМАЄ ДАНИХ</x:String>
+    <x:String x:Key="langHealthExhausted">ВИЧЕРПАНО</x:String>
     <x:String x:Key="langNoAgents">Агентів не знайдено. Встанови Claude Code, Codex або Gemini CLI.</x:String>
     <x:String x:Key="langErrorExpired">Вхід минув — відкрий {0}, щоб оновити</x:String>
     <x:String x:Key="langErrorRateLimited">Сервер просить питати рідше, повтор о {0}</x:String>
@@ -59,7 +60,9 @@
     <x:String x:Key="langHooksConnect">Підключити</x:String>
     <x:String x:Key="langHooksDisconnect">Відключити</x:String>
     <x:String x:Key="langHooksError">Не вдалося змінити settings.json: {0}</x:String>
-    <x:String x:Key="langToastQuota">{0}: {1} — використано {2}%</x:String>
+    <x:String x:Key="langAlertImportant">Важливо · запас закінчується</x:String>
+    <x:String x:Key="langAlertCritical">Критично · ліміт майже вичерпано</x:String>
+    <x:String x:Key="langAlertLeft">{0} · {1}: залишилось {2}%</x:String>
     <x:String x:Key="langToastStatus">Anthropic: {0}</x:String>
     <x:String x:Key="langToastStatusOk">Anthropic: усе знову працює</x:String>
 </ResourceDictionary>

@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 
 namespace AgentVitals;
@@ -31,8 +32,24 @@ internal partial class Toast : Window
 
 	public event Action? Clicked;
 
-	public void Say(string message, PixelRect anchor)
+	/// <summary>Показать уведомление у значка.</summary>
+	/// <param name="message">Текст.</param>
+	/// <param name="anchor">Где значок.</param>
+	/// <param name="title">Заголовок; без него — имя программы.</param>
+	/// <param name="accent">Цвет заголовка: насколько серьёзно; без него — обычный текст.</param>
+	public void Say(string message, PixelRect anchor, string? title = null, IBrush? accent = null)
 	{
+		Heading.Text = title ?? "AgentVitals";
+
+		if (accent is null)
+		{
+			Heading.ClearValue(TextBlock.ForegroundProperty);
+		}
+		else
+		{
+			Heading.Foreground = accent;
+		}
+
 		Message.Text = message;
 		_anchor = anchor;
 		Show();

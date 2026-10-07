@@ -43,6 +43,24 @@ internal static class Text
 		_ => Localization.Get("langErrorParse"),
 	};
 
+	/// <summary>Плашка окна: по проценту, а исчерпанное — «исчерпано», а не «критично».</summary>
+	public static string Badge(double used) =>
+		Math.Round(used) >= 100 ? Localization.Get("langHealthExhausted") : HealthName(Quota.Rate(used));
+
+	/// <summary>Тост о пороге: заголовок — насколько серьёзно, текст — что, сколько осталось и когда сброс.</summary>
+	public static (string Title, string Message) Alert(string provider, QuotaAlert alert, DateTime now)
+	{
+		var left = Math.Max(0, 100 - Math.Round(alert.Window.Used));
+		var message = Localization.Format("langAlertLeft", provider, Title(alert.Window), left);
+
+		if (Until(alert.Window.ResetsAt, now) is { Length: > 0 } resets)
+		{
+			message += ", " + resets;
+		}
+
+		return (Localization.Get(alert.Critical ? "langAlertCritical" : "langAlertImportant"), message);
+	}
+
 	public static string HealthName(Health health) => Localization.Get(health switch
 	{
 		Health.Unknown => "langHealthUnknown",
@@ -79,9 +97,6 @@ internal static class Text
 		status.Indicator == "none"
 			? Localization.Get("langToastStatusOk")
 			: Localization.Format("langToastStatus", status.Incident ?? status.Description);
-
-	public static string QuotaToast(string provider, QuotaWindow window) =>
-		Localization.Format("langToastQuota", provider, Title(window), Math.Round(window.Used));
 
 	public static string Money(decimal amount, string currency)
 	{

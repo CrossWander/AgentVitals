@@ -9,10 +9,13 @@ Ukrainian and Russian, light and dark.
 ## What it shows
 
 - **Quotas.** The session, the week and per-model weekly limits, each as a card with the
-  percentage used, a bar and the time left until it resets. Extra usage, if enabled.
+  percentage used, a bar and the time left until it resets. A window at 100% says *used up*.
+  Extra usage, if enabled.
 - **The tray icon** is a pulse line coloured by the window that limits you most: green under 50%,
   amber to 80%, red above, grey when there is no data. An exhausted week turns it red even with an
-  empty session. A toast comes once when the session or the week reaches 90%, and again only
+  empty session.
+- **Toasts** when the session or the week reaches 75% (*important*, a quarter left) and 90%
+  (*critical*, almost used up), with the time until it resets. Each comes once and again only
   after that window resets.
 - **Live sessions.** With the hooks connected, the pulse runs while Claude is working and a blue
   dot blinks while it waits for your permission.

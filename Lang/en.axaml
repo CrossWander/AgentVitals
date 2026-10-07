@@ -24,6 +24,7 @@
     <x:String x:Key="langHealthWarning">WARNING</x:String>
     <x:String x:Key="langHealthCritical">CRITICAL</x:String>
     <x:String x:Key="langHealthUnknown">NO DATA</x:String>
+    <x:String x:Key="langHealthExhausted">USED UP</x:String>
     <x:String x:Key="langNoAgents">No agents found. Install Claude Code, Codex or Gemini CLI.</x:String>
     <x:String x:Key="langErrorExpired">Sign-in expired — open {0} to renew it</x:String>
     <x:String x:Key="langErrorRateLimited">The server asks to check less often, retrying at {0}</x:String>
@@ -59,7 +60,9 @@
     <x:String x:Key="langHooksConnect">Connect</x:String>
     <x:String x:Key="langHooksDisconnect">Disconnect</x:String>
     <x:String x:Key="langHooksError">Could not change settings.json: {0}</x:String>
-    <x:String x:Key="langToastQuota">{0}: {1} — {2}% used</x:String>
+    <x:String x:Key="langAlertImportant">Important · running low</x:String>
+    <x:String x:Key="langAlertCritical">Critical · almost used up</x:String>
+    <x:String x:Key="langAlertLeft">{0} · {1}: {2}% left</x:String>
     <x:String x:Key="langToastStatus">Anthropic: {0}</x:String>
     <x:String x:Key="langToastStatusOk">Anthropic: all systems operational again</x:String>
 </ResourceDictionary>

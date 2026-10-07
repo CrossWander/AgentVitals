@@ -147,19 +147,20 @@ internal sealed class TrayApp
 		ShowIcon();
 	}
 
-	/// <summary>Тост, когда сессия или неделя дошли до 90% или сменился статус Anthropic.</summary>
+	/// <summary>Тост, когда сессия или неделя дошли до 75% или 90% или сменился статус Anthropic.</summary>
 	private void Notify()
 	{
-		var reached = _poller.Providers
+		var alerts = _poller.Providers
 			.Where(state => state.Provider.Available && state.Snapshot is not null)
-			.SelectMany(state => _alarm.Check(state.Provider.Name, state.Snapshot!.Windows).Select(window => (state.Provider.Name, window)))
+			.SelectMany(state => _alarm.Check(state.Provider.Name, state.Snapshot!.Windows).Select(alert => (state.Provider.Name, alert)))
 			.ToList();
 
-		// Два окна за один опрос почти не доходят до порога — тост одного, того, что ближе к потолку.
-		if (reached.Count > 0)
+		// Два окна за один опрос почти не доходят до порога — тост одного, самого серьёзного.
+		if (alerts.Count > 0)
 		{
-			var (provider, window) = reached.MaxBy(item => item.window.Used);
-			_toast.Say(Text.QuotaToast(provider, window), Anchor());
+			var (provider, alert) = alerts.MaxBy(item => (item.alert.Critical, item.alert.Window.Used));
+			var (title, message) = Text.Alert(provider, alert, DateTime.UtcNow);
+			_toast.Say(message, Anchor(), title, Views.Brush(alert.Critical ? "Bad" : "Warn"));
 		}
 
 		if (_poller.Status is { } status)

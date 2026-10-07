@@ -36,35 +36,59 @@ internal sealed class RateLimitedException(DateTime until) : Exception($"rate li
 	public DateTime Until { get; } = until;
 }
 
-/// <summary>Один тост за цикл окна: сессия или неделя дошли до 90%. Порог снова взводится после сброса.</summary>
+/// <summary>Окно дошло до порога: осталась четверть (важно) или десятая часть (критично).</summary>
+internal sealed record QuotaAlert(QuotaWindow Window, bool Critical);
+
+/// <summary>
+/// Тосты по сессии и неделе: «важно» при 75%, «критично» при 90%, каждый раз за цикл окна.
+/// Ниже 75% — после сброса — пороги взводятся снова.
+/// </summary>
 internal sealed class QuotaAlarm
 {
-	private const double _threshold = 90;
+	private const double _important = 75;
+	private const double _critical = 90;
 
-	private readonly HashSet<string> _fired = [];
+	// Окно → уже сказали «критично» (true) или только «важно» (false).
+	private readonly Dictionary<string, bool> _fired = [];
 	private readonly HashSet<string> _seen = [];
 
-	/// <summary>Окна провайдера, которые только что дошли до порога; первый снимок — точка отсчёта.</summary>
-	public IReadOnlyList<QuotaWindow> Check(string provider, IReadOnlyList<QuotaWindow> windows)
+	/// <summary>Окна провайдера, которые только что дошли до следующего порога; первый снимок — точка отсчёта.</summary>
+	/// <param name="provider">Имя агента: у каждого свои окна.</param>
+	/// <param name="windows">Окна из свежего снимка.</param>
+	/// <returns>По тревоге на окно, только о самом высоком из пройденных порогов.</returns>
+	public IReadOnlyList<QuotaAlert> Check(string provider, IReadOnlyList<QuotaWindow> windows)
 	{
 		var first = _seen.Add(provider);
-		var reached = new List<QuotaWindow>();
+		var alerts = new List<QuotaAlert>();
 
 		foreach (var window in windows.Where(window => window.Limiting))
 		{
 			var key = $"{provider}/{window.Key}/{window.Label}";
 
-			if (window.Used < _threshold)
+			if (window.Used < _important)
 			{
 				_fired.Remove(key);
+
+				continue;
 			}
-			else if (_fired.Add(key) && !first)
+
+			var critical = window.Used >= _critical;
+
+			// Уже сказали то же или больше.
+			if (_fired.TryGetValue(key, out var said) && (said || !critical))
 			{
-				reached.Add(window);
+				continue;
+			}
+
+			_fired[key] = critical;
+
+			if (!first)
+			{
+				alerts.Add(new(window, critical));
 			}
 		}
 
-		return reached;
+		return alerts;
 	}
 }
 
