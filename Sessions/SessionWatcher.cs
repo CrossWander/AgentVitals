@@ -76,6 +76,16 @@ internal static class SessionWatcher
 
 		try
 		{
+			// Сетевую папку не трогаем: недоступный сервер держит каждую проверку секунды,
+			// а ветка читается раз в секунду в потоке окна.
+			// ponytail: у сессий на сетевых дисках нет ветки; понадобится — читать в фоне с кэшем.
+			if (cwd.StartsWith(@"\\", StringComparison.Ordinal)
+				|| cwd.StartsWith("//", StringComparison.Ordinal)
+				|| new DriveInfo(cwd).DriveType == DriveType.Network)
+			{
+				return null;
+			}
+
 			for (var directory = new DirectoryInfo(cwd); directory is not null; directory = directory.Parent)
 			{
 				var git = Path.Combine(directory.FullName, ".git");

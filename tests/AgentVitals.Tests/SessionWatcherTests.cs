@@ -95,4 +95,15 @@ public class SessionWatcherTests
 
 	[Fact]
 	public void NoBranchForEmptyCwd() => Assert.Null(SessionWatcher.Branch(""));
+
+	[Fact]
+	public void SkipsNetworkFolders() // недоступный сервер подвесил бы трей: ветку читаем раз в секунду в потоке окна
+	{
+		// Имя каждый раз новое: Windows запоминает, что сервера нет, и повторная проверка уже быстрая.
+		var cwd = $@"\\av{Guid.NewGuid().ToString("N")[..12]}\share\repo";
+		var watch = System.Diagnostics.Stopwatch.StartNew();
+
+		Assert.Null(SessionWatcher.Branch(cwd));
+		Assert.True(watch.ElapsedMilliseconds < 300, $"took {watch.ElapsedMilliseconds} ms");
+	}
 }
