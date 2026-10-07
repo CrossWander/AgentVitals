@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Xunit;
 
@@ -109,14 +110,11 @@ public class ClaudeProviderTests
 	}
 
 	[Fact]
-	public void SurvivesNulls()
+	public void NothingUsableIsParseError() // иначе пустой снимок затёр бы последний удачный: серый значок без объяснений
 	{
 		var usage = JsonNode.Parse("""{ "limits": null, "five_hour": null, "seven_day": null, "spend": null, "extra_usage": null }""")!;
 
-		var snapshot = ClaudeProvider.Parse(usage, "", null);
-
-		Assert.Empty(snapshot.Windows);
-		Assert.Null(snapshot.Extra);
+		Assert.Throws<JsonException>(() => ClaudeProvider.Parse(usage, "", null));
 	}
 
 	[Fact]

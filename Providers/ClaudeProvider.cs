@@ -85,7 +85,15 @@ internal sealed class ClaudeProvider : IProvider
 			Legacy(windows, usage["seven_day"], "langWindowWeek");
 		}
 
-		return new(plan, account, windows, Extra(usage));
+		var extra = Extra(usage);
+
+		// Ответ сменил форму: ошибка разбора оставит прежний снимок и скажет об этом в окне и в журнале.
+		if (windows.Count == 0 && extra is null)
+		{
+			throw new JsonException("usage: no quota windows");
+		}
+
+		return new(plan, account, windows, extra);
 	}
 
 	// «Fable 5» и «Fable» — одна модель: в карточке хватает первого слова.
