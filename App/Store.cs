@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace AgentVitals;
 
-/// <summary>Всё, что программа помнит между запусками, в одном config.json рядом с exe.</summary>
+/// <summary>Всё, что программа помнит между запусками, в одном config.json в папке данных (Paths.Data).</summary>
 internal static class Store
 {
 	internal sealed class Data

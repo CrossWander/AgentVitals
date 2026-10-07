@@ -6,7 +6,7 @@ using System.Text;
 
 namespace AgentVitals;
 
-/// <summary>Журнал рядом с программой: что не получилось и что человек поменял.</summary>
+/// <summary>Журнал в папке данных: что не получилось и что человек поменял.</summary>
 internal static class Journal
 {
 	private const string _timeFormat = "yyyy-MM-dd HH:mm:ss";

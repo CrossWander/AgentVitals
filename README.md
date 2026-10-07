@@ -45,7 +45,8 @@ in the background, which writes one small state file per session into `sessions\
 ## Files
 
 Everything lives next to the exe: `config.json` (settings), `log.txt` (two days of errors and
-changes), `sessions\` (session states). Start with Windows is a value in
+changes), `sessions\` (session states). If that folder is read-only (say, under `Program Files`),
+they go to `%LOCALAPPDATA%\AgentVitals` instead. Start with Windows is a value in
 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
 
 Windows 10 may put a new tray icon into the hidden area — drag it onto the taskbar once.
