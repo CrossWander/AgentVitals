@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
@@ -88,6 +89,29 @@ public class PollerTests
 		Assert.True(state.Available);
 	}
 
+	[Fact]
+	public async Task BrokenStatisticsDoNotStopPolling() // тик опроса — async void: исключение уронило бы программу
+	{
+		using var http = new HttpClient();
+		var state = new ProviderState(new WithLog(new Broken()));
+
+		await state.ReadUsageAsync(http, _now);
+
+		Assert.Null(state.Days);
+	}
+
+	[Fact]
+	public async Task StatisticsComeFromTheAgentsLog()
+	{
+		using var http = new HttpClient();
+		IReadOnlyList<UsageDay> days = [new(new DateOnly(2026, 10, 7), 1, 2, 3, 4, null, false, TimeSpan.Zero)];
+		var state = new ProviderState(new WithLog(new Fixed(days)));
+
+		await state.ReadUsageAsync(http, _now);
+
+		Assert.Same(days, state.Days);
+	}
+
 	[Theory]
 	[InlineData(60, 60)]
 	[InlineData(30, 60)] // прежний вариант 30 с: сервер на нём отвечал 429
@@ -107,6 +131,34 @@ public class PollerTests
 
 		public string? Dashboard => null;
 
+		public IUsageLog? Usage => null;
+
 		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => throw new TokenExpiredException(Cli);
+	}
+
+	private sealed class WithLog(IUsageLog log) : IProvider
+	{
+		public string Name => "Fake";
+
+		public string Cli => "fake";
+
+		public string Credentials => "";
+
+		public string? Dashboard => null;
+
+		public IUsageLog? Usage => log;
+
+		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => throw new NotSupportedException();
+	}
+
+	private sealed class Broken : IUsageLog
+	{
+		public Task<IReadOnlyList<UsageDay>> ReadAsync(HttpClient http, DateTime now, CancellationToken cancellation) =>
+			throw new InvalidOperationException("ошибка в разборе");
+	}
+
+	private sealed class Fixed(IReadOnlyList<UsageDay> days) : IUsageLog
+	{
+		public Task<IReadOnlyList<UsageDay>> ReadAsync(HttpClient http, DateTime now, CancellationToken cancellation) => Task.FromResult(days);
 	}
 }

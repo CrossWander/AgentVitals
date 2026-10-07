@@ -20,6 +20,8 @@ Ukrainian and Russian, light and dark.
 - **Live sessions.** With the hooks connected, the pulse runs while Claude is working and a blue
   dot blinks while it waits for your permission.
 - **Anthropic status** from status.claude.com, with a toast when it changes.
+- **Usage statistics** (Claude). Today's cost, tokens and working time, each with yesterday's
+  number, and a 30-day chart of cost, tokens or cache — see [Usage statistics](#usage-statistics).
 
 Hover the icon for a quick card, click it for the full popover, right-click for the menu. The popover stays open while you work in other windows: close it with ✕, another click on the icon or Esc.
 
@@ -39,6 +41,20 @@ minute by default (2, 5 or 10 minutes in settings; more often the server answers
 
 Agents whose credential file is missing are simply not shown.
 
+## Usage statistics
+
+Under the limits, the Claude tab adds today's numbers and a 30-day chart. They come from Claude
+Code's own logs in `~/.claude/projects` (subagents included), read on this machine only:
+AgentVitals takes the token counts of model answers and keeps nothing else. Each answer counts
+once — Claude Code writes the same answer several times while it streams.
+
+- **Cost** is what the tokens would cost at Anthropic's API list prices, on a subscription too.
+  Prices come from the [official pricing page](https://platform.claude.com/docs/en/about-claude/pricing)
+  once a day and are kept in `prices.md` next to the settings, so cost works offline. A model the
+  page doesn't list yet gets no price rather than a guess. Fast mode is counted at standard prices.
+- **Working time** adds up stretches of activity; a pause longer than 30 minutes starts a new one.
+- Codex and Gemini have no statistics yet: the slot is there (`IProvider.Usage`), the reader isn't.
+
 ## Live sessions
 
 Settings → *Live sessions* → **Connect** adds AgentVitals hooks to `~/.claude/settings.json`.
@@ -55,7 +71,7 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
 ## Files
 
 Everything lives next to the exe: `config.json` (settings), `log.txt` (two days of errors and
-changes), `sessions\` (session states). If that folder is read-only (say, under `Program Files`),
+changes), `sessions\` (session states), `prices.md` (Anthropic's price list). If that folder is read-only (say, under `Program Files`),
 they go to `%LOCALAPPDATA%\AgentVitals` instead. Start with Windows is a value in
 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
 

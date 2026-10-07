@@ -29,6 +29,8 @@ internal sealed class ClaudeProvider : IProvider
 
 	public string? Dashboard => "https://claude.ai/settings/usage";
 
+	public IUsageLog? Usage { get; } = new ClaudeLog();
+
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{

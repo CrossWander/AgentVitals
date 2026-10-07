@@ -24,11 +24,16 @@ internal sealed class ProviderState(IProvider provider)
 
 	public DateTime? Updated { get; set; }
 
+	/// <summary>Расход по дням из логов агента; null — логов у агента нет или первое чтение ещё идёт.</summary>
+	public IReadOnlyList<UsageDay>? Days { get; private set; }
+
 	/// <summary>Начало тика, в котором провайдера спрашивали последний раз.</summary>
 	public DateTime Started { get; set; } = DateTime.MinValue;
 
 	// Время записи файла входа, когда вход отклонили: пока файл тот же, спрашивать снова бесполезно.
 	private DateTime? _rejected;
+
+	private string? _usageError;
 
 	/// <summary>Запомнить исход запроса; null — удача.</summary>
 	/// <param name="error">Ошибка запроса или null.</param>
@@ -38,6 +43,29 @@ internal sealed class ProviderState(IProvider provider)
 	{
 		Error = error;
 		_rejected = error is TokenExpiredException ? credentials : null;
+	}
+
+	/// <summary>Дочитать логи агента. Статистика вторична: её сбой не должен ронять тик опроса — он async void.</summary>
+	public async Task ReadUsageAsync(HttpClient http, DateTime now)
+	{
+		if (Provider.Usage is not { } log)
+		{
+			return;
+		}
+
+		try
+		{
+			Days = await log.ReadAsync(http, now, CancellationToken.None);
+		}
+		catch (Exception exception)
+		{
+			if (_usageError != exception.GetType().Name)
+			{
+				Journal.Add($"{Provider.Name} usage: {exception.GetType().Name}: {exception.Message}");
+			}
+
+			_usageError = exception.GetType().Name;
+		}
 	}
 
 	/// <summary>Агента установили или удалили, пока программа работает.</summary>
@@ -142,6 +170,12 @@ internal sealed class Poller
 			if (force || now >= _nextStatus)
 			{
 				await FetchStatusAsync(now);
+			}
+
+			// Статистика — после квот и статуса: первое чтение логов занимает секунды.
+			foreach (var state in Available)
+			{
+				await state.ReadUsageAsync(_http, now);
 			}
 		}
 		finally
