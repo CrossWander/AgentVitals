@@ -20,7 +20,7 @@ internal static class Store
 		public int IntervalSeconds { get; set; } = 60;
 	}
 
-	private static readonly string _path = Path.Combine(AppContext.BaseDirectory, "config.json");
+	private static readonly string _path = Path.Combine(Paths.Data, "config.json");
 
 	// Файл открывает и правит человек: с отступами, кириллицей и терпимо к комментариям.
 	private static readonly JsonSerializerOptions _format = new()

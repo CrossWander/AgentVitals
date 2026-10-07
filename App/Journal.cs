@@ -16,7 +16,7 @@ internal static class Journal
 	private const int _keepLines = 500;
 	private const long _sizeLimit = 1_000_000;
 
-	private static readonly string _path = Path.Combine(AppContext.BaseDirectory, "log.txt");
+	private static readonly string _path = Path.Combine(Paths.Data, "log.txt");
 
 	public static void Add(string message)
 	{
