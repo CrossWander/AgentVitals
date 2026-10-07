@@ -1,0 +1,15 @@
+bin/
+obj/
+
+# файлы, которые программа создаёт рядом с собой при запуске
+config.json
+log.txt
+sessions/
+
+# готовый портабельный exe нужен в репозитории, спутники сборки — нет
+release/*
+!release/AgentVitals.exe
+
+# служебные файлы Visual Studio
+.vs/
+*.user
