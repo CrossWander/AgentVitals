@@ -104,4 +104,31 @@ internal static class Text
 
 		return currency == "USD" ? "$" + number : $"{number} {currency}";
 	}
+
+	/// <summary>Стоимость или «—», если цен нет.</summary>
+	public static string Cost(decimal? cost) => cost is { } amount ? Money(amount, "USD") : "—";
+
+	/// <summary>Токены коротко: «152,3 млн», «12,4 тыс».</summary>
+	public static string Tokens(long count)
+	{
+		var (key, value) = Scale(count);
+
+		return Localization.Format(key, value.ToString("0.#", Localization.Culture));
+	}
+
+	internal static (string Key, double Value) Scale(long count) =>
+		count >= 1_000_000_000 ? ("langBillions", count / 1e9)
+		: count >= 1_000_000 ? ("langMillions", count / 1e6)
+		: count >= 1_000 ? ("langThousands", count / 1e3)
+		: ("langUnits", count);
+
+	/// <summary>Время работы: «3 ч 12 мин», меньше часа — минуты; ноль — честные «0 мин», а не «1 мин», как у Span.</summary>
+	public static string Working(TimeSpan span) =>
+		span.TotalHours >= 1
+			? Localization.Format("langHoursMinutes", (int)span.TotalHours, span.Minutes)
+			: Localization.Format("langMinutes", span.Minutes);
+
+	/// <summary>Строка дня для графика: «7 окт · $12.34 · 152,3 млн · 3 ч 12 мин».</summary>
+	public static string DayLine(UsageDay day) =>
+		string.Join(" · ", day.Date.ToString("d MMM", Localization.Culture), Cost(day.Cost), Tokens(day.Total), Working(day.Working));
 }
