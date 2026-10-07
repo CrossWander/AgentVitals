@@ -23,7 +23,8 @@ internal sealed unsafe partial class Tray : IDisposable
 	private const uint _flags = 0x1 | 0x2;        // NIF_MESSAGE | NIF_ICON; без NIF_TIP — системной подсказки нет
 	private const int _mouseMove = 0x0200;
 	private const int _leftUp = 0x0202;
-	private const int _contextMenu = 0x007B;      // правый щелчок в версии 4
+	private const int _contextMenu = 0x007B;      // правый щелчок или Shift+F10 в версии 4
+	private const int _keySelect = 0x0401;        // NIN_KEYSELECT: Win+B, стрелки, Enter или пробел
 	private const uint _popupStyle = 0x80000000;  // WS_POPUP; окно никогда не показывается
 	private const int _smallIcon = 49;            // SM_CXSMICON
 
@@ -63,12 +64,29 @@ internal sealed unsafe partial class Tray : IDisposable
 
 	public event Action? RightClicked;
 
+	/// <summary>Значок выбрали с клавиатуры. Enter оболочка шлёт дважды — поэтому открыть, а не переключить.</summary>
+	public event Action? KeySelected;
+
 	/// <summary>Сторона значка трея для текущего масштаба экрана, в точках.</summary>
-	public static int IconSize => GetSystemMetricsForDpi(_smallIcon, GetDpiForSystem());
+	public static int IconSize => GetSystemMetricsForDpi(_smallIcon, TaskbarDpi());
 
 	/// <summary>Панель задач тёмная: от этого зависит, какие оттенки на ней читаются.</summary>
 	public static bool DarkTaskbar =>
 		Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "SystemUsesLightTheme", 0) is not 1;
+
+	// Масштаб монитора с панелью задач, а не системный: тот запоминается при входе в Windows,
+	// и после смены масштаба или переноса панели на другой монитор значок рисовался бы не в размер.
+	private static uint TaskbarDpi()
+	{
+		const uint nearest = 2;      // MONITOR_DEFAULTTONEAREST
+		const int effective = 0;     // MDT_EFFECTIVE_DPI
+
+		var taskbar = FindWindowW("Shell_TrayWnd", null);
+
+		return taskbar != IntPtr.Zero && GetDpiForMonitor(MonitorFromWindow(taskbar, nearest), effective, out var dpi, out _) == 0
+			? dpi
+			: GetDpiForSystem();
+	}
 
 	public static PixelPoint Cursor() => GetCursorPos(out var point) ? new(point.X, point.Y) : default;
 
@@ -184,6 +202,10 @@ internal sealed unsafe partial class Tray : IDisposable
 			case _contextMenu:
 				RightClicked?.Invoke();
 				break;
+
+			case _keySelect:
+				KeySelected?.Invoke();
+				break;
 		}
 	}
 
@@ -270,6 +292,15 @@ internal sealed unsafe partial class Tray : IDisposable
 
 	[LibraryImport("user32.dll")]
 	private static partial uint GetDpiForSystem();
+
+	[LibraryImport("user32.dll", StringMarshalling = StringMarshalling.Utf16)]
+	private static partial IntPtr FindWindowW(string className, string? windowName);
+
+	[LibraryImport("user32.dll")]
+	private static partial IntPtr MonitorFromWindow(IntPtr window, uint flags);
+
+	[LibraryImport("shcore.dll")]
+	private static partial int GetDpiForMonitor(IntPtr monitor, int type, out uint dpiX, out uint dpiY);
 
 	[LibraryImport("user32.dll")]
 	private static partial int GetSystemMetricsForDpi(int index, uint dpi);
