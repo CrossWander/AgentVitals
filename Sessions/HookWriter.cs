@@ -79,8 +79,17 @@ internal static class HookWriter
 
 			Directory.CreateDirectory(directory);
 			var temp = $"{file}.{Environment.ProcessId}.tmp";
-			File.WriteAllText(temp, JsonSerializer.Serialize(session, Json));
-			File.Move(temp, file, overwrite: true);
+
+			try
+			{
+				File.WriteAllText(temp, JsonSerializer.Serialize(session, Json));
+				Replace(temp, file);
+			}
+			finally
+			{
+				// После удачной подмены файла уже нет; после неудачной — не оставлять мусор в папке сессий.
+				File.Delete(temp);
+			}
 		}
 		finally
 		{
@@ -100,6 +109,24 @@ internal static class HookWriter
 		recorded is not null
 		&& (recorded.At > at
 			|| (recorded.State == SessionState.Waiting && state != SessionState.Waiting && at - recorded.At < _sameMoment));
+
+	// Пока трей читает файл (раз в секунду, доли миллисекунды), Windows не даёт подменить его переименованием.
+	private static void Replace(string temp, string file)
+	{
+		for (var attempt = 1; ; attempt++)
+		{
+			try
+			{
+				File.Move(temp, file, overwrite: true);
+
+				return;
+			}
+			catch (Exception exception) when (exception is IOException or UnauthorizedAccessException && attempt < 10)
+			{
+				Thread.Sleep(20);
+			}
+		}
+	}
 
 	private static bool Acquire(Mutex mutex)
 	{
@@ -128,7 +155,7 @@ internal static class HookWriter
 	{
 		try
 		{
-			return File.Exists(file) ? JsonSerializer.Deserialize<Session>(File.ReadAllText(file), Json) : null;
+			return File.Exists(file) ? JsonSerializer.Deserialize<Session>(SharedFile.ReadAllText(file), Json) : null;
 		}
 		catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
 		{

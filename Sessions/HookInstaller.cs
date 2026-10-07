@@ -87,7 +87,7 @@ internal static class HookInstaller
 	}
 
 	internal static JsonObject Load(string settings) =>
-		JsonNode.Parse(File.ReadAllText(settings), documentOptions: _read) as JsonObject
+		JsonNode.Parse(SharedFile.ReadAllText(settings), documentOptions: _read) as JsonObject
 			?? throw new JsonException("settings.json is not a JSON object");
 
 	internal static void Add(JsonObject root, string exe)

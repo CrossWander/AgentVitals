@@ -31,7 +31,7 @@ internal sealed class CodexProvider : IProvider
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{
-		var tokens = JsonNode.Parse(await File.ReadAllTextAsync(Auth, cancellation))?["tokens"];
+		var tokens = JsonNode.Parse(await SharedFile.ReadAllTextAsync(Auth, cancellation))?["tokens"];
 
 		if ((string?)tokens?["access_token"] is not { Length: > 0 } token)
 		{

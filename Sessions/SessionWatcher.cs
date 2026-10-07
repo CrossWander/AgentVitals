@@ -88,7 +88,7 @@ internal static class SessionWatcher
 					continue;
 				}
 
-				var text = File.ReadAllText(head).Trim();
+				var text = SharedFile.ReadAllText(head).Trim();
 
 				return text.StartsWith(_branchPrefix, StringComparison.Ordinal)
 					? text[_branchPrefix.Length..]
@@ -106,7 +106,7 @@ internal static class SessionWatcher
 	// В worktree .git — файл со строкой «gitdir: <путь>» к настоящей папке репозитория.
 	private static string Worktree(string gitFile)
 	{
-		var path = File.ReadAllText(gitFile).Trim()["gitdir:".Length..].Trim();
+		var path = SharedFile.ReadAllText(gitFile).Trim()["gitdir:".Length..].Trim();
 
 		return Path.IsPathRooted(path) ? path : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(gitFile)!, path));
 	}

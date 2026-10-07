@@ -33,7 +33,7 @@ internal sealed class ClaudeProvider : IProvider
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{
 		// Файл перечитывается каждый раз: Claude Code меняет токен, не спрашивая нас.
-		var oauth = JsonNode.Parse(await File.ReadAllTextAsync(_credentials, cancellation))?["claudeAiOauth"]
+		var oauth = JsonNode.Parse(await SharedFile.ReadAllTextAsync(_credentials, cancellation))?["claudeAiOauth"]
 			?? throw new TokenExpiredException(Cli);
 
 		var token = (string?)oauth["accessToken"];
@@ -145,7 +145,7 @@ internal sealed class ClaudeProvider : IProvider
 		try
 		{
 			return File.Exists(_account)
-				? (string?)JsonNode.Parse(await File.ReadAllTextAsync(_account, cancellation))?["oauthAccount"]?["emailAddress"]
+				? (string?)JsonNode.Parse(await SharedFile.ReadAllTextAsync(_account, cancellation))?["oauthAccount"]?["emailAddress"]
 				: null;
 		}
 		catch (Exception exception) when (exception is IOException or JsonException or InvalidOperationException)

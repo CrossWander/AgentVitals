@@ -30,7 +30,7 @@ internal sealed class GeminiProvider : IProvider
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{
-		if ((string?)JsonNode.Parse(await File.ReadAllTextAsync(_credentials, cancellation))?["access_token"] is not { Length: > 0 } token)
+		if ((string?)JsonNode.Parse(await SharedFile.ReadAllTextAsync(_credentials, cancellation))?["access_token"] is not { Length: > 0 } token)
 		{
 			throw new TokenExpiredException(Cli);
 		}
