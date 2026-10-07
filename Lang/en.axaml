@@ -14,7 +14,6 @@
     <x:String x:Key="langResetsSoon">resetting now</x:String>
     <x:String x:Key="langHoursMinutes">{0} h {1} min</x:String>
     <x:String x:Key="langMinutes">{0} min</x:String>
-    <x:String x:Key="langSeconds30">30 sec</x:String>
     <x:String x:Key="langMinutes1">1 min</x:String>
     <x:String x:Key="langMinutes2">2 min</x:String>
     <x:String x:Key="langMinutes5">5 min</x:String>

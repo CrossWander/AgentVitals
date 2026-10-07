@@ -43,7 +43,7 @@ internal sealed class Poller
 	// Тик — самый короткий интервал из настроек: каждый из них кратен ему и приходится ровно на тик.
 	private readonly DispatcherTimer _timer = new()
 	{
-		Interval = TimeSpan.FromSeconds(30),
+		Interval = TimeSpan.FromMinutes(1),
 	};
 
 	private DateTime _nextStatus = DateTime.MinValue;
@@ -70,8 +70,8 @@ internal sealed class Poller
 	/// <summary>Когда спрашивать снова после этого исхода.</summary>
 	internal static DateTime Schedule(Exception? error, int intervalSeconds, DateTime now) => error switch
 	{
-		// Чаще тика спрашивать незачем, реже суток — уже не наблюдение; файл могли поправить руками.
-		null => now.AddSeconds(Math.Clamp(intervalSeconds, 30, 86_400)),
+		// Чаще раза в минуту сервер отвечает 429, реже суток — уже не наблюдение; файл могли поправить руками.
+		null => now.AddSeconds(Math.Clamp(intervalSeconds, 60, 86_400)),
 
 		// Срок токена проверяется локально: тик ничего не стоит, а как только Claude Code
 		// обновит вход, данные вернутся на следующем тике.

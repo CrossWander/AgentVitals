@@ -46,8 +46,6 @@
                     <Border Classes="track" HorizontalAlignment="Left">
                         <StackPanel Orientation="Horizontal">
                             <!-- Tag — интервал в секундах -->
-                            <RadioButton Name="Interval30s" Theme="{StaticResource Segment}" GroupName="interval" Tag="30"
-                                         Content="{DynamicResource langSeconds30}" IsCheckedChanged="OnInterval"/>
                             <RadioButton Name="Interval1" Theme="{StaticResource Segment}" GroupName="interval" Tag="60"
                                          Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnInterval"/>
                             <RadioButton Name="Interval2" Theme="{StaticResource Segment}" GroupName="interval" Tag="120"

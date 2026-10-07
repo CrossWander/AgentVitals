@@ -29,22 +29,22 @@ public class PollerTests
 		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new HttpRequestException(), 60, _now));
 
 	[Fact]
-	public void NewIntervalAppliesAtOnce() // с 10 минут на 30 секунд — без ожидания прежних 10 минут
+	public void NewIntervalAppliesAtOnce() // с 10 минут на минуту — без ожидания прежних 10 минут
 	{
 		var state = new ProviderState(new ClaudeProvider()) { Started = _now };
 
 		Assert.Equal(_now.AddMinutes(10), state.NextFetch(600));
-		Assert.Equal(_now.AddSeconds(30), state.NextFetch(30));
+		Assert.Equal(_now.AddMinutes(1), state.NextFetch(60));
 	}
 
 	[Fact]
 	public void FirstFetchIsDueAtOnce() => Assert.True(new ProviderState(new ClaudeProvider()).NextFetch(60) < _now);
 
 	[Theory]
-	[InlineData(30, 30)]
-	[InlineData(10, 30)]
-	[InlineData(0, 30)]
-	[InlineData(-5, 30)]
+	[InlineData(60, 60)]
+	[InlineData(30, 60)] // прежний вариант 30 с: сервер на нём отвечал 429
+	[InlineData(0, 60)]
+	[InlineData(-5, 60)]
 	[InlineData(999_999, 86_400)]
 	public void ClampsHandEditedInterval(int seconds, int expected) =>
 		Assert.Equal(_now.AddSeconds(expected), Poller.Schedule(null, seconds, _now));
