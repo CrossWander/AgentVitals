@@ -105,7 +105,7 @@ internal sealed class TrayApp
 
 	private void Render()
 	{
-		var vitals = Views.Build(_poller, _sessions, DateTime.Now);
+		var vitals = Views.Build(_poller, _sessions, DateTime.UtcNow);
 		_popover.Render(vitals);
 		_card.Render(vitals);
 		ShowIcon();
@@ -119,7 +119,7 @@ internal sealed class TrayApp
 			_darkTaskbar = Tray.DarkTaskbar;
 		}
 
-		var sessions = SessionWatcher.Read(Paths.Sessions, DateTime.Now);
+		var sessions = SessionWatcher.Read(Paths.Sessions, DateTime.UtcNow);
 
 		if (!sessions.SequenceEqual(_sessions))
 		{
@@ -207,7 +207,7 @@ internal sealed class TrayApp
 		if (OverIcon() && !_popover.IsVisible && !_menu.IsVisible)
 		{
 			// Свежий снимок: «обновлено N мин назад» и «сброс через» сдвигаются со временем.
-			_card.Render(Views.Build(_poller, _sessions, DateTime.Now));
+			_card.Render(Views.Build(_poller, _sessions, DateTime.UtcNow));
 			_card.Open(Anchor());
 			_watch.Start();
 		}
@@ -249,7 +249,7 @@ internal sealed class TrayApp
 			return;
 		}
 
-		if (DateTime.Now - _popover.HiddenAt < _refractory)
+		if (DateTime.UtcNow - _popover.HiddenAt < _refractory)
 		{
 			return;
 		}
@@ -261,7 +261,7 @@ internal sealed class TrayApp
 	{
 		HideGlance();
 		_menu.Hide();
-		_popover.Render(Views.Build(_poller, _sessions, DateTime.Now));
+		_popover.Render(Views.Build(_poller, _sessions, DateTime.UtcNow));
 		_popover.Open(Anchor(), settings);
 
 		if (OperatingSystem.IsWindows())

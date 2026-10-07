@@ -107,8 +107,8 @@ internal static class HookWriter
 	/// </remarks>
 	private static bool Stale(Session? recorded, SessionState state, long at) =>
 		recorded is not null
-		&& (recorded.At > at
-			|| (recorded.State == SessionState.Waiting && state != SessionState.Waiting && at - recorded.At < _sameMoment));
+		&& (recorded.Utc > at
+			|| (recorded.State == SessionState.Waiting && state != SessionState.Waiting && at - recorded.Utc < _sameMoment));
 
 	// Пока трей читает файл (раз в секунду, доли миллисекунды), Windows не даёт подменить его переименованием.
 	private static void Replace(string temp, string file)

@@ -84,7 +84,7 @@ public class HookWriterTests
 		{
 			Parallel.For(0, 8, index => HookWriter.Apply(Event("PreToolUse"), temp.Path, at: round * 100 + index));
 
-			Assert.Equal(round * 100 + 7, HookWriter.Read(temp.File("s1.json"))!.At);
+			Assert.Equal(round * 100 + 7, HookWriter.Read(temp.File("s1.json"))!.Utc);
 		}
 	}
 

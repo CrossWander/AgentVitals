@@ -105,7 +105,7 @@ internal sealed class Poller
 
 		try
 		{
-			var now = DateTime.Now;
+			var now = DateTime.UtcNow;
 			var due = Providers
 				.Where(state => state.Provider.Available
 					&& (now >= state.NextFetch(Store.Current.IntervalSeconds) || (force && state.Error is not RateLimitedException)))
@@ -136,7 +136,7 @@ internal sealed class Poller
 		{
 			state.Snapshot = await state.Provider.FetchAsync(_http, CancellationToken.None);
 			state.Record(null);
-			state.Updated = DateTime.Now;
+			state.Updated = DateTime.UtcNow;
 		}
 		catch (Exception exception)
 		{

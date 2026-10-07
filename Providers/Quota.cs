@@ -31,7 +31,7 @@ internal sealed class TokenExpiredException(string cli) : Exception($"{cli}: sig
 }
 
 /// <summary>Сервер просит подождать до указанного момента.</summary>
-internal sealed class RateLimitedException(DateTime until) : Exception($"rate limited until {until:HH:mm}")
+internal sealed class RateLimitedException(DateTime until) : Exception($"rate limited until {until.ToLocalTime():HH:mm}")
 {
 	public DateTime Until { get; } = until;
 }

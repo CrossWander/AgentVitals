@@ -11,12 +11,13 @@ public enum SessionState
 	Waiting,
 }
 
-/// <summary>Запись о сессии, которую hook кладёт в файл. At — тики момента, когда hook запустился.</summary>
-internal sealed record Session(SessionState State, string? Tool, string Cwd, long At)
+/// <summary>Запись о сессии, которую hook кладёт в файл. Utc — тики UTC момента, когда hook запустился.</summary>
+/// <remarks>Прежний формат хранил местное время в поле at: такие файлы читаются как очень старые и забываются.</remarks>
+internal sealed record Session(SessionState State, string? Tool, string Cwd, long Utc)
 {
-	// Только для чтения в коде: в файле время хранится одним полем at.
+	// Только для чтения в коде: в файле время хранится одним полем utc.
 	[JsonIgnore]
-	public DateTime Time => new(At);
+	public DateTime Time => new(Utc, DateTimeKind.Utc);
 }
 
 /// <summary>Сессия для показа: состояние с поправкой на давность, папка и ветка.</summary>

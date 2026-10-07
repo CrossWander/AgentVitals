@@ -83,10 +83,10 @@ public class RetryTests
 		Assert.Equal(_now.AddMinutes(5), Api.RetryAt(new RetryConditionHeaderValue(new DateTimeOffset(_now.AddHours(-1))), _now));
 
 	[Fact]
-	public void UsesFutureDate()
+	public void UsesFutureDate() // всё время внутри — UTC: переход часов не сдвигает расписание
 	{
-		var at = new DateTimeOffset(_now.AddMinutes(30));
+		var at = new DateTimeOffset(_now.AddMinutes(30), TimeSpan.Zero);
 
-		Assert.Equal(at.LocalDateTime, Api.RetryAt(new RetryConditionHeaderValue(at), _now));
+		Assert.Equal(at.UtcDateTime, Api.RetryAt(new RetryConditionHeaderValue(at), _now));
 	}
 }

@@ -54,7 +54,7 @@ public class SharedFileTests
 		await reader.DisposeAsync();
 		await write;
 
-		Assert.Equal(2, HookWriter.Read(file)!.At);
+		Assert.Equal(2, HookWriter.Read(file)!.Utc);
 	}
 
 	[Fact]

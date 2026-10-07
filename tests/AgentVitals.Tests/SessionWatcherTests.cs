@@ -37,6 +37,16 @@ public class SessionWatcherTests
 	}
 
 	[Fact]
+	public void ForgetsFilesWithLocalTime() // прежний формат: поле at в местном времени, в UTC+3 оно «из будущего»
+	{
+		using var temp = new TempDirectory();
+		File.WriteAllText(temp.File("legacy.json"), $$"""{ "state": "working", "cwd": "C:\\x", "at": {{_now.AddHours(3).Ticks}} }""");
+
+		Assert.Empty(SessionWatcher.Read(temp.Path, _now));
+		Assert.False(File.Exists(temp.File("legacy.json")));
+	}
+
+	[Fact]
 	public void WaitingOutranksWorking()
 	{
 		LiveSession[] sessions =

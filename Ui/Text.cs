@@ -18,7 +18,7 @@ internal static class Text
 			return "";
 		}
 
-		var left = at.LocalDateTime - now;
+		var left = at.UtcDateTime - now;
 
 		return left <= TimeSpan.Zero ? Localization.Get("langResetsSoon")
 			: left > TimeSpan.FromDays(1) ? Localization.Format("langResetsAt", at.LocalDateTime.ToString("ddd HH:mm", Localization.Culture))
@@ -38,7 +38,7 @@ internal static class Text
 	public static string Error(Exception error) => error switch
 	{
 		TokenExpiredException expired => Localization.Format("langErrorExpired", expired.Cli),
-		RateLimitedException limited => Localization.Format("langErrorRateLimited", limited.Until.ToString("HH:mm", Localization.Culture)),
+		RateLimitedException limited => Localization.Format("langErrorRateLimited", limited.Until.ToLocalTime().ToString("HH:mm", Localization.Culture)),
 		HttpRequestException or TaskCanceledException => Localization.Get("langErrorNetwork"),
 		_ => Localization.Get("langErrorParse"),
 	};

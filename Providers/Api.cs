@@ -30,7 +30,7 @@ internal static class Api
 
 		if (response.StatusCode == HttpStatusCode.TooManyRequests)
 		{
-			throw new RateLimitedException(RetryAt(response.Headers.RetryAfter, DateTime.Now));
+			throw new RateLimitedException(RetryAt(response.Headers.RetryAfter, DateTime.UtcNow));
 		}
 
 		response.EnsureSuccessStatusCode();
@@ -43,7 +43,7 @@ internal static class Api
 	public static DateTime RetryAt(RetryConditionHeaderValue? retry, DateTime now)
 	{
 		var at = retry?.Date is { } date
-			? date.LocalDateTime
+			? date.UtcDateTime
 			: retry?.Delta is { } delta ? now + delta : now;
 
 		return at > now ? at : now.AddMinutes(5);

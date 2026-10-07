@@ -57,7 +57,7 @@ internal partial class Popover : Window
 		}
 
 		Hide();
-		HiddenAt = DateTime.Now;
+		HiddenAt = DateTime.UtcNow;
 	}
 
 	public void Render(Vitals vitals)
