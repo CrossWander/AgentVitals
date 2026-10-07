@@ -32,10 +32,11 @@ internal partial class SettingsPanel : UserControl
 		ThemeAuto.IsChecked = Store.Current.Theme == ThemeMode.Auto;
 		ThemeLight.IsChecked = Store.Current.Theme == ThemeMode.Light;
 		ThemeDark.IsChecked = Store.Current.Theme == ThemeMode.Dark;
-		Interval2.IsChecked = Store.Current.IntervalMinutes == 2;
-		Interval5.IsChecked = Store.Current.IntervalMinutes == 5;
-		Interval10.IsChecked = Store.Current.IntervalMinutes == 10;
-		Interval1.IsChecked = Store.Current.IntervalMinutes is not (2 or 5 or 10);
+		Interval30s.IsChecked = Store.Current.IntervalSeconds == 30;
+		Interval2.IsChecked = Store.Current.IntervalSeconds == 120;
+		Interval5.IsChecked = Store.Current.IntervalSeconds == 300;
+		Interval10.IsChecked = Store.Current.IntervalSeconds == 600;
+		Interval1.IsChecked = Store.Current.IntervalSeconds is not (30 or 120 or 300 or 600);
 		AutostartCard.IsVisible = OperatingSystem.IsWindows();
 
 		if (OperatingSystem.IsWindows())
@@ -69,9 +70,9 @@ internal partial class SettingsPanel : UserControl
 
 	private void OnInterval(object? sender, RoutedEventArgs e)
 	{
-		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string minutes })
+		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string seconds })
 		{
-			Store.Current.IntervalMinutes = int.Parse(minutes, CultureInfo.InvariantCulture);
+			Store.Current.IntervalSeconds = int.Parse(seconds, CultureInfo.InvariantCulture);
 			Store.Save();
 		}
 	}

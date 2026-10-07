@@ -36,9 +36,10 @@ internal sealed class Poller
 		Timeout = TimeSpan.FromSeconds(15),
 	};
 
+	// Тик — самый короткий интервал из настроек: каждый из них кратен ему и приходится ровно на тик.
 	private readonly DispatcherTimer _timer = new()
 	{
-		Interval = TimeSpan.FromMinutes(1),
+		Interval = TimeSpan.FromSeconds(30),
 	};
 
 	private DateTime _nextStatus = DateTime.MinValue;
@@ -63,12 +64,13 @@ internal sealed class Poller
 	public Task RefreshAsync() => TickAsync(force: true);
 
 	/// <summary>Когда спрашивать снова после этого исхода.</summary>
-	internal static DateTime Schedule(Exception? error, int intervalMinutes, DateTime now) => error switch
+	internal static DateTime Schedule(Exception? error, int intervalSeconds, DateTime now) => error switch
 	{
-		null => now.AddMinutes(Math.Clamp(intervalMinutes, 1, 1440)),
+		// Чаще тика спрашивать незачем, реже суток — уже не наблюдение; файл могли поправить руками.
+		null => now.AddSeconds(Math.Clamp(intervalSeconds, 30, 86_400)),
 
 		// Срок токена проверяется локально: тик ничего не стоит, а как только Claude Code
-		// обновит вход, данные вернутся в течение минуты.
+		// обновит вход, данные вернутся на следующем тике.
 		TokenExpiredException => now,
 		RateLimitedException limited => limited.Until,
 		_ => now.AddMinutes(5),
@@ -128,7 +130,7 @@ internal sealed class Poller
 			state.Error = exception;
 		}
 
-		state.NextFetch = Schedule(state.Error, Store.Current.IntervalMinutes, started);
+		state.NextFetch = Schedule(state.Error, Store.Current.IntervalSeconds, started);
 	}
 
 	private async Task FetchStatusAsync(DateTime started)

@@ -17,7 +17,7 @@ internal static class Store
 		public ThemeMode Theme { get; set; } = ThemeMode.Auto;
 
 		// Квоты сессии меняются за минуты: реже — и цифры в карточке отстают от того, что видно в claude.
-		public int IntervalMinutes { get; set; } = 1;
+		public int IntervalSeconds { get; set; } = 60;
 	}
 
 	private static readonly string _path = Path.Combine(AppContext.BaseDirectory, "config.json");

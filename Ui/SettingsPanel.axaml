@@ -45,13 +45,16 @@
                     <TextBlock Classes="label" Text="{DynamicResource langInterval}"/>
                     <Border Classes="track" HorizontalAlignment="Left">
                         <StackPanel Orientation="Horizontal">
-                            <RadioButton Name="Interval1" Theme="{StaticResource Segment}" GroupName="interval" Tag="1"
+                            <!-- Tag — интервал в секундах -->
+                            <RadioButton Name="Interval30s" Theme="{StaticResource Segment}" GroupName="interval" Tag="30"
+                                         Content="{DynamicResource langSeconds30}" IsCheckedChanged="OnInterval"/>
+                            <RadioButton Name="Interval1" Theme="{StaticResource Segment}" GroupName="interval" Tag="60"
                                          Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Name="Interval2" Theme="{StaticResource Segment}" GroupName="interval" Tag="2"
+                            <RadioButton Name="Interval2" Theme="{StaticResource Segment}" GroupName="interval" Tag="120"
                                          Content="{DynamicResource langMinutes2}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Name="Interval5" Theme="{StaticResource Segment}" GroupName="interval" Tag="5"
+                            <RadioButton Name="Interval5" Theme="{StaticResource Segment}" GroupName="interval" Tag="300"
                                          Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Name="Interval10" Theme="{StaticResource Segment}" GroupName="interval" Tag="10"
+                            <RadioButton Name="Interval10" Theme="{StaticResource Segment}" GroupName="interval" Tag="600"
                                          Content="{DynamicResource langMinutes10}" IsCheckedChanged="OnInterval"/>
                         </StackPanel>
                     </Border>
