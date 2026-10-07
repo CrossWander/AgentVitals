@@ -40,6 +40,46 @@ public class PlacementTests
 	}
 
 	[Fact]
+	public void TallWindowKeepsHeaderOnScreen() // масштаб 150% и десяток сессий
+	{
+		var point = Placement.Near(new PixelRect(1800, 1045, 24, 30), new PixelRect(0, 0, 1920, 1040), new PixelSize(400, 1200));
+
+		Assert.Equal(0, point.Y);
+	}
+
+	[Fact]
+	public void AutoHideTaskbarPutsWindowAboveIcon() // рабочая область — весь экран, значок внутри неё
+	{
+		var point = Placement.Near(new PixelRect(1800, 1050, 24, 30), new PixelRect(0, 0, 1920, 1080), _window);
+
+		Assert.Equal(new PixelPoint(1520, 450), point);
+	}
+
+	[Fact]
+	public void OverflowFlyoutPutsWindowAboveIcon() // Windows 10: значок во всплывающей области над панелью
+	{
+		var point = Placement.Near(new PixelRect(1500, 960, 24, 40), new PixelRect(0, 0, 1920, 1040), _window);
+
+		Assert.Equal(new PixelPoint(1312, 360), point);
+	}
+
+	[Fact]
+	public void AutoHideTopTaskbarPutsWindowBelowIcon()
+	{
+		var point = Placement.Near(new PixelRect(1000, 5, 24, 30), new PixelRect(0, 0, 1920, 1080), _window);
+
+		Assert.Equal(new PixelPoint(812, 35), point);
+	}
+
+	[Fact]
+	public void AutoHideRightTaskbarPutsWindowLeftOfIcon()
+	{
+		var point = Placement.Near(new PixelRect(1890, 500, 24, 30), new PixelRect(0, 0, 1920, 1080), _window);
+
+		Assert.Equal(new PixelPoint(1490, 215), point);
+	}
+
+	[Fact]
 	public void SecondMonitorUsesItsOwnArea()
 	{
 		var point = Placement.Near(new PixelRect(3700, 1045, 24, 30), new PixelRect(1920, 0, 1920, 1040), _window);

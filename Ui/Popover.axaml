@@ -95,21 +95,24 @@
                                   Stroke="{DynamicResource IconModel}" VerticalAlignment="Center"/>
                             <TextBlock Classes="label" Text="{DynamicResource langSessions}" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <ItemsControl ItemsSource="{Binding Sessions}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="local:SessionView">
-                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3">
-                                        <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Column="1" Margin="9,0" Orientation="Horizontal" Spacing="6">
-                                            <TextBlock Text="{Binding Folder}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Classes="faint" Text="{Binding Branch}" VerticalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="2" Classes="caption" Text="{Binding State}" VerticalAlignment="Center"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <!-- Шесть строк, дальше прокрутка: простаивающие сессии живут час, а окно не должно расти выше экрана -->
+                        <ScrollViewer MaxHeight="150" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding Sessions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:SessionView">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3">
+                                            <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1" Margin="9,0" Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="{Binding Folder}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Classes="faint" Text="{Binding Branch}" VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Classes="caption" Text="{Binding State}" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                         <TextBlock Classes="caption" Text="{Binding SessionsHint}" TextWrapping="Wrap"
                                    IsVisible="{Binding SessionsHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                     </StackPanel>
