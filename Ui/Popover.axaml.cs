@@ -10,9 +10,8 @@ using Avalonia.Styling;
 namespace AgentVitals;
 
 /// <summary>Окно по щелчку на значке: квоты выбранного агента, сессии и настройки.</summary>
-internal partial class Popover : Window
+internal partial class Popover : TrayWindow
 {
-	private PixelRect _anchor;
 	private Vitals? _vitals;
 	private string? _selected;
 
@@ -20,11 +19,6 @@ internal partial class Popover : Window
 	{
 		InitializeComponent();
 		Deactivated += (_, _) => Dismiss();
-
-		// Высота зависит от содержимого: после смены экрана или вкладки ставим окно заново.
-		// Resized, а не SizeChanged: при показе Windows возвращает окну прежний размер, Avalonia
-		// растягивает его снова, а Bounds при этом не меняются и SizeChanged молчит.
-		Resized += (_, _) => Placement.Place(this, _anchor);
 
 		Settings.Back += () => ShowSettings(false);
 		Settings.Changed += () => Changed?.Invoke();
@@ -43,10 +37,8 @@ internal partial class Popover : Window
 
 	public void Open(PixelRect anchor, bool settings)
 	{
-		_anchor = anchor;
 		ShowSettings(settings);
-		Show();
-		Placement.Place(this, anchor);
+		ShowAt(anchor);
 		Activate();
 	}
 

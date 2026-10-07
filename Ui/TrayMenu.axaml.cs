@@ -6,15 +6,12 @@ using Avalonia.Interactivity;
 namespace AgentVitals;
 
 /// <summary>Меню по правому щелчку на значке — своё окно вместо системного меню.</summary>
-internal partial class TrayMenu : Window
+internal partial class TrayMenu : TrayWindow
 {
-	private PixelRect _anchor;
-
 	public TrayMenu()
 	{
 		InitializeComponent();
 		Deactivated += (_, _) => Hide();
-		Resized += (_, _) => Placement.Place(this, _anchor);
 	}
 
 	public event Action? RefreshRequested;
@@ -25,9 +22,7 @@ internal partial class TrayMenu : Window
 
 	public void Open(PixelRect anchor)
 	{
-		_anchor = anchor;
-		Show();
-		Placement.Place(this, anchor);
+		ShowAt(anchor);
 		Activate();
 	}
 

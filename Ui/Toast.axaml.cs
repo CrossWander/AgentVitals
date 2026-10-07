@@ -8,14 +8,12 @@ using Avalonia.Threading;
 namespace AgentVitals;
 
 /// <summary>Уведомление у значка: своё окно вместо системного тоста, уходит само через шесть секунд.</summary>
-internal partial class Toast : Window
+internal partial class Toast : TrayWindow
 {
 	private readonly DispatcherTimer _life = new()
 	{
 		Interval = TimeSpan.FromSeconds(6),
 	};
-
-	private PixelRect _anchor;
 
 	public Toast()
 	{
@@ -26,8 +24,6 @@ internal partial class Toast : Window
 			_life.Stop();
 			Hide();
 		};
-
-		Resized += (_, _) => Placement.Place(this, _anchor);
 	}
 
 	public event Action? Clicked;
@@ -51,9 +47,7 @@ internal partial class Toast : Window
 		}
 
 		Message.Text = message;
-		_anchor = anchor;
-		Show();
-		Placement.Place(this, anchor);
+		ShowAt(anchor);
 		_life.Stop();
 		_life.Start();
 	}

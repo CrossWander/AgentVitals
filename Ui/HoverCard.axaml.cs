@@ -4,22 +4,11 @@ using Avalonia.Controls;
 namespace AgentVitals;
 
 /// <summary>Карточка по наведению на значок: коротко о квотах, сессиях и статусе. Фокус не забирает.</summary>
-internal partial class HoverCard : Window
+internal partial class HoverCard : TrayWindow
 {
-	private PixelRect _anchor;
-
-	public HoverCard()
-	{
-		InitializeComponent();
-		Resized += (_, _) => Placement.Place(this, _anchor);
-	}
+	public HoverCard() => InitializeComponent();
 
 	public void Render(Vitals vitals) => DataContext = vitals;
 
-	public void Open(PixelRect anchor)
-	{
-		_anchor = anchor;
-		Show();
-		Placement.Place(this, anchor);
-	}
+	public void Open(PixelRect anchor) => ShowAt(anchor);
 }

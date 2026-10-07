@@ -54,3 +54,26 @@ internal static class Placement
 		window.Position = Near(icon, screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling));
 	}
 }
+
+/// <summary>Окно у значка в трее: поповер, карточка, меню, тост. Держится у значка при любой смене размера.</summary>
+internal class TrayWindow : Window
+{
+	private PixelRect _anchor;
+
+	public TrayWindow()
+	{
+		// Высота зависит от содержимого: после смены экрана или вкладки окно ставится заново.
+		// Resized, а не SizeChanged: при показе Windows возвращает окну прежний размер, Avalonia
+		// растягивает его снова, а Bounds при этом не меняются и SizeChanged молчит.
+		Resized += (_, _) => Placement.Place(this, _anchor);
+	}
+
+	/// <summary>Показать у значка.</summary>
+	/// <param name="anchor">Где значок, в точках экрана.</param>
+	protected void ShowAt(PixelRect anchor)
+	{
+		_anchor = anchor;
+		Show();
+		Placement.Place(this, anchor);
+	}
+}
