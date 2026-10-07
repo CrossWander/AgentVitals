@@ -15,6 +15,11 @@ internal partial class Popover : TrayWindow
 {
 	private Vitals? _vitals;
 	private string? _selected;
+	private ChartMode _mode = ChartMode.Cost;
+	private (IReadOnlyList<UsageDay>? Days, ChartMode Mode, string Language) _shown;
+	private IReadOnlyList<BarView> _bars = [];
+	private string _total = "";
+	private DateOnly? _hovered;
 
 	public Popover()
 	{
@@ -105,6 +110,72 @@ internal partial class Popover : TrayWindow
 		ErrorLine.Text = provider?.Error;
 		ErrorLine.IsVisible = provider?.HasError == true;
 		DashboardButton.IsVisible = provider?.Dashboard is not null;
+
+		var usage = provider?.Usage;
+		UsageBlock.IsVisible = usage is not null;
+
+		if (usage is not null)
+		{
+			ShowUsage(usage);
+		}
+	}
+
+	private void ShowUsage(UsageView usage)
+	{
+		CostValue.Text = usage.Cost;
+		CostNote.Text = usage.CostNote;
+		CostYesterday.Text = usage.CostYesterday;
+		TokensValue.Text = usage.Tokens;
+		TokensNote.Text = usage.TokensNote;
+		TokensYesterday.Text = usage.TokensYesterday;
+		WorkValue.Text = usage.Working;
+		WorkYesterday.Text = usage.WorkingYesterday;
+
+		// Render бывает раз в секунду, пока Claude работает: столбики пересоздаются, только когда сменились
+		// дни, мера или язык, — иначе столбик под мышью терял бы свою строку.
+		var shown = (usage.Days, _mode, Localization.Current);
+
+		if (shown != _shown)
+		{
+			_shown = shown;
+			_bars = Views.Bars(usage.Days, _mode);
+			Bars.ItemsSource = _bars;
+			_total = usage.Days.Count == 0 ? "" : Views.Total(usage.Days, _mode);
+			Legend.IsVisible = _mode != ChartMode.Cost;
+			LegendLow.Text = Localization.Get(_mode == ChartMode.Tokens ? "langInput" : "langCacheWrite");
+			LegendHigh.Text = Localization.Get(_mode == ChartMode.Tokens ? "langOutput" : "langCacheRead");
+		}
+
+		ChartLine.Text = _bars.FirstOrDefault(bar => bar.Date == _hovered)?.Line ?? _total;
+	}
+
+	private void OnMode(object? sender, RoutedEventArgs e)
+	{
+		if (sender is RadioButton { IsChecked: true, Tag: string tag } && Enum.TryParse<ChartMode>(tag, out var mode))
+		{
+			_mode = mode;
+
+			// Срабатывает и при загрузке разметки, когда показывать ещё нечего.
+			if (_vitals is not null)
+			{
+				ShowProvider();
+			}
+		}
+	}
+
+	private void OnBarEnter(object? sender, PointerEventArgs e)
+	{
+		if (sender is Control { DataContext: BarView bar })
+		{
+			_hovered = bar.Date;
+			ChartLine.Text = bar.Line;
+		}
+	}
+
+	private void OnBarLeave(object? sender, PointerEventArgs e)
+	{
+		_hovered = null;
+		ChartLine.Text = _total;
 	}
 
 	private void ShowSettings(bool settings)
