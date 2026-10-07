@@ -150,8 +150,8 @@ internal sealed class TrayApp
 	/// <summary>Тост, когда сессия или неделя дошли до 75% или 90% или сменился статус Anthropic.</summary>
 	private void Notify()
 	{
-		var alerts = _poller.Providers
-			.Where(state => state.Provider.Available && state.Snapshot is not null)
+		var alerts = _poller.Available
+			.Where(state => state.Snapshot is not null)
 			.SelectMany(state => _alarm.Check(state.Provider.Name, state.Snapshot!.Windows).Select(alert => (state.Provider.Name, alert)))
 			.ToList();
 
@@ -174,11 +174,6 @@ internal sealed class TrayApp
 		}
 	}
 
-	private Health OverallHealth() =>
-		Quota.Worst(_poller.Providers
-			.Where(state => state.Provider.Available)
-			.Select(state => state.Health));
-
 	private void ShowIcon()
 	{
 		if (OperatingSystem.IsWindows())
@@ -189,7 +184,7 @@ internal sealed class TrayApp
 
 	[SupportedOSPlatform("windows")]
 	private IntPtr Glyph() =>
-		TrayGlyph.Get(OverallHealth(), SessionWatcher.Overall(_sessions), _tick, _darkTaskbar, Tray.IconSize);
+		TrayGlyph.Get(_poller.Health, SessionWatcher.Overall(_sessions), _tick, _darkTaskbar, Tray.IconSize);
 
 	private void OnTrayMove()
 	{

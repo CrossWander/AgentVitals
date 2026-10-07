@@ -73,6 +73,21 @@ public class PollerTests
 	[Fact]
 	public void FirstFetchIsDueAtOnce() => Assert.True(new ProviderState(new ClaudeProvider()).NextFetch(60) < _now);
 
+	[Fact]
+	public void AgentShowsUpOnceItsCredentialsAppear() // проверка — раз в тик, а не на каждый кадр значка
+	{
+		using var temp = new TempDirectory();
+		var credentials = temp.File("auth.json");
+		var state = new ProviderState(new SignedOut(credentials));
+		Assert.False(state.Available);
+
+		File.WriteAllText(credentials, "{}"); // человек вошёл в CLI агента
+		Assert.False(state.Available);
+
+		state.CheckInstalled();
+		Assert.True(state.Available);
+	}
+
 	[Theory]
 	[InlineData(60, 60)]
 	[InlineData(30, 60)] // прежний вариант 30 с: сервер на нём отвечал 429
@@ -89,8 +104,6 @@ public class PollerTests
 		public string Cli => "fake";
 
 		public string Credentials => credentials;
-
-		public bool Available => true;
 
 		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => throw new TokenExpiredException(Cli);
 	}

@@ -27,8 +27,6 @@ internal sealed class ClaudeProvider : IProvider
 
 	public string Credentials => _credentials;
 
-	public bool Available => File.Exists(_credentials);
-
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{

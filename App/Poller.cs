@@ -15,6 +15,9 @@ internal sealed class ProviderState(IProvider provider)
 {
 	public IProvider Provider { get; } = provider;
 
+	/// <summary>Агент установлен: его файл входа на месте. Проверяется раз в тик опроса, а не каждым читателем.</summary>
+	public bool Available { get; private set; } = File.Exists(provider.Credentials);
+
 	public Snapshot? Snapshot { get; set; }
 
 	public Exception? Error { get; private set; }
@@ -36,6 +39,9 @@ internal sealed class ProviderState(IProvider provider)
 		Error = error;
 		_rejected = error is TokenExpiredException ? credentials : null;
 	}
+
+	/// <summary>Агента установили или удалили, пока программа работает.</summary>
+	public void CheckInstalled() => Available = File.Exists(Provider.Credentials);
 
 	/// <summary>Время записи файла входа — снимать до запроса и передавать в <see cref="Record"/>.</summary>
 	public DateTime Stamp() => File.GetLastWriteTimeUtc(Provider.Credentials);
@@ -69,6 +75,12 @@ internal sealed class Poller
 
 	public IReadOnlyList<ProviderState> Providers { get; } =
 		[new(new ClaudeProvider()), new(new CodexProvider()), new(new GeminiProvider())];
+
+	/// <summary>Установленные агенты: только их показывают и спрашивают.</summary>
+	public IEnumerable<ProviderState> Available => Providers.Where(state => state.Available);
+
+	/// <summary>Общее состояние квот: худшее среди установленных агентов.</summary>
+	public Health Health => Quota.Worst(Available.Select(state => state.Health));
 
 	public ServiceStatus? Status { get; private set; }
 
@@ -110,9 +122,14 @@ internal sealed class Poller
 		try
 		{
 			var now = DateTime.UtcNow;
-			var due = Providers
-				.Where(state => state.Provider.Available
-					&& (now >= state.NextFetch(Store.Current.IntervalSeconds) || (force && state.Error is not RateLimitedException)))
+
+			foreach (var state in Providers)
+			{
+				state.CheckInstalled();
+			}
+
+			var due = Available
+				.Where(state => now >= state.NextFetch(Store.Current.IntervalSeconds) || (force && state.Error is not RateLimitedException))
 				.ToList();
 
 			// Следующий запрос считается от начала тика, а не от ответа: иначе минутный тик приходит

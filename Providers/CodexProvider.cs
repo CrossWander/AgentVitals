@@ -22,8 +22,6 @@ internal sealed class CodexProvider : IProvider
 
 	public string Credentials => Auth;
 
-	public bool Available => File.Exists(Auth);
-
 	private static string Auth => Path.Combine(
 		Environment.GetEnvironmentVariable("CODEX_HOME") is { Length: > 0 } home ? home : Path.Combine(Paths.Home, ".codex"),
 		"auth.json");

@@ -57,11 +57,8 @@ internal static class Views
 {
 	public static Vitals Build(Poller poller, IReadOnlyList<LiveSession> sessions, DateTime now)
 	{
-		var available = poller.Providers
-			.Where(state => state.Provider.Available)
-			.ToList();
-
-		var health = Quota.Worst(available.Select(state => state.Health));
+		var available = poller.Available.ToList();
+		var health = poller.Health;
 
 		// Шапка говорит о самом узком окне: исчерпано оно — «исчерпано», как на его карточке.
 		var tightest = available
