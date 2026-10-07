@@ -20,6 +20,8 @@ internal sealed class CodexProvider : IProvider
 
 	public string Cli => "codex";
 
+	public string Credentials => Auth;
+
 	public bool Available => File.Exists(Auth);
 
 	private static string Auth => Path.Combine(

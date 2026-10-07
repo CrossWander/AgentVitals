@@ -23,6 +23,8 @@ internal sealed class GeminiProvider : IProvider
 
 	public string Cli => "gemini";
 
+	public string Credentials => _credentials;
+
 	public bool Available => File.Exists(_credentials);
 
 	/// <inheritdoc/>

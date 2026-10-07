@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -16,15 +17,28 @@ internal sealed class ProviderState(IProvider provider)
 
 	public Snapshot? Snapshot { get; set; }
 
-	public Exception? Error { get; set; }
+	public Exception? Error { get; private set; }
 
 	public DateTime? Updated { get; set; }
 
 	/// <summary>Начало тика, в котором провайдера спрашивали последний раз.</summary>
 	public DateTime Started { get; set; } = DateTime.MinValue;
 
+	// Время записи файла входа, когда вход отклонили: пока файл тот же, спрашивать снова бесполезно.
+	private DateTime? _rejected;
+
+	/// <summary>Запомнить исход запроса; null — удача.</summary>
+	public void Record(Exception? error)
+	{
+		Error = error;
+		_rejected = error is TokenExpiredException ? Stamp() : null;
+	}
+
 	/// <summary>Считается при каждом тике, а не запоминается: новый интервал из настроек действует сразу.</summary>
-	public DateTime NextFetch(int intervalSeconds) => Poller.Schedule(Error, intervalSeconds, Started);
+	public DateTime NextFetch(int intervalSeconds) =>
+		_rejected is { } rejected && rejected == Stamp() ? DateTime.MaxValue : Poller.Schedule(Error, intervalSeconds, Started);
+
+	private DateTime Stamp() => File.GetLastWriteTimeUtc(Provider.Credentials);
 
 	/// <summary>Истёкший вход — серое: старые проценты уже ничего не говорят о том, можно ли работать.</summary>
 	public Health Health => Snapshot is null || Error is TokenExpiredException ? Health.Unknown : Quota.Rate(Snapshot.Windows);
@@ -121,7 +135,7 @@ internal sealed class Poller
 		try
 		{
 			state.Snapshot = await state.Provider.FetchAsync(_http, CancellationToken.None);
-			state.Error = null;
+			state.Record(null);
 			state.Updated = DateTime.Now;
 		}
 		catch (Exception exception)
@@ -132,7 +146,7 @@ internal sealed class Poller
 				Journal.Add($"{state.Provider.Name}: {exception.GetType().Name}: {exception.Message}");
 			}
 
-			state.Error = exception;
+			state.Record(exception);
 		}
 
 		state.Started = started;

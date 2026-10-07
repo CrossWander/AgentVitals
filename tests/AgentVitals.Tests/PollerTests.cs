@@ -1,6 +1,9 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace AgentVitals.Tests;
@@ -38,6 +41,21 @@ public class PollerTests
 	}
 
 	[Fact]
+	public void RejectedSignInWaitsForNewCredentials() // 401 при свежем expiresAt или истёкший вход Codex/Gemini
+	{
+		using var temp = new TempDirectory();
+		var credentials = temp.File("auth.json");
+		File.WriteAllText(credentials, "{}");
+		var state = new ProviderState(new SignedOut(credentials)) { Started = _now };
+
+		state.Record(new TokenExpiredException("fake"));
+		Assert.Equal(DateTime.MaxValue, state.NextFetch(60));
+
+		File.SetLastWriteTimeUtc(credentials, DateTime.UtcNow.AddMinutes(1)); // CLI агента обновил вход
+		Assert.Equal(_now, state.NextFetch(60));
+	}
+
+	[Fact]
 	public void FirstFetchIsDueAtOnce() => Assert.True(new ProviderState(new ClaudeProvider()).NextFetch(60) < _now);
 
 	[Theory]
@@ -48,4 +66,17 @@ public class PollerTests
 	[InlineData(999_999, 86_400)]
 	public void ClampsHandEditedInterval(int seconds, int expected) =>
 		Assert.Equal(_now.AddSeconds(expected), Poller.Schedule(null, seconds, _now));
+
+	private sealed class SignedOut(string credentials) : IProvider
+	{
+		public string Name => "Fake";
+
+		public string Cli => "fake";
+
+		public string Credentials => credentials;
+
+		public bool Available => true;
+
+		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => throw new TokenExpiredException(Cli);
+	}
 }

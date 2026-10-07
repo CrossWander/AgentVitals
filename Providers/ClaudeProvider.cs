@@ -25,6 +25,8 @@ internal sealed class ClaudeProvider : IProvider
 
 	public string Cli => "claude";
 
+	public string Credentials => _credentials;
+
 	public bool Available => File.Exists(_credentials);
 
 	/// <inheritdoc/>

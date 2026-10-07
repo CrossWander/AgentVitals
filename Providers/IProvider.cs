@@ -13,6 +13,9 @@ internal interface IProvider
 	/// <summary>Команда CLI, запуск которой обновляет вход агента.</summary>
 	string Cli { get; }
 
+	/// <summary>Файл авторизации агента: его переписывает CLI, когда обновляет вход.</summary>
+	string Credentials { get; }
+
 	/// <summary>Агент установлен: его файл авторизации на месте.</summary>
 	bool Available { get; }
 
