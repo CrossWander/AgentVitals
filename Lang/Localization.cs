@@ -44,12 +44,6 @@ internal static class Localization
 		dictionaries.Add(strings);
 		_strings = strings;
 		Current = code;
-
-		if (Store.Current.Language != code)
-		{
-			Store.Current.Language = code;
-			Store.Save();
-		}
 	}
 
 	public static string Get(string key) =>

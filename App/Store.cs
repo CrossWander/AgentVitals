@@ -39,18 +39,20 @@ internal static class Store
 
 	public static Data Current { get; } = Read();
 
-	/// <summary>Записать файл; false — папка только для чтения, настройка не переживёт перезапуск.</summary>
-	public static bool Save()
+	/// <summary>Записать файл через временный: оборванная запись не испортит прежние настройки.</summary>
+	public static void Save()
 	{
+		var temp = _path + ".tmp";
+
 		try
 		{
-			File.WriteAllText(_path, JsonSerializer.Serialize(Current, _format), new UTF8Encoding(true));
-
-			return true;
+			File.WriteAllText(temp, JsonSerializer.Serialize(Current, _format), new UTF8Encoding(true));
+			File.Move(temp, _path, overwrite: true);
 		}
 		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
 		{
-			return false;
+			// Настройка действует до перезапуска; почему не сохранилась — в журнале.
+			Journal.Add($"config.json: {exception.Message}");
 		}
 	}
 

@@ -16,12 +16,12 @@
                 <StackPanel Spacing="6">
                     <TextBlock Classes="label" Text="{DynamicResource langLanguage}"/>
                     <Border Classes="track" HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal">
-                            <RadioButton Name="LanguageEn" Theme="{StaticResource Segment}" GroupName="language" Tag="en"
+                        <StackPanel Name="Languages" Orientation="Horizontal">
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="en"
                                          Content="English" IsCheckedChanged="OnLanguage"/>
-                            <RadioButton Name="LanguageRu" Theme="{StaticResource Segment}" GroupName="language" Tag="ru"
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="ru"
                                          Content="Русский" IsCheckedChanged="OnLanguage"/>
-                            <RadioButton Name="LanguageUk" Theme="{StaticResource Segment}" GroupName="language" Tag="uk"
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="uk"
                                          Content="Українська" IsCheckedChanged="OnLanguage"/>
                         </StackPanel>
                     </Border>
@@ -30,12 +30,12 @@
                 <StackPanel Spacing="6">
                     <TextBlock Classes="label" Text="{DynamicResource langTheme}"/>
                     <Border Classes="track" HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal">
-                            <RadioButton Name="ThemeAuto" Theme="{StaticResource Segment}" GroupName="theme" Tag="Auto"
+                        <StackPanel Name="Themes" Orientation="Horizontal">
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Auto"
                                          Content="{DynamicResource langThemeAuto}" IsCheckedChanged="OnTheme"/>
-                            <RadioButton Name="ThemeLight" Theme="{StaticResource Segment}" GroupName="theme" Tag="Light"
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Light"
                                          Content="{DynamicResource langThemeLight}" IsCheckedChanged="OnTheme"/>
-                            <RadioButton Name="ThemeDark" Theme="{StaticResource Segment}" GroupName="theme" Tag="Dark"
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Dark"
                                          Content="{DynamicResource langThemeDark}" IsCheckedChanged="OnTheme"/>
                         </StackPanel>
                     </Border>
@@ -44,15 +44,15 @@
                 <StackPanel Spacing="6">
                     <TextBlock Classes="label" Text="{DynamicResource langInterval}"/>
                     <Border Classes="track" HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal">
-                            <!-- Tag — интервал в секундах -->
-                            <RadioButton Name="Interval1" Theme="{StaticResource Segment}" GroupName="interval" Tag="60"
+                        <StackPanel Name="Intervals" Orientation="Horizontal">
+                            <!-- Tag — значение настройки: код языка, ThemeMode, интервал в секундах -->
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="60"
                                          Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Name="Interval2" Theme="{StaticResource Segment}" GroupName="interval" Tag="120"
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="120"
                                          Content="{DynamicResource langMinutes2}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Name="Interval5" Theme="{StaticResource Segment}" GroupName="interval" Tag="300"
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="300"
                                          Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Name="Interval10" Theme="{StaticResource Segment}" GroupName="interval" Tag="600"
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="600"
                                          Content="{DynamicResource langMinutes10}" IsCheckedChanged="OnInterval"/>
                         </StackPanel>
                     </Border>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Text.Json;
@@ -31,16 +32,9 @@ internal partial class SettingsPanel : UserControl
 	{
 		_loading = true;
 
-		LanguageEn.IsChecked = Localization.Current == "en";
-		LanguageRu.IsChecked = Localization.Current == "ru";
-		LanguageUk.IsChecked = Localization.Current == "uk";
-		ThemeAuto.IsChecked = Store.Current.Theme == ThemeMode.Auto;
-		ThemeLight.IsChecked = Store.Current.Theme == ThemeMode.Light;
-		ThemeDark.IsChecked = Store.Current.Theme == ThemeMode.Dark;
-		Interval2.IsChecked = Store.Current.IntervalSeconds == 120;
-		Interval5.IsChecked = Store.Current.IntervalSeconds == 300;
-		Interval10.IsChecked = Store.Current.IntervalSeconds == 600;
-		Interval1.IsChecked = Store.Current.IntervalSeconds is not (120 or 300 or 600);
+		Select(Languages, Localization.Current);
+		Select(Themes, Store.Current.Theme.ToString());
+		Select(Intervals, Store.Current.IntervalSeconds.ToString(CultureInfo.InvariantCulture));
 		AutostartCard.IsVisible = OperatingSystem.IsWindows();
 
 		if (OperatingSystem.IsWindows())
@@ -52,11 +46,21 @@ internal partial class SettingsPanel : UserControl
 		_loading = false;
 	}
 
+	// Значения живут только в Tag кнопок: новый язык или интервал — правка XAML и строк, не кода.
+	// Сохранённого среди кнопок нет (руками поправили config.json) — отмечается первая, она же умолчание.
+	private static void Select(Panel group, string value)
+	{
+		var buttons = group.Children.OfType<RadioButton>().ToList();
+		(buttons.FirstOrDefault(button => (string?)button.Tag == value) ?? buttons[0]).IsChecked = true;
+	}
+
 	private void OnLanguage(object? sender, RoutedEventArgs e)
 	{
 		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string code })
 		{
 			Localization.Apply(code);
+			Store.Current.Language = Localization.Current;
+			Store.Save();
 			ShowHooks(null);
 			Changed?.Invoke();
 		}
@@ -66,8 +70,12 @@ internal partial class SettingsPanel : UserControl
 	{
 		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string name })
 		{
+			var mode = Enum.Parse<ThemeMode>(name);
+
 			// Внутри контрола Theme — его свойство ControlTheme, поэтому имя класса полностью.
-			AgentVitals.Theme.Apply(Enum.Parse<ThemeMode>(name));
+			AgentVitals.Theme.Apply(mode);
+			Store.Current.Theme = mode;
+			Store.Save();
 			Changed?.Invoke();
 		}
 	}

@@ -24,11 +24,5 @@ internal static class Theme
 			ThemeMode.Dark => ThemeVariant.Dark,
 			_ => throw new NotImplementedException("ThemeMode switch error"),
 		};
-
-		if (Store.Current.Theme != mode)
-		{
-			Store.Current.Theme = mode;
-			Store.Save();
-		}
 	}
 }
