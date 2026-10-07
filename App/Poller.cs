@@ -20,7 +20,11 @@ internal sealed class ProviderState(IProvider provider)
 
 	public DateTime? Updated { get; set; }
 
-	public DateTime NextFetch { get; set; } = DateTime.MinValue;
+	/// <summary>Начало тика, в котором провайдера спрашивали последний раз.</summary>
+	public DateTime Started { get; set; } = DateTime.MinValue;
+
+	/// <summary>Считается при каждом тике, а не запоминается: новый интервал из настроек действует сразу.</summary>
+	public DateTime NextFetch(int intervalSeconds) => Poller.Schedule(Error, intervalSeconds, Started);
 
 	/// <summary>Истёкший вход — серое: старые проценты уже ничего не говорят о том, можно ли работать.</summary>
 	public Health Health => Snapshot is null || Error is TokenExpiredException ? Health.Unknown : Quota.Rate(Snapshot.Windows);
@@ -89,7 +93,8 @@ internal sealed class Poller
 		{
 			var now = DateTime.Now;
 			var due = Providers
-				.Where(state => state.Provider.Available && (now >= state.NextFetch || (force && state.Error is not RateLimitedException)))
+				.Where(state => state.Provider.Available
+					&& (now >= state.NextFetch(Store.Current.IntervalSeconds) || (force && state.Error is not RateLimitedException)))
 				.ToList();
 
 			// Следующий запрос считается от начала тика, а не от ответа: иначе минутный тик приходит
@@ -130,7 +135,7 @@ internal sealed class Poller
 			state.Error = exception;
 		}
 
-		state.NextFetch = Schedule(state.Error, Store.Current.IntervalSeconds, started);
+		state.Started = started;
 	}
 
 	private async Task FetchStatusAsync(DateTime started)

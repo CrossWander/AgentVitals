@@ -28,6 +28,18 @@ public class PollerTests
 	public void NetworkErrorRetriesInFiveMinutes() =>
 		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new HttpRequestException(), 60, _now));
 
+	[Fact]
+	public void NewIntervalAppliesAtOnce() // с 10 минут на 30 секунд — без ожидания прежних 10 минут
+	{
+		var state = new ProviderState(new ClaudeProvider()) { Started = _now };
+
+		Assert.Equal(_now.AddMinutes(10), state.NextFetch(600));
+		Assert.Equal(_now.AddSeconds(30), state.NextFetch(30));
+	}
+
+	[Fact]
+	public void FirstFetchIsDueAtOnce() => Assert.True(new ProviderState(new ClaudeProvider()).NextFetch(60) < _now);
+
 	[Theory]
 	[InlineData(30, 30)]
 	[InlineData(10, 30)]
