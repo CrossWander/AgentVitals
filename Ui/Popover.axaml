@@ -204,13 +204,16 @@
                             <ItemsControl ItemsSource="{Binding Sessions}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="local:SessionView">
-                                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3">
+                                        <!-- Фон прозрачный, а не пустой: иначе подсказка ловится только над буквами -->
+                                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3" Background="Transparent" ToolTip.Tip="{Binding Tip}">
                                             <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center"/>
-                                            <StackPanel Grid.Column="1" Margin="9,0" Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding Folder}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Classes="faint" Text="{Binding Branch}" VerticalAlignment="Center"
-                                                           TextTrimming="CharacterEllipsis"/>
-                                            </StackPanel>
+                                            <!-- Одна строка, а не StackPanel: в горизонтальной панели ширина бесконечна, троеточия
+                                                 не бывает, и длинное имя наезжает на состояние -->
+                                            <TextBlock Grid.Column="1" Margin="9,0" TextTrimming="CharacterEllipsis" VerticalAlignment="Center">
+                                                <Run Text="{Binding Folder}" FontWeight="SemiBold"/>
+                                                <Run Text="  " FontSize="11"/>
+                                                <Run Text="{Binding Branch}" FontSize="11" Foreground="{DynamicResource TextFaint}"/>
+                                            </TextBlock>
                                             <TextBlock Grid.Column="2" Classes="caption" Text="{Binding State}" VerticalAlignment="Center"/>
                                         </Grid>
                                     </DataTemplate>

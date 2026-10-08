@@ -35,7 +35,11 @@ internal sealed record ProviderView(string Name, string Info, string Updated, IR
 	public bool HasError => Error.Length > 0;
 }
 
-internal sealed record SessionView(string Folder, string Branch, string State, IBrush Dot);
+internal sealed record SessionView(string Folder, string Branch, string State, IBrush Dot)
+{
+	/// <summary>Подсказка над строкой: длинные имя папки и ветка в строке обрезаны троеточием.</summary>
+	public string Tip => Branch.Length > 0 ? $"{Folder}\n{Branch}" : Folder;
+}
 
 /// <summary>Что откладывать по высоте столбиков графика.</summary>
 internal enum ChartMode

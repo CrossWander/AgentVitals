@@ -29,6 +29,12 @@ public class ViewsTests
 	public void TabOpensItsAgentsUsagePage() =>
 		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow).Dashboard);
 
+	[Theory]
+	[InlineData("feature/POS20-13047", "POS20-13047-prepaid-internet-orders-report\nfeature/POS20-13047")]
+	[InlineData("", "POS20-13047-prepaid-internet-orders-report")]
+	public void SessionTipShowsTheWholeName(string branch, string tip) => // в строке длинное имя обрезано троеточием
+		Assert.Equal(tip, new SessionView("POS20-13047-prepaid-internet-orders-report", branch, "", Avalonia.Media.Brushes.Gray).Tip);
+
 	[Fact]
 	public void PassedResetShowsAnEmptyWindow() // после сна вход истёк, а сессия за это время сбросилась — не 91%
 	{
