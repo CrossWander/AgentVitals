@@ -21,6 +21,8 @@
     <x:String x:Key="langMinutes2">2 мин</x:String>
     <x:String x:Key="langMinutes5">5 мин</x:String>
     <x:String x:Key="langMinutes10">10 мин</x:String>
+    <x:String x:Key="langMinutes15">15 мин</x:String>
+    <x:String x:Key="langAnyTurn">любой</x:String>
     <x:String x:Key="langUpdatedNow">Обновлено только что</x:String>
     <x:String x:Key="langUpdatedAgo">Обновлено {0} мин назад</x:String>
     <x:String x:Key="langHealthGood">НОРМА</x:String>
@@ -79,6 +81,9 @@
     <x:String x:Key="langThemeDark">Тёмная</x:String>
     <x:String x:Key="langInterval">ПРОВЕРЯТЬ КВОТЫ КАЖДЫЕ</x:String>
     <x:String x:Key="langAutostart">Запускать вместе с Windows</x:String>
+    <x:String x:Key="langNotifications">УВЕДОМЛЕНИЯ</x:String>
+    <x:String x:Key="langSessionToasts">Сообщать о конце хода и вопросах</x:String>
+    <x:String x:Key="langTurnLonger">О КОНЦЕ ХОДА, ЕСЛИ ОН ДОЛЬШЕ</x:String>
     <x:String x:Key="langHooks">ЖИВЫЕ СЕССИИ</x:String>
     <x:String x:Key="langHooksOff">Не подключено. AgentVitals добавит свои hooks в ~/.claude/settings.json и сохранит рядом резервную копию.</x:String>
     <x:String x:Key="langHooksOn">Подключено: Claude Code сообщает AgentVitals о своём состоянии.</x:String>
@@ -91,4 +96,7 @@
     <x:String x:Key="langAlertLeft">{0} · {1}: осталось {2}%</x:String>
     <x:String x:Key="langToastStatus">Anthropic: {0}</x:String>
     <x:String x:Key="langToastStatusOk">Anthropic: всё снова работает</x:String>
+    <x:String x:Key="langToastDone">Claude закончил</x:String>
+    <x:String x:Key="langToastDoneText">{0} · ход занял {1}</x:String>
+    <x:String x:Key="langToastWaiting">Claude ждёт разрешения</x:String>
 </ResourceDictionary>

@@ -60,6 +60,8 @@ internal static class SessionWatcher
 				state = SessionState.Idle;
 			}
 
+			DateTime? turn = session.Turn is { } ticks ? new DateTime(ticks, DateTimeKind.Utc) : null;
+
 			if (state == SessionState.Idle && age > _idleForgotten)
 			{
 				Forget(file);
@@ -72,7 +74,11 @@ internal static class SessionWatcher
 				state,
 				state == SessionState.Working ? session.Tool : null,
 				Folder(session.Cwd),
-				Branch(session.Cwd)));
+				Branch(session.Cwd),
+				state == SessionState.Idle ? null : turn,
+
+				// Длительность — только у хода, закрытого Stop: прерванный Esc или брошенный её не знает.
+				session.State == SessionState.Idle ? session.Time - turn : null));
 		}
 
 		return sessions;

@@ -29,4 +29,23 @@ public class TextTests
 
 	[Fact]
 	public void MissingCostIsADash() => Assert.Equal("—", Text.Cost(null));
+
+	[Fact]
+	public void TurnShowsHowLongItRuns() // «работает · 3 мин»; первую минуту — без таймера
+	{
+		var now = System.DateTime.UtcNow;
+		var session = new LiveSession("s", SessionState.Working, null, "repo", null, Since: now.AddMinutes(-3));
+
+		Assert.Equal("langSessionWorking · langMinutes", Text.Session(session, now));
+		Assert.Equal("langSessionWorking", Text.Session(session with { Since = now.AddSeconds(-20) }, now));
+	}
+
+	[Fact]
+	public void SessionToastSaysWhatHappened()
+	{
+		var session = new LiveSession("s", SessionState.Waiting, null, "repo", null);
+
+		Assert.Equal(("langToastWaiting", "repo"), Text.SessionToast(new SessionAlert(session, Waiting: true)));
+		Assert.Equal("langToastDone", Text.SessionToast(new SessionAlert(session with { State = SessionState.Idle, Took = System.TimeSpan.FromMinutes(12) }, Waiting: false)).Title);
+	}
 }

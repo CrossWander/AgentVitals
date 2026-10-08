@@ -122,7 +122,7 @@ internal static class Views
 			[.. available.Select(state => Provider(state, now))],
 			Text.Status(poller.Status),
 			Brush(poller.Status is { } status ? Tone(status.Health) : "Muted"),
-			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session), Brush(Dot(session.State))))],
+			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State))))],
 			hint,
 			focus is null ? "" : Text.Live(focus),
 			Brush(Dot(live)));

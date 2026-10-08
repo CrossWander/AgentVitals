@@ -44,6 +44,38 @@ public class HookWriterTests
 		Assert.Equal(@"C:\Проекты\мой репо", session.Cwd);
 	}
 
+	// Секунды, а не тики: события ближе 50 мс к «ждёт» считаются одним мгновением и отбрасываются.
+	private static void Hook(TempDirectory temp, string hookEvent, long second) =>
+		HookWriter.Apply(new JsonObject { ["session_id"] = "s1", ["hook_event_name"] = hookEvent, ["cwd"] = @"C:\x" }, temp.Path, second * TimeSpan.TicksPerSecond);
+
+	[Fact]
+	public void TurnStartsAtThePromptAndOutlivesItsTools() // по нему таймер хода, а после Stop — сколько ход занял
+	{
+		using var temp = new TempDirectory();
+
+		Hook(temp, "UserPromptSubmit", 100);
+		Hook(temp, "PreToolUse", 200);
+		Hook(temp, "PermissionRequest", 300);
+		Hook(temp, "Stop", 400);
+
+		Assert.Equal(100 * TimeSpan.TicksPerSecond, HookWriter.Read(temp.File("s1.json"))!.Turn);
+
+		Hook(temp, "SessionStart", 500); // /clear — новый разговор, прежнего хода нет
+		Assert.Null(HookWriter.Read(temp.File("s1.json"))!.Turn);
+	}
+
+	[Fact]
+	public void TurnWithoutPromptStartsAtItsFirstEvent() // сессия старше hooks или ход без запроса
+	{
+		using var temp = new TempDirectory();
+
+		Hook(temp, "Stop", 100);
+		Hook(temp, "PreToolUse", 200);
+		Hook(temp, "PostToolUse", 300);
+
+		Assert.Equal(200 * TimeSpan.TicksPerSecond, HookWriter.Read(temp.File("s1.json"))!.Turn);
+	}
+
 	[Fact]
 	public void OlderEventDoesNotOverwriteNewer()
 	{

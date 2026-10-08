@@ -70,13 +70,24 @@ internal static class Text
 		_ => throw new NotImplementedException("Health switch error"),
 	});
 
-	public static string Session(LiveSession session) => session.State switch
+	/// <summary>Состояние сессии, а у идущего хода — и сколько он длится: «работает · 3 мин». Первую минуту таймера нет.</summary>
+	public static string Session(LiveSession session, DateTime now)
 	{
-		SessionState.Idle => Localization.Get("langSessionIdle"),
-		SessionState.Working => session.Tool is { } tool ? Localization.Format("langSessionWorkingTool", tool) : Localization.Get("langSessionWorking"),
-		SessionState.Waiting => Localization.Get("langSessionWaiting"),
-		_ => throw new NotImplementedException("SessionState switch error"),
-	};
+		var state = session.State switch
+		{
+			SessionState.Idle => Localization.Get("langSessionIdle"),
+			SessionState.Working => session.Tool is { } tool ? Localization.Format("langSessionWorkingTool", tool) : Localization.Get("langSessionWorking"),
+			SessionState.Waiting => Localization.Get("langSessionWaiting"),
+			_ => throw new NotImplementedException("SessionState switch error"),
+		};
+
+		return session.Since is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
+	}
+
+	/// <summary>Тост о сессии: заголовок — что случилось, текст — где и сколько ход занял.</summary>
+	public static (string Title, string Message) SessionToast(SessionAlert alert) => alert.Waiting
+		? (Localization.Get("langToastWaiting"), alert.Session.Folder)
+		: (Localization.Get("langToastDone"), Localization.Format("langToastDoneText", alert.Session.Folder, Span(alert.Session.Took ?? TimeSpan.Zero)));
 
 	public static string Live(LiveSession session) => session.State switch
 	{

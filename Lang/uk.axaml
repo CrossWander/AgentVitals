@@ -21,6 +21,8 @@
     <x:String x:Key="langMinutes2">2 хв</x:String>
     <x:String x:Key="langMinutes5">5 хв</x:String>
     <x:String x:Key="langMinutes10">10 хв</x:String>
+    <x:String x:Key="langMinutes15">15 хв</x:String>
+    <x:String x:Key="langAnyTurn">будь-який</x:String>
     <x:String x:Key="langUpdatedNow">Оновлено щойно</x:String>
     <x:String x:Key="langUpdatedAgo">Оновлено {0} хв тому</x:String>
     <x:String x:Key="langHealthGood">НОРМА</x:String>
@@ -79,6 +81,9 @@
     <x:String x:Key="langThemeDark">Темна</x:String>
     <x:String x:Key="langInterval">ПЕРЕВІРЯТИ КВОТИ КОЖНІ</x:String>
     <x:String x:Key="langAutostart">Запускати разом з Windows</x:String>
+    <x:String x:Key="langNotifications">СПОВІЩЕННЯ</x:String>
+    <x:String x:Key="langSessionToasts">Повідомляти про кінець ходу й питання</x:String>
+    <x:String x:Key="langTurnLonger">ПРО КІНЕЦЬ ХОДУ, ЯКЩО ВІН ДОВШИЙ</x:String>
     <x:String x:Key="langHooks">ЖИВІ СЕСІЇ</x:String>
     <x:String x:Key="langHooksOff">Не підключено. AgentVitals додасть свої hooks у ~/.claude/settings.json і збереже поруч резервну копію.</x:String>
     <x:String x:Key="langHooksOn">Підключено: Claude Code повідомляє AgentVitals про свій стан.</x:String>
@@ -91,4 +96,7 @@
     <x:String x:Key="langAlertLeft">{0} · {1}: залишилось {2}%</x:String>
     <x:String x:Key="langToastStatus">Anthropic: {0}</x:String>
     <x:String x:Key="langToastStatusOk">Anthropic: усе знову працює</x:String>
+    <x:String x:Key="langToastDone">Claude закінчив</x:String>
+    <x:String x:Key="langToastDoneText">{0} · хід тривав {1}</x:String>
+    <x:String x:Key="langToastWaiting">Claude чекає дозволу</x:String>
 </ResourceDictionary>

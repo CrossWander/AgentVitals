@@ -51,15 +51,9 @@ internal static class HookWriter
 		var cwd = (string?)payload["cwd"] ?? "";
 		var hookEvent = (string?)payload["hook_event_name"];
 
-		// SessionEnd не удаляет файл, а оставляет отметку: async-событие, запущенное перед выходом
-		// и финишировавшее после, иначе воскресило бы сессию. Отметку через минуту убирает трей.
-		var session = hookEvent == "SessionEnd"
-			? new Session(SessionState.Idle, null, cwd, at, Ended: true)
-			: Map(hookEvent, (string?)payload["notification_type"]) is { } state
-				? new Session(state, state == SessionState.Working ? (string?)payload["tool_name"] : null, cwd, at, Transcript: (string?)payload["transcript_path"])
-				: null;
+		var state = hookEvent == "SessionEnd" ? SessionState.Idle : Map(hookEvent, (string?)payload["notification_type"]);
 
-		if (session is null)
+		if (state is null)
 		{
 			return;
 		}
@@ -71,7 +65,21 @@ internal static class HookWriter
 
 		try
 		{
-			if (Stale(Read(file), session))
+			var recorded = Read(file);
+
+			// SessionEnd не удаляет файл, а оставляет отметку: async-событие, запущенное перед выходом
+			// и финишировавшее после, иначе воскресило бы сессию. Отметку через минуту убирает трей.
+			var session = hookEvent == "SessionEnd"
+				? new Session(SessionState.Idle, null, cwd, at, Ended: true)
+				: new Session(
+					state.Value,
+					state == SessionState.Working ? (string?)payload["tool_name"] : null,
+					cwd,
+					at,
+					Transcript: (string?)payload["transcript_path"],
+					Turn: Turn(hookEvent, state.Value, recorded, at));
+
+			if (Stale(recorded, session))
 			{
 				return;
 			}
@@ -143,6 +151,16 @@ internal static class HookWriter
 			return true;
 		}
 	}
+
+	/// <summary>Начало хода — запрос человека. События хода его наследуют, Stop тоже: по нему трей узнаёт длительность.</summary>
+	private static long? Turn(string? hookEvent, SessionState state, Session? recorded, long at) =>
+		hookEvent == "UserPromptSubmit" ? at
+		: hookEvent == "SessionStart" ? null
+		: state == SessionState.Idle ? recorded?.Turn
+
+		// Ход без запроса или сессия, начатая до подключения hooks, — отсчёт с первого события.
+		: recorded is { State: not SessionState.Idle, Turn: { } turn } ? turn
+		: at;
 
 	internal static SessionState? Map(string? hookEvent, string? notificationType) => hookEvent switch
 	{

@@ -18,6 +18,11 @@ internal static class Store
 
 		// Квоты сессии меняются за минуты: реже — и цифры в карточке отстают от того, что видно в claude.
 		public int IntervalSeconds { get; set; } = 60;
+
+		// Тосты о сессиях: ход закончился (не короче TurnMinutes, 0 — любой) или ждёт разрешения.
+		public bool SessionToasts { get; set; } = true;
+
+		public int TurnMinutes { get; set; } = 5;
 	}
 
 	private static readonly string _path = Path.Combine(Paths.Data, "config.json");

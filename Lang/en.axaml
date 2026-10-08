@@ -21,6 +21,8 @@
     <x:String x:Key="langMinutes2">2 min</x:String>
     <x:String x:Key="langMinutes5">5 min</x:String>
     <x:String x:Key="langMinutes10">10 min</x:String>
+    <x:String x:Key="langMinutes15">15 min</x:String>
+    <x:String x:Key="langAnyTurn">any</x:String>
     <x:String x:Key="langUpdatedNow">Updated just now</x:String>
     <x:String x:Key="langUpdatedAgo">Updated {0} min ago</x:String>
     <x:String x:Key="langHealthGood">HEALTHY</x:String>
@@ -79,6 +81,9 @@
     <x:String x:Key="langThemeDark">Dark</x:String>
     <x:String x:Key="langInterval">CHECK QUOTAS EVERY</x:String>
     <x:String x:Key="langAutostart">Start with Windows</x:String>
+    <x:String x:Key="langNotifications">NOTIFICATIONS</x:String>
+    <x:String x:Key="langSessionToasts">Tell me when Claude finishes or asks</x:String>
+    <x:String x:Key="langTurnLonger">FINISHED TURNS LONGER THAN</x:String>
     <x:String x:Key="langHooks">LIVE SESSIONS</x:String>
     <x:String x:Key="langHooksOff">Not connected. AgentVitals will add its hooks to ~/.claude/settings.json and keep a backup next to it.</x:String>
     <x:String x:Key="langHooksOn">Connected: Claude Code reports its state to AgentVitals.</x:String>
@@ -91,4 +96,7 @@
     <x:String x:Key="langAlertLeft">{0} · {1}: {2}% left</x:String>
     <x:String x:Key="langToastStatus">Anthropic: {0}</x:String>
     <x:String x:Key="langToastStatusOk">Anthropic: all systems operational again</x:String>
+    <x:String x:Key="langToastDone">Claude is done</x:String>
+    <x:String x:Key="langToastDoneText">{0} · took {1}</x:String>
+    <x:String x:Key="langToastWaiting">Claude needs your permission</x:String>
 </ResourceDictionary>

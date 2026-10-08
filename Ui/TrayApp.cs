@@ -126,6 +126,7 @@ internal sealed class TrayApp
 
 		if (!sessions.SequenceEqual(_sessions))
 		{
+			NotifySessions(_sessions, sessions);
 			_sessions = sessions;
 
 			if (SessionWatcher.Overall(sessions) == SessionState.Idle)
@@ -176,6 +177,23 @@ internal sealed class TrayApp
 			}
 
 			_lastIndicator = status.Indicator;
+		}
+	}
+
+	/// <summary>Тост, когда Claude закончил долгий ход или ждёт разрешения, — пока человек в другом окне.</summary>
+	private void NotifySessions(IReadOnlyList<LiveSession> before, IReadOnlyList<LiveSession> after)
+	{
+		if (!Store.Current.SessionToasts)
+		{
+			return;
+		}
+
+		// Несколько разом бывает редко — сказать о главном: вопрос о разрешении держит Claude, пока не ответят.
+		if (SessionAlarm.Check(before, after, TimeSpan.FromMinutes(Store.Current.TurnMinutes)).MaxBy(alert => alert.Waiting) is { } alert)
+		{
+			var (title, message) = Text.SessionToast(alert);
+			_toast.Say(message, Anchor(), title, Views.Brush(alert.Waiting ? "Blue" : "Good"));
+			Journal.Add($"toast: {title}: {message}");
 		}
 	}
 

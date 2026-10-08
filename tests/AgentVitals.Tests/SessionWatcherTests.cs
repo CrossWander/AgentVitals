@@ -85,6 +85,31 @@ public class SessionWatcherTests
 		Assert.Equal(SessionState.Working, AfterEsc(SessionState.Working, _now.AddSeconds(-10)));
 
 	[Fact]
+	public void WorkingSessionKnowsWhenItsTurnStarted() // для таймера «работает · 3 мин»
+	{
+		using var temp = new TempDirectory();
+		var turn = _now.AddMinutes(-3);
+		File.WriteAllText(temp.File("s.json"), JsonSerializer.Serialize(new Session(SessionState.Working, null, @"C:\x", _now.AddMinutes(-1).Ticks, Turn: turn.Ticks), HookWriter.Json));
+
+		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now));
+
+		Assert.Equal(turn, session.Since);
+		Assert.Null(session.Took);
+	}
+
+	[Fact]
+	public void FinishedTurnTellsHowLongItTook()
+	{
+		using var temp = new TempDirectory();
+		File.WriteAllText(temp.File("s.json"), JsonSerializer.Serialize(new Session(SessionState.Idle, null, @"C:\x", _now.AddMinutes(-1).Ticks, Turn: _now.AddMinutes(-13).Ticks), HookWriter.Json));
+
+		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now));
+
+		Assert.Equal(TimeSpan.FromMinutes(12), session.Took);
+		Assert.Null(session.Since);
+	}
+
+	[Fact]
 	public void WaitingOutranksWorking()
 	{
 		LiveSession[] sessions =

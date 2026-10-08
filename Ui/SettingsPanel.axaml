@@ -60,6 +60,30 @@
             </StackPanel>
         </Border>
 
+        <Border Classes="card">
+            <StackPanel Spacing="12">
+                <TextBlock Classes="label" Text="{DynamicResource langNotifications}"/>
+                <CheckBox Name="SessionToastsToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langSessionToasts}"
+                          IsCheckedChanged="OnSessionToasts"/>
+                <StackPanel Name="TurnPanel" Spacing="6">
+                    <TextBlock Classes="label" Text="{DynamicResource langTurnLonger}"/>
+                    <Border Classes="track" HorizontalAlignment="Left">
+                        <!-- Tag — минуты; 0 — о любом ходе -->
+                        <StackPanel Name="TurnMinutes" Orientation="Horizontal">
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="0"
+                                         Content="{DynamicResource langAnyTurn}" IsCheckedChanged="OnTurnMinutes"/>
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="1"
+                                         Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnTurnMinutes"/>
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="5"
+                                         Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnTurnMinutes"/>
+                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="15"
+                                         Content="{DynamicResource langMinutes15}" IsCheckedChanged="OnTurnMinutes"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
         <Border Name="AutostartCard" Classes="card">
             <CheckBox Name="AutostartToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langAutostart}"
                       IsCheckedChanged="OnAutostart"/>

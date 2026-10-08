@@ -35,6 +35,9 @@ internal partial class SettingsPanel : UserControl
 		Select(Languages, Localization.Current);
 		Select(Themes, Store.Current.Theme.ToString());
 		Select(Intervals, Store.Current.IntervalSeconds.ToString(CultureInfo.InvariantCulture));
+		Select(TurnMinutes, Store.Current.TurnMinutes.ToString(CultureInfo.InvariantCulture));
+		SessionToastsToggle.IsChecked = Store.Current.SessionToasts;
+		TurnPanel.IsEnabled = Store.Current.SessionToasts;
 		AutostartCard.IsVisible = OperatingSystem.IsWindows();
 
 		if (OperatingSystem.IsWindows())
@@ -85,6 +88,25 @@ internal partial class SettingsPanel : UserControl
 		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string seconds })
 		{
 			Store.Current.IntervalSeconds = int.Parse(seconds, CultureInfo.InvariantCulture);
+			Store.Save();
+		}
+	}
+
+	private void OnSessionToasts(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading)
+		{
+			Store.Current.SessionToasts = SessionToastsToggle.IsChecked == true;
+			TurnPanel.IsEnabled = Store.Current.SessionToasts;
+			Store.Save();
+		}
+	}
+
+	private void OnTurnMinutes(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string minutes })
+		{
+			Store.Current.TurnMinutes = int.Parse(minutes, CultureInfo.InvariantCulture);
 			Store.Save();
 		}
 	}

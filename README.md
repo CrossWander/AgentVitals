@@ -24,6 +24,9 @@ Ukrainian and Russian, light and dark.
 - **Live sessions.** With the hooks connected, the pulse runs while Claude is working and a blue
   dot blinks while it waits for your permission. A turn stopped with Esc fires no hook; the
   session's transcript says so, and the session goes idle at once instead of after 15 minutes.
+  A running turn shows how long it has been going (*working · 3 min*). A toast says when Claude
+  finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
+  in settings.
 - **Anthropic status** from status.claude.com, with a toast when it changes.
 - **Usage statistics** (Claude). Today's cost, tokens and working time, each with yesterday's
   number, and a 30-day chart of cost, tokens or cache — see [Usage statistics](#usage-statistics).

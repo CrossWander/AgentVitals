@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace AgentVitals;
@@ -15,7 +17,8 @@ public enum SessionState
 /// <remarks>Прежний формат хранил местное время в поле at: такие файлы читаются как очень старые и забываются.</remarks>
 /// <remarks>Ended — отметка SessionEnd: файл не удаляется сразу, чтобы опоздавшие события сессию не воскресили.</remarks>
 /// <remarks>Transcript — журнал сессии: по нему видно прерывание клавишей Esc, о котором hooks молчат.</remarks>
-internal sealed record Session(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false, string? Transcript = null)
+/// <remarks>Turn — тики UTC начала хода; после Stop остаётся, чтобы трей узнал, сколько ход занял.</remarks>
+internal sealed record Session(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false, string? Transcript = null, long? Turn = null)
 {
 	// Только для чтения в коде: в файле время хранится одним полем utc.
 	[JsonIgnore]
@@ -23,4 +26,27 @@ internal sealed record Session(SessionState State, string? Tool, string Cwd, lon
 }
 
 /// <summary>Сессия для показа: состояние с поправкой на давность, папка и ветка.</summary>
-internal sealed record LiveSession(string Id, SessionState State, string? Tool, string Folder, string? Branch);
+/// <remarks>Since — начало идущего хода; Took — сколько занял закончившийся (null — прерван или неизвестно).</remarks>
+internal sealed record LiveSession(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? Since = null, TimeSpan? Took = null);
+
+/// <summary>О чём сказать тостом: ход закончился или сессия ждёт разрешения.</summary>
+internal sealed record SessionAlert(LiveSession Session, bool Waiting);
+
+/// <summary>Перемены в сессиях, о которых стоит сказать, пока человек в другом окне.</summary>
+internal static class SessionAlarm
+{
+	/// <param name="before">Прошлое чтение; сессии, которых в нём нет, молчат — неизвестно, что было до них.</param>
+	/// <param name="shortest">Ход короче этого не стоит тоста: на коротком человек и так смотрит в терминал.</param>
+	public static IReadOnlyList<SessionAlert> Check(IReadOnlyList<LiveSession> before, IReadOnlyList<LiveSession> after, TimeSpan shortest)
+	{
+		var was = before.ToDictionary(session => session.Id, session => session.State);
+
+		return
+		[
+			.. after
+				.Where(session => was.TryGetValue(session.Id, out var state) && state != session.State)
+				.Where(session => session.State == SessionState.Waiting || (session.State == SessionState.Idle && session.Took >= shortest))
+				.Select(session => new SessionAlert(session, session.State == SessionState.Waiting)),
+		];
+	}
+}
