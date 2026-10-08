@@ -20,7 +20,7 @@ internal static class Text
 
 		var left = at.UtcDateTime - now;
 
-		return left <= TimeSpan.Zero ? Localization.Get("langResetsSoon")
+		return left <= TimeSpan.Zero ? Localization.Get("langResetDone")
 			: left > TimeSpan.FromDays(1) ? Localization.Format("langResetsAt", at.LocalDateTime.ToString("ddd HH:mm", Localization.Culture))
 			: Localization.Format("langResetsIn", Span(left));
 	}

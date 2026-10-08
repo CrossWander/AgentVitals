@@ -11,7 +11,7 @@
     <x:String x:Key="langExtraSpent">витрачено</x:String>
     <x:String x:Key="langResetsIn">скидання через {0}</x:String>
     <x:String x:Key="langResetsAt">скидання {0}</x:String>
-    <x:String x:Key="langResetsSoon">скидається</x:String>
+    <x:String x:Key="langResetDone">скинуто</x:String>
     <x:String x:Key="langHoursMinutes">{0} год {1} хв</x:String>
     <x:String x:Key="langMinutes">{0} хв</x:String>
     <x:String x:Key="langMinutes1">1 хв</x:String>

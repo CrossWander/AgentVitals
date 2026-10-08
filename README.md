@@ -36,7 +36,9 @@ Hover the icon for a quick card, click it for the full popover, right-click for 
 
 The token is only ever read. AgentVitals never refreshes it: Claude Code does that itself, and a
 refresh token spent by someone else would sign Claude Code out. After a night's sleep the token
-has usually expired: the card keeps the last numbers and waits. Claude Code renews the sign-in on
+has usually expired: the card keeps the last numbers and waits, except a window whose reset time
+has passed, which shows 0% and "reset" (use from other devices since then is not visible until fresh
+data arrives). Claude Code renews the sign-in on
 its first request, and AgentVitals notices the new file and fetches at once. Quotas are checked every
 minute by default (2, 5 or 10 minutes in settings; more often the server answers 429);
 `Retry-After` is respected.

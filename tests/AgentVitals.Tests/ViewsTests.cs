@@ -29,6 +29,25 @@ public class ViewsTests
 	public void TabOpensItsAgentsUsagePage() =>
 		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow).Dashboard);
 
+	[Fact]
+	public void PassedResetShowsAnEmptyWindow() // после сна вход истёк, а сессия за это время сбросилась — не 91%
+	{
+		var now = DateTime.UtcNow;
+		var state = new ProviderState(new ClaudeProvider())
+		{
+			Snapshot = new("Max", null,
+			[
+				new("langWindowSession", null, 91, now.AddMinutes(-5), Limiting: true),
+				new("langWindowWeek", null, 40, now.AddDays(2), Limiting: true),
+			], null),
+		};
+
+		var cards = Views.Provider(state, now).Cards;
+
+		Assert.Equal(("0", 0d, "langResetDone"), (cards[0].Value, cards[0].Fill, cards[0].Resets));
+		Assert.Equal("40", cards[1].Value);
+	}
+
 	private static UsageDay Day(int day, long input = 0, long output = 0, decimal? cost = 0, bool unpriced = false) =>
 		new(new DateOnly(2026, 10, day), input, output, 0, 0, cost, unpriced, TimeSpan.Zero);
 

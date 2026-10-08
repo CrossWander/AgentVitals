@@ -246,6 +246,13 @@ internal static class Views
 
 	private static CardView Card(QuotaWindow window, DateTime now)
 	{
+		// Сброс прошёл, а свежих данных нет — после сна вход истёк или нет сети: окно точно обнулилось.
+		// ponytail: расход с других устройств после сброса не виден, пока не придёт новый снимок.
+		if (window.ResetsAt?.UtcDateTime <= now)
+		{
+			window = window with { Used = 0 };
+		}
+
 		var health = Quota.Rate(window.Used);
 		var (icon, tint) = window.Key switch
 		{
