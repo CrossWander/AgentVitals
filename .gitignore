@@ -7,9 +7,9 @@ obj/
 config.json
 log.txt
 
-# готовый портабельный exe нужен в репозитории, спутники сборки — нет
-release/*
-!release/AgentVitals.exe
+# сборка, как bin/ и obj/: exe — результат tools\publish.ps1, в git ему не место;
+# людям его отдаёт релиз на GitHub (.github/workflows/release.yml)
+release/
 
 # служебные файлы Visual Studio
 .vs/

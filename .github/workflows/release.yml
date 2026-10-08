@@ -1,0 +1,31 @@
+# Сборка по релизу: опубликовали релиз на GitHub — exe собирается из его тега и прикладывается к нему.
+# В git exe не хранится: так видно, из каких исходников он собран, и история не пухнет на 27 МБ за выпуск.
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        run: dotnet test AgentVitals.slnx
+
+      - name: Build
+        run: ./tools/publish.ps1
+
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" release/AgentVitals.exe --clobber

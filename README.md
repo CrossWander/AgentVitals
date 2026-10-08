@@ -88,6 +88,10 @@ Requires the .NET 10 SDK.
     powershell -File tools\publish.ps1 -SelfContained
     powershell -File tools\make-icons.ps1         # redraw app.ico and app.png
 
+`release\` is a build folder and stays out of git. Publishing a release on GitHub runs
+[`release.yml`](.github/workflows/release.yml): it tests the tagged sources, builds the exe with
+`tools\publish.ps1` and attaches it to that release.
+
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
