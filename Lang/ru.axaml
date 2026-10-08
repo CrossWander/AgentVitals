@@ -26,7 +26,7 @@
     <x:String x:Key="langHealthUnknown">НЕТ ДАННЫХ</x:String>
     <x:String x:Key="langHealthExhausted">ИСЧЕРПАНО</x:String>
     <x:String x:Key="langNoAgents">Агенты не найдены. Установи Claude Code, Codex или Gemini CLI.</x:String>
-    <x:String x:Key="langErrorExpired">Вход истёк — открой {0}, чтобы обновить</x:String>
+    <x:String x:Key="langErrorExpired">Вход истёк, обновится, когда заработает {0}, — данные вернутся сами</x:String>
     <x:String x:Key="langErrorRateLimited">Сервер просит спрашивать реже, повтор в {0}</x:String>
     <x:String x:Key="langErrorNetwork">Нет связи</x:String>
     <x:String x:Key="langErrorParse">Не удалось разобрать ответ</x:String>

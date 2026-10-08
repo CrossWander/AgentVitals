@@ -98,6 +98,8 @@ internal sealed class Poller
 		Interval = TimeSpan.FromMinutes(1),
 	};
 
+	private readonly List<FileNotice> _notices = [];
+
 	private DateTime _nextStatus = DateTime.MinValue;
 	private bool _busy;
 
@@ -120,6 +122,12 @@ internal sealed class Poller
 		_timer.Tick += async (_, _) => await TickAsync(force: false);
 		_timer.Start();
 		_ = TickAsync(force: false);
+
+		// После сна вход истёк, пока CLI агента его не обновит: новый файл входа — сразу тик, а не через минуту.
+		foreach (var state in Providers)
+		{
+			_notices.Add(new FileNotice(state.Provider.Credentials, () => Dispatcher.UIThread.Post(() => _ = TickAsync(force: false))));
+		}
 	}
 
 	/// <summary>Спросить всех сейчас, кроме тех, кому сервер велел ждать.</summary>

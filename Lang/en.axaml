@@ -26,7 +26,7 @@
     <x:String x:Key="langHealthUnknown">NO DATA</x:String>
     <x:String x:Key="langHealthExhausted">USED UP</x:String>
     <x:String x:Key="langNoAgents">No agents found. Install Claude Code, Codex or Gemini CLI.</x:String>
-    <x:String x:Key="langErrorExpired">Sign-in expired — open {0} to renew it</x:String>
+    <x:String x:Key="langErrorExpired">Sign-in expired; it renews once {0} runs — the data comes back by itself</x:String>
     <x:String x:Key="langErrorRateLimited">The server asks to check less often, retrying at {0}</x:String>
     <x:String x:Key="langErrorNetwork">No connection</x:String>
     <x:String x:Key="langErrorParse">Could not read the response</x:String>

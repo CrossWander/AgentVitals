@@ -35,8 +35,9 @@ Hover the icon for a quick card, click it for the full popover, right-click for 
 | Gemini | `cloudcode-pa.googleapis.com` quota calls with `~/.gemini/oauth_creds.json` | not verified |
 
 The token is only ever read. AgentVitals never refreshes it: Claude Code does that itself, and a
-refresh token spent by someone else would sign Claude Code out. If the token has expired, the card
-says so — open `claude` and the data comes back within a minute. Quotas are checked every
+refresh token spent by someone else would sign Claude Code out. After a night's sleep the token
+has usually expired: the card keeps the last numbers and waits. Claude Code renews the sign-in on
+its first request, and AgentVitals notices the new file and fetches at once. Quotas are checked every
 minute by default (2, 5 or 10 minutes in settings; more often the server answers 429);
 `Retry-After` is respected.
 
