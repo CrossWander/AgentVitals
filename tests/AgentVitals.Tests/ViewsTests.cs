@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace AgentVitals.Tests;
@@ -75,4 +76,26 @@ public class ViewsTests
 
 	[Fact]
 	public void EmptyMonthDrawsNothing() => Assert.All(Views.Bars([Day(6), Day(7)], ChartMode.Cost), bar => Assert.Equal(0, bar.Low));
+
+	[Theory]
+	[InlineData(21.3, 30)]
+	[InlineData(40, 40)]
+	[InlineData(124.61, 160)]
+	[InlineData(294_400_000, 300_000_000)]
+	[InlineData(0, 0)]
+	public void ScaleIsTwoRoundSteps(double top, double ceiling) => Assert.Equal(ceiling, Views.Ceiling(top), 6);
+
+	[Fact]
+	public void AxisSaysMoneyForCost() => Assert.Equal(["$40", "$20", "$0"], Views.AxisY(40, ChartMode.Cost));
+
+	[Fact]
+	public void EmptyAxisShowsOnlyZero() => Assert.Equal(["", "", "$0"], Views.AxisY(0, ChartMode.Cost));
+
+	[Fact]
+	public void DatesEveryWeekFromTheFirstDay()
+	{
+		var days = Enumerable.Range(0, 30).Select(offset => Day(1) with { Date = new DateOnly(2026, 9, 8).AddDays(offset) }).ToList();
+
+		Assert.Equal([0, 7, 14, 21, 28], Views.AxisX(days).Select(tick => tick.Index));
+	}
 }

@@ -140,6 +140,9 @@ internal partial class Popover : TrayWindow
 			_shown = shown;
 			_bars = Views.Bars(usage.Days, _mode);
 			Bars.ItemsSource = _bars;
+			var axis = Views.AxisY(Views.Ceiling(Views.Top(usage.Days, _mode)), _mode);
+			(AxisTop.Text, AxisMiddle.Text, AxisBottom.Text) = (axis[0], axis[1], axis[2]);
+			ShowDates(usage.Days);
 			_total = usage.Days.Count == 0 ? "" : Views.Total(usage.Days, _mode);
 			LegendLow.Text = Localization.Get(_mode switch
 			{
@@ -154,6 +157,33 @@ internal partial class Popover : TrayWindow
 		}
 
 		ChartLine.Text = _bars.FirstOrDefault(bar => bar.Date == _hovered)?.Line ?? _total;
+	}
+
+	/// <summary>Даты под столбиками: по колонке на день и последняя — шириной с подписи шкалы; подпись тянется на неделю вправо.</summary>
+	private void ShowDates(IReadOnlyList<UsageDay> days)
+	{
+		AxisX.Children.Clear();
+		AxisX.ColumnDefinitions.Clear();
+
+		foreach (var _ in days)
+		{
+			AxisX.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+		}
+
+		AxisX.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto) { SharedSizeGroup = "Axis" });
+
+		foreach (var (index, text) in Views.AxisX(days))
+		{
+			var label = new TextBlock
+			{
+				Text = text,
+				Classes = { "faint" },
+			};
+
+			Grid.SetColumn(label, index);
+			Grid.SetColumnSpan(label, Math.Min(7, days.Count + 1 - index));
+			AxisX.Children.Add(label);
+		}
 	}
 
 	private void OnMode(object? sender, RoutedEventArgs e)

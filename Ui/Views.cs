@@ -179,12 +179,12 @@ internal static class Views
 			days);
 	}
 
-	/// <summary>Столбики в выбранной мере: масштаб — самый большой день, сегодняшний ярче.</summary>
+	/// <summary>Столбики в выбранной мере: во всю высоту — верх шкалы, сегодняшний ярче.</summary>
 	internal static IReadOnlyList<BarView> Bars(IReadOnlyList<UsageDay> days, ChartMode mode)
 	{
 		var parts = days.Select(day => Parts(day, mode)).ToList();
-		var top = parts.Select(part => part.Low + part.High).DefaultIfEmpty(0).Max();
-		var scale = top > 0 ? ChartHeight / top : 0;
+		var ceiling = Ceiling(Top(days, mode));
+		var scale = ceiling > 0 ? ChartHeight / ceiling : 0;
 
 		return [.. days.Select((day, index) => new BarView(
 			day.Date,
@@ -193,6 +193,39 @@ internal static class Views
 			index == days.Count - 1 ? 1 : 0.6,
 			Text.DayLine(day)))];
 	}
+
+	/// <summary>Самый большой день в выбранной мере.</summary>
+	internal static double Top(IReadOnlyList<UsageDay> days, ChartMode mode) =>
+		days.Select(day => Parts(day, mode)).Select(part => part.Low + part.High).DefaultIfEmpty(0).Max();
+
+	/// <summary>Верх шкалы: две «круглые» ступени, как $0 / $80 / $160, не ниже самого большого дня.</summary>
+	internal static double Ceiling(double top)
+	{
+		if (top <= 0)
+		{
+			return 0;
+		}
+
+		var half = top / 2;
+		var power = Math.Pow(10, Math.Floor(Math.Log10(half)));
+
+		return 2 * new[] { 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10 }.Select(step => step * power).First(step => step >= half);
+	}
+
+	/// <summary>Подписи оси Y сверху вниз: верх шкалы, середина, ноль.</summary>
+	internal static IReadOnlyList<string> AxisY(double ceiling, ChartMode mode)
+	{
+		string Label(double value) => mode == ChartMode.Cost
+			? "$" + value.ToString("0.##", CultureInfo.InvariantCulture)
+			: value == 0 ? "0" : Text.Tokens((long)value);
+
+		return ceiling > 0 ? [Label(ceiling), Label(ceiling / 2), Label(0)] : ["", "", Label(0)];
+	}
+
+	/// <summary>Подписи оси X: каждый седьмой день от первого — номер столбика и дата.</summary>
+	internal static IReadOnlyList<(int Index, string Text)> AxisX(IReadOnlyList<UsageDay> days) =>
+		[.. days.Select((day, index) => (Index: index, day.Date)).Where(item => item.Index % 7 == 0)
+			.Select(item => (item.Index, item.Date.ToString("d MMM", Localization.Culture)))];
 
 	/// <summary>Сумма за 30 дней в выбранной мере — в углу графика.</summary>
 	internal static string Total(IReadOnlyList<UsageDay> days, ChartMode mode) => mode switch

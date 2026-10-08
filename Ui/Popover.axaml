@@ -136,25 +136,45 @@
                                                  Content="{DynamicResource langChartCache}" IsCheckedChanged="OnMode"/>
                                 </StackPanel>
                             </Border>
-                            <ItemsControl Name="Bars" Height="90">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Rows="1"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="local:BarView">
-                                        <!-- Столбик ловит мышь во всю высоту: навести можно и на день с крошечным расходом -->
-                                        <Panel Background="Transparent" Opacity="{Binding Opacity}"
-                                               PointerEntered="OnBarEnter" PointerExited="OnBarLeave">
-                                            <StackPanel VerticalAlignment="Bottom" Margin="1,0">
-                                                <Border Height="{Binding High}" Background="{DynamicResource Good}" CornerRadius="2,2,0,0"/>
-                                                <Border Height="{Binding Low}" Background="{DynamicResource Blue}"/>
-                                            </StackPanel>
-                                        </Panel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <!-- Слева столбики на сетке (верх шкалы, середина, ноль), справа подписи шкалы, снизу даты раз в неделю -->
+                            <Grid RowDefinitions="Auto,Auto" Grid.IsSharedSizeScope="True">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Axis"/>
+                                </Grid.ColumnDefinitions>
+                                <Panel Height="90">
+                                    <Border Height="1" VerticalAlignment="Top" Background="{DynamicResource CardLine}"/>
+                                    <Border Height="1" VerticalAlignment="Center" Background="{DynamicResource CardLine}"/>
+                                    <Border Height="1" VerticalAlignment="Bottom" Background="{DynamicResource CardLine}"/>
+                                    <ItemsControl Name="Bars">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Rows="1"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:BarView">
+                                                <!-- Столбик ловит мышь во всю высоту: навести можно и на день с крошечным расходом -->
+                                                <Panel Background="Transparent" Opacity="{Binding Opacity}"
+                                                       PointerEntered="OnBarEnter" PointerExited="OnBarLeave">
+                                                    <StackPanel VerticalAlignment="Bottom" Margin="1,0">
+                                                        <Border Height="{Binding High}" Background="{DynamicResource Good}" CornerRadius="2,2,0,0"/>
+                                                        <Border Height="{Binding Low}" Background="{DynamicResource Blue}"/>
+                                                    </StackPanel>
+                                                </Panel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Panel>
+                                <Panel Grid.Column="1" Height="90" Margin="6,0,0,0">
+                                    <TextBlock Name="AxisTop" Classes="faint" VerticalAlignment="Top" Margin="0,-7,0,0"/>
+                                    <TextBlock Name="AxisMiddle" Classes="faint" VerticalAlignment="Center"/>
+                                    <TextBlock Name="AxisBottom" Classes="faint" VerticalAlignment="Bottom" Margin="0,0,0,-7"/>
+                                </Panel>
+                                <!-- Высота задана: пока логи не прочитаны, дат нет, а окно не должно прыгать.
+                                     Тянется и под подписи шкалы: последней дате мало двух столбиков -->
+                                <Grid Name="AxisX" Grid.Row="1" Grid.ColumnSpan="2" Height="15" Margin="0,5,0,0"/>
+                            </Grid>
                             <!-- Легенда есть при любой мере: появляйся она только у составных — окно прыгало бы на её высоту -->
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="5">
