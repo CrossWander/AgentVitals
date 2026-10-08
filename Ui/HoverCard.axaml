@@ -12,7 +12,7 @@
     <Border Classes="window" Margin="16,12,16,20" Padding="14,12">
         <StackPanel Spacing="10">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <Image Source="avares://AgentVitals/app.png" Width="24" Height="24"/>
+                <Image Source="avares://AgentVitals/app.png" Width="24" Height="24" RenderOptions.BitmapInterpolationMode="HighQuality"/>
                 <TextBlock Grid.Column="1" Text="AgentVitals" FontSize="14" FontWeight="Bold" Margin="8,0"
                            VerticalAlignment="Center"/>
                 <Border Grid.Column="2" Classes="pill" BorderBrush="{Binding HealthBrush}">

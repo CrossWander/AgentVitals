@@ -9,7 +9,7 @@
 
     <Border Classes="window" Margin="16,12,16,20" Padding="14,12" Cursor="Hand" PointerReleased="OnClick">
         <Grid ColumnDefinitions="Auto,*">
-            <Image Source="avares://AgentVitals/app.png" Width="36" Height="36" VerticalAlignment="Top"/>
+            <Image Source="avares://AgentVitals/app.png" Width="36" Height="36" VerticalAlignment="Top" RenderOptions.BitmapInterpolationMode="HighQuality"/>
             <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="2">
                 <TextBlock Name="Heading" Text="AgentVitals" FontWeight="Bold"/>
                 <TextBlock Name="Message" Classes="caption" TextWrapping="Wrap"/>

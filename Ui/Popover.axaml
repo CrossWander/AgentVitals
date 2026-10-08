@@ -15,7 +15,8 @@
             <StackPanel Name="MainView" Spacing="12">
                 <!-- Шапка: значок, имя и общее состояние -->
                 <Grid ColumnDefinitions="Auto,*,Auto">
-                    <Image Source="avares://AgentVitals/app.png" Width="40" Height="40"/>
+                    <!-- Значок 256 px сжимается в 40: без высокого качества края и пульс выходят лесенкой -->
+                    <Image Source="avares://AgentVitals/app.png" Width="40" Height="40" RenderOptions.BitmapInterpolationMode="HighQuality"/>
                     <StackPanel Grid.Column="1" Margin="10,0" VerticalAlignment="Center">
                         <TextBlock Text="AgentVitals" FontSize="18" FontWeight="Bold"/>
                         <TextBlock Classes="caption" Text="{DynamicResource langSubtitle}"/>
