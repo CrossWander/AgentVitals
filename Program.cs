@@ -18,7 +18,7 @@ internal static class Program
 		{
 			// Время запуска процесса, а не входа в Main: прогрев рантайма скачет на сотни миллисекунд
 			// и переставил бы события, которые Claude Code запустил одно за другим.
-			HookWriter.Run(Console.OpenStandardInput(), Paths.Sessions, Process.GetCurrentProcess().StartTime.ToUniversalTime().Ticks);
+			HookWriter.Run(Console.OpenStandardInput(), Paths.Sessions, Process.GetCurrentProcess().StartTime.ToUniversalTime().Ticks, ClaudeProcess.Find());
 
 			return 0;
 		}

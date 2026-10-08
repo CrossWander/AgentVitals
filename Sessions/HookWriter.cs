@@ -23,12 +23,12 @@ internal static class HookWriter
 	};
 
 	/// <summary>Прочитать событие и записать состояние; не бросает никогда.</summary>
-	public static void Run(Stream input, string directory, long at)
+	public static void Run(Stream input, string directory, long at, int? pid = null)
 	{
 		try
 		{
 			using var reader = new StreamReader(input, Encoding.UTF8);
-			Apply(JsonNode.Parse(reader.ReadToEnd()), directory, at);
+			Apply(JsonNode.Parse(reader.ReadToEnd()), directory, at, pid);
 		}
 		catch (Exception)
 		{
@@ -37,7 +37,7 @@ internal static class HookWriter
 		}
 	}
 
-	internal static void Apply(JsonNode? payload, string directory, long at)
+	internal static void Apply(JsonNode? payload, string directory, long at, int? pid = null)
 	{
 		if (payload is null
 			|| (string?)payload["session_id"] is not { Length: > 0 } id
@@ -77,7 +77,8 @@ internal static class HookWriter
 					cwd,
 					at,
 					Transcript: (string?)payload["transcript_path"],
-					Turn: Turn(hookEvent, state.Value, recorded, at));
+					Turn: Turn(hookEvent, state.Value, recorded, at),
+					Pid: pid);
 
 			if (Stale(recorded, session))
 			{

@@ -26,6 +26,8 @@ Ukrainian and Russian, light and dark.
 - **Live sessions.** With the hooks connected, the pulse runs while Claude is working and a blue
   dot blinks while it waits for your permission. A turn stopped with Esc fires no hook; the
   session's transcript says so, and the session goes idle at once instead of after 15 minutes.
+  A terminal closed without `/exit` fires no hook either: the hook records the Claude Code
+  process, and the session leaves the list as soon as that process is gone.
   A running turn shows how long it has been going (*working · 3 min*). A toast says when Claude
   finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
   in settings.

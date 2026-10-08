@@ -53,6 +53,14 @@ internal static class SessionWatcher
 				continue;
 			}
 
+			// Терминал закрыли крестиком или Claude Code упал: SessionEnd не придёт, а ждать час незачем.
+			if (session.Pid is { } pid && !ClaudeProcess.Alive(pid, session.Time))
+			{
+				Forget(file);
+
+				continue;
+			}
+
 			var state = Effective(session.State, age);
 
 			if (state != SessionState.Idle && Interrupted(session.Transcript, session.Time))

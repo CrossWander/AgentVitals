@@ -39,6 +39,26 @@ public class SessionWatcherTests
 	}
 
 	[Fact]
+	public void ForgetsSessionOfClosedClaude() // терминал закрыли крестиком: SessionEnd не пришёл, а час ждать незачем
+	{
+		using var temp = new TempDirectory();
+		var now = DateTime.UtcNow;
+		File.WriteAllText(temp.File("gone.json"), JsonSerializer.Serialize(new Session(SessionState.Working, null, @"C:\x", now.Ticks, Pid: Exited()), HookWriter.Json));
+		File.WriteAllText(temp.File("live.json"), JsonSerializer.Serialize(new Session(SessionState.Working, null, @"C:\x", now.Ticks, Pid: Environment.ProcessId), HookWriter.Json));
+
+		Assert.Equal("live", Assert.Single(SessionWatcher.Read(temp.Path, now)).Id);
+		Assert.False(File.Exists(temp.File("gone.json")));
+	}
+
+	private static int Exited()
+	{
+		using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", "/c exit") { CreateNoWindow = true })!;
+		process.WaitForExit();
+
+		return process.Id;
+	}
+
+	[Fact]
 	public void ForgetsFilesWithLocalTime() // прежний формат: поле at в местном времени, в UTC+3 оно «из будущего»
 	{
 		using var temp = new TempDirectory();

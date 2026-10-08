@@ -44,6 +44,16 @@ public class HookWriterTests
 		Assert.Equal(@"C:\Проекты\мой репо", session.Cwd);
 	}
 
+	[Fact]
+	public void RecordsClaudeProcess() // по нему трей узнаёт, что терминал закрыли без SessionEnd
+	{
+		using var temp = new TempDirectory();
+
+		HookWriter.Apply(new JsonObject { ["session_id"] = "s1", ["hook_event_name"] = "PreToolUse", ["cwd"] = @"C:\x" }, temp.Path, 100, pid: 42);
+
+		Assert.Equal(42, HookWriter.Read(temp.File("s1.json"))!.Pid);
+	}
+
 	// Секунды, а не тики: события ближе 50 мс к «ждёт» считаются одним мгновением и отбрасываются.
 	private static void Hook(TempDirectory temp, string hookEvent, long second) =>
 		HookWriter.Apply(new JsonObject { ["session_id"] = "s1", ["hook_event_name"] = hookEvent, ["cwd"] = @"C:\x" }, temp.Path, second * TimeSpan.TicksPerSecond);

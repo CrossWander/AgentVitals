@@ -18,7 +18,8 @@ public enum SessionState
 /// <remarks>Ended — отметка SessionEnd: файл не удаляется сразу, чтобы опоздавшие события сессию не воскресили.</remarks>
 /// <remarks>Transcript — журнал сессии: по нему видно прерывание клавишей Esc, о котором hooks молчат.</remarks>
 /// <remarks>Turn — тики UTC начала хода; после Stop остаётся, чтобы трей узнал, сколько ход занял.</remarks>
-internal sealed record Session(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false, string? Transcript = null, long? Turn = null)
+/// <remarks>Pid — процесс Claude Code: умер он — сессия кончилась, даже если SessionEnd не пришёл.</remarks>
+internal sealed record Session(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false, string? Transcript = null, long? Turn = null, int? Pid = null)
 {
 	// Только для чтения в коде: в файле время хранится одним полем utc.
 	[JsonIgnore]
