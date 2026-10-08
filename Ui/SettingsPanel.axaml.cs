@@ -36,6 +36,7 @@ internal partial class SettingsPanel : UserControl
 		Select(Themes, Store.Current.Theme.ToString());
 		Select(Intervals, Store.Current.IntervalSeconds.ToString(CultureInfo.InvariantCulture));
 		Select(TurnMinutes, Store.Current.TurnMinutes.ToString(CultureInfo.InvariantCulture));
+		ShowLevels();
 		SessionToastsToggle.IsChecked = Store.Current.SessionToasts;
 		TurnPanel.IsEnabled = Store.Current.SessionToasts;
 		AutostartCard.IsVisible = OperatingSystem.IsWindows();
@@ -90,6 +91,23 @@ internal partial class SettingsPanel : UserControl
 			Store.Current.IntervalSeconds = int.Parse(seconds, CultureInfo.InvariantCulture);
 			Store.Save();
 		}
+	}
+
+	private void OnLevel(object? sender, RoutedEventArgs e)
+	{
+		if (sender is Button { Tag: string tag } && tag.Split(':') is [var which, var step])
+		{
+			(Store.Current.ImportantAt, Store.Current.CriticalAt) = QuotaAlarm.Shift(
+				Store.Current.ImportantAt, Store.Current.CriticalAt, which == "critical", int.Parse(step, CultureInfo.InvariantCulture));
+			Store.Save();
+			ShowLevels();
+		}
+	}
+
+	private void ShowLevels()
+	{
+		ImportantValue.Text = $"{Store.Current.ImportantAt}%";
+		CriticalValue.Text = $"{Store.Current.CriticalAt}%";
 	}
 
 	private void OnSessionToasts(object? sender, RoutedEventArgs e)

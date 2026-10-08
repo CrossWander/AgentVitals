@@ -23,6 +23,11 @@ internal static class Store
 		public bool SessionToasts { get; set; } = true;
 
 		public int TurnMinutes { get; set; } = 5;
+
+		// Пороги тостов о квоте, %: осталась четверть и десятая часть.
+		public int ImportantAt { get; set; } = 75;
+
+		public int CriticalAt { get; set; } = 90;
 	}
 
 	private static readonly string _path = Path.Combine(Paths.Data, "config.json");

@@ -40,23 +40,31 @@ internal sealed class RateLimitedException(DateTime until) : Exception($"rate li
 internal sealed record QuotaAlert(QuotaWindow Window, bool Critical);
 
 /// <summary>
-/// Тосты по сессии и неделе: «важно» при 75%, «критично» при 90%, каждый раз за цикл окна.
-/// Ниже 75% — после сброса — пороги взводятся снова.
+/// Тосты по сессии и неделе: «важно» и «критично» (по умолчанию 75% и 90%, меняются в настройках), каждый раз
+/// за цикл окна. Ниже порога «важно» — после сброса — пороги взводятся снова.
 /// </summary>
 internal sealed class QuotaAlarm
 {
-	private const double _important = 75;
-	private const double _critical = 90;
+	private const int _step = 5;
+	private const int _lowest = 50;
+	private const int _highest = 95;
 
 	// Окно → уже сказали «критично» (true) или только «важно» (false).
 	private readonly Dictionary<string, bool> _fired = [];
+
+	/// <summary>Сдвинуть порог на шаг: от 50 до 95, «важно» всегда хотя бы на шаг ниже «критично».</summary>
+	public static (int Important, int Critical) Shift(int important, int critical, bool moveCritical, int delta) => moveCritical
+		? (important, Math.Clamp(critical + delta, Math.Max(_lowest, important + _step), _highest))
+		: (Math.Clamp(important + delta, _lowest, Math.Min(_highest, critical - _step)), critical);
 
 	/// <summary>Окна провайдера, которые только что дошли до следующего порога. Уже высокое при запуске — тоже:
 	/// запуск утром или после обновления — как раз тот момент, когда об этом важно знать.</summary>
 	/// <param name="provider">Имя агента: у каждого свои окна.</param>
 	/// <param name="windows">Окна из свежего снимка.</param>
+	/// <param name="important">Порог «важно», %.</param>
+	/// <param name="critical">Порог «критично», %.</param>
 	/// <returns>По тревоге на окно, только о самом высоком из пройденных порогов.</returns>
-	public IReadOnlyList<QuotaAlert> Check(string provider, IReadOnlyList<QuotaWindow> windows)
+	public IReadOnlyList<QuotaAlert> Check(string provider, IReadOnlyList<QuotaWindow> windows, double important, double critical)
 	{
 		var alerts = new List<QuotaAlert>();
 
@@ -64,23 +72,23 @@ internal sealed class QuotaAlarm
 		{
 			var key = $"{provider}/{window.Key}/{window.Label}";
 
-			if (window.Used < _important)
+			if (window.Used < important)
 			{
 				_fired.Remove(key);
 
 				continue;
 			}
 
-			var critical = window.Used >= _critical;
+			var high = window.Used >= critical;
 
 			// Уже сказали то же или больше.
-			if (_fired.TryGetValue(key, out var said) && (said || !critical))
+			if (_fired.TryGetValue(key, out var said) && (said || !high))
 			{
 				continue;
 			}
 
-			_fired[key] = critical;
-			alerts.Add(new(window, critical));
+			_fired[key] = high;
+			alerts.Add(new(window, high));
 		}
 
 		return alerts;

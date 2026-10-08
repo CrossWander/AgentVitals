@@ -13,7 +13,25 @@ public class QuotaAlarmTests
 	private static QuotaWindow Week(double used) => new("langWindowWeek", null, used, null, Limiting: true);
 
 	private List<(double Used, bool Critical)> Check(params QuotaWindow[] windows) =>
-		[.. _alarm.Check("Claude", windows).Select(alert => (alert.Window.Used, alert.Critical))];
+		[.. _alarm.Check("Claude", windows, 75, 90).Select(alert => (alert.Window.Used, alert.Critical))];
+
+	[Fact]
+	public void LevelsComeFromSettings() // пороги 60 и 80 вместо 75 и 90
+	{
+		Assert.Empty(_alarm.Check("Claude", [Session(55)], 60, 80));
+		Assert.Equal([(61, false)], _alarm.Check("Claude", [Session(61)], 60, 80).Select(alert => (alert.Window.Used, alert.Critical)));
+		Assert.Equal([(80, true)], _alarm.Check("Claude", [Session(80)], 60, 80).Select(alert => (alert.Window.Used, alert.Critical)));
+	}
+
+	[Theory]
+	[InlineData(75, 90, false, 5, 80, 90)]
+	[InlineData(85, 90, false, 5, 85, 90)] // «важно» не догоняет «критично»
+	[InlineData(75, 80, true, -5, 75, 80)] // и «критично» не опускается до «важно»
+	[InlineData(50, 90, false, -5, 50, 90)] // ниже 50 — уже не тревога
+	[InlineData(75, 95, true, 5, 75, 95)] // выше 95 — поздно
+	[InlineData(75, 90, true, -5, 75, 85)]
+	public void LevelStepsByFiveWithinBounds(int important, int critical, bool moveCritical, int delta, int newImportant, int newCritical) =>
+		Assert.Equal((newImportant, newCritical), QuotaAlarm.Shift(important, critical, moveCritical, delta));
 
 	[Fact]
 	public void WarnsOnceWhenAQuarterIsLeft()
@@ -91,9 +109,9 @@ public class QuotaAlarmTests
 	[Fact]
 	public void ProvidersAreIndependent()
 	{
-		_alarm.Check("Claude", [Session(50)]);
-		_alarm.Check("Codex", [Session(95)]);
+		_alarm.Check("Claude", [Session(50)], 75, 90);
+		_alarm.Check("Codex", [Session(95)], 75, 90);
 
-		Assert.Single(_alarm.Check("Claude", [Session(91)]));
+		Assert.Single(_alarm.Check("Claude", [Session(91)], 75, 90));
 	}
 }

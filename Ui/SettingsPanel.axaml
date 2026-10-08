@@ -63,6 +63,23 @@
         <Border Classes="card">
             <StackPanel Spacing="12">
                 <TextBlock Classes="label" Text="{DynamicResource langNotifications}"/>
+                <!-- Пороги тостов о квоте: Tag — какой порог и шаг; границы и порядок держит QuotaAlarm.Shift -->
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto" RowSpacing="6">
+                    <TextBlock Text="{DynamicResource langLevelImportant}" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
+                            Tag="important:-5" Click="OnLevel"/>
+                    <TextBlock Grid.Column="2" Name="ImportantValue" Width="48" TextAlignment="Center"
+                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="3" Theme="{StaticResource Round}" Width="26" Height="26" Content="+"
+                            Tag="important:5" Click="OnLevel"/>
+                    <TextBlock Grid.Row="1" Text="{DynamicResource langLevelCritical}" VerticalAlignment="Center"/>
+                    <Button Grid.Row="1" Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
+                            Tag="critical:-5" Click="OnLevel"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" Name="CriticalValue" Width="48" TextAlignment="Center"
+                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button Grid.Row="1" Grid.Column="3" Theme="{StaticResource Round}" Width="26" Height="26" Content="+"
+                            Tag="critical:5" Click="OnLevel"/>
+                </Grid>
                 <CheckBox Name="SessionToastsToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langSessionToasts}"
                           IsCheckedChanged="OnSessionToasts"/>
                 <StackPanel Name="TurnPanel" Spacing="6">
