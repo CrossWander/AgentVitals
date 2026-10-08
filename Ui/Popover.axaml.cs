@@ -51,9 +51,29 @@ internal partial class Popover : TrayWindow
 			Hide();
 			e.Handled = true;
 		}
+		else if (RefreshKey(e.Key, e.KeyModifiers))
+		{
+			RefreshRequested?.Invoke();
+			e.Handled = true;
+		}
+		else if (TabKey(e.Key, e.KeyModifiers) is { } index && index < Tabs.Children.Count && Tabs.Children[index] is RadioButton tab)
+		{
+			tab.IsChecked = true;
+			e.Handled = true;
+		}
 
 		base.OnKeyDown(e);
 	}
+
+	internal static bool RefreshKey(Key key, KeyModifiers modifiers) =>
+		key == Key.F5 || (key == Key.R && modifiers == KeyModifiers.Control);
+
+	/// <summary>Ctrl+1…9 — вкладка по порядку, с нуля; null — не то сочетание.</summary>
+	internal static int? TabKey(Key key, KeyModifiers modifiers) =>
+		modifiers != KeyModifiers.Control ? null
+		: key is >= Key.D1 and <= Key.D9 ? key - Key.D1
+		: key is >= Key.NumPad1 and <= Key.NumPad9 ? key - Key.NumPad1
+		: null;
 
 	public void Render(Vitals vitals)
 	{

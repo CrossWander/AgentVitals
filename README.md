@@ -27,7 +27,7 @@ Ukrainian and Russian, light and dark.
 - **Usage statistics** (Claude). Today's cost, tokens and working time, each with yesterday's
   number, and a 30-day chart of cost, tokens or cache — see [Usage statistics](#usage-statistics).
 
-Hover the icon for a quick card, click it for the full popover, right-click for the menu. The popover stays open while you work in other windows: close it with ✕, another click on the icon or Esc.
+Hover the icon for a quick card, click it for the full popover, right-click for the menu. The popover stays open while you work in other windows: close it with ✕, another click on the icon or Esc. F5 or Ctrl+R refreshes, Ctrl+1…3 switch the agent tabs.
 
 ## Where the data comes from
 

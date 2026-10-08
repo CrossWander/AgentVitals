@@ -25,6 +25,21 @@ public class ViewsTests
 	public void TabSelectionFollowsTheName(string? selected, string expected) =>
 		Assert.Equal(expected, Popover.Keep(selected, ["Claude", "Codex"]));
 
+	[Theory]
+	[InlineData(Avalonia.Input.Key.D1, Avalonia.Input.KeyModifiers.Control, 0)]
+	[InlineData(Avalonia.Input.Key.NumPad3, Avalonia.Input.KeyModifiers.Control, 2)]
+	[InlineData(Avalonia.Input.Key.D2, Avalonia.Input.KeyModifiers.None, null)] // без Ctrl цифра — просто цифра
+	[InlineData(Avalonia.Input.Key.D0, Avalonia.Input.KeyModifiers.Control, null)]
+	public void CtrlDigitPicksTab(Avalonia.Input.Key key, Avalonia.Input.KeyModifiers modifiers, int? tab) =>
+		Assert.Equal(tab, Popover.TabKey(key, modifiers));
+
+	[Theory]
+	[InlineData(Avalonia.Input.Key.F5, Avalonia.Input.KeyModifiers.None, true)]
+	[InlineData(Avalonia.Input.Key.R, Avalonia.Input.KeyModifiers.Control, true)]
+	[InlineData(Avalonia.Input.Key.R, Avalonia.Input.KeyModifiers.None, false)]
+	public void F5OrCtrlRRefreshes(Avalonia.Input.Key key, Avalonia.Input.KeyModifiers modifiers, bool refresh) =>
+		Assert.Equal(refresh, Popover.RefreshKey(key, modifiers));
+
 	[Fact]
 	public void TabOpensItsAgentsUsagePage() =>
 		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow).Dashboard);
