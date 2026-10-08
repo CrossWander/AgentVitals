@@ -155,12 +155,13 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <StackPanel Name="Legend" Orientation="Horizontal" Spacing="12">
+                            <!-- Легенда есть при любой мере: появляйся она только у составных — окно прыгало бы на её высоту -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="5">
                                     <Ellipse Width="7" Height="7" Fill="{DynamicResource Blue}" VerticalAlignment="Center"/>
                                     <TextBlock Name="LegendLow" Classes="faint"/>
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                <StackPanel Name="LegendHighItem" Orientation="Horizontal" Spacing="5">
                                     <Ellipse Width="7" Height="7" Fill="{DynamicResource Good}" VerticalAlignment="Center"/>
                                     <TextBlock Name="LegendHigh" Classes="faint"/>
                                 </StackPanel>
