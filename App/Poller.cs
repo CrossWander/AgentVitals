@@ -87,6 +87,8 @@ internal sealed class Poller
 {
 	private static readonly TimeSpan _statusEvery = TimeSpan.FromMinutes(5);
 
+	private static readonly TimeSpan[] _afterWake = [TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(45)];
+
 	private readonly HttpClient _http = new()
 	{
 		Timeout = TimeSpan.FromSeconds(15),
@@ -132,6 +134,26 @@ internal sealed class Poller
 
 	/// <summary>Спросить всех сейчас, кроме тех, кому сервер велел ждать.</summary>
 	public Task RefreshAsync() => TickAsync(force: true);
+
+	/// <summary>Компьютер проснулся: спросить сразу. Сеть после сна поднимается не сразу, а обычный повтор после
+	/// сетевой ошибки — через пять минут; поэтому ещё пара попыток, пока ответ не придёт.</summary>
+	public async Task WokeAsync()
+	{
+		foreach (var delay in _afterWake)
+		{
+			await Task.Delay(delay);
+			await TickAsync(force: true);
+
+			if (!Offline(Available, Status))
+			{
+				return;
+			}
+		}
+	}
+
+	/// <summary>Кто-то не дозвался до сервера: ни ответа, ни отказа.</summary>
+	internal static bool Offline(IEnumerable<ProviderState> states, ServiceStatus? status) =>
+		status is null || states.Any(state => state.Error is HttpRequestException or TaskCanceledException);
 
 	/// <summary>Когда спрашивать снова после этого исхода.</summary>
 	internal static DateTime Schedule(Exception? error, int intervalSeconds, DateTime now) => error switch

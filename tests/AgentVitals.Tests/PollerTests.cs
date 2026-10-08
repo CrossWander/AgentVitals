@@ -29,6 +29,26 @@ public class PollerTests
 		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new JsonException("truncated"), 60, _now));
 
 	[Fact]
+	public void WakeRetriesOnlyWhileTheNetworkIsDown() // после сна сеть поднимается не сразу
+	{
+		var state = new ProviderState(new ClaudeProvider());
+		var status = new ServiceStatus("none", "All Systems Operational", null);
+
+		state.Record(new HttpRequestException(), _now);
+		Assert.True(Poller.Offline([state], status));
+
+		state.Record(new TaskCanceledException(), _now); // таймаут HttpClient
+		Assert.True(Poller.Offline([state], status));
+
+		state.Record(new TokenExpiredException("claude"), _now); // сервер ответил: сеть есть, повтор не поможет
+		Assert.False(Poller.Offline([state], status));
+
+		state.Record(null, _now);
+		Assert.False(Poller.Offline([state], status));
+		Assert.True(Poller.Offline([state], null)); // статус-страница не ответила
+	}
+
+	[Fact]
 	public void NetworkErrorRetriesInFiveMinutes() =>
 		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new HttpRequestException(), 60, _now));
 

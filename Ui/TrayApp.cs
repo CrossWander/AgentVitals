@@ -74,6 +74,11 @@ internal sealed class TrayApp
 			_tray.Clicked += TogglePopover;
 			_tray.RightClicked += ShowMenu;
 			_tray.KeySelected += () => OpenPopover(settings: false);
+			_tray.Woke += () =>
+			{
+				Journal.Add("woke");
+				_ = _poller.WokeAsync();
+			};
 			Journal.Add($"start, tray icon at {_tray.Bounds()}, size {Tray.IconSize}");
 		}
 		else

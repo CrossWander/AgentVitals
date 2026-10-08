@@ -25,6 +25,8 @@ internal sealed unsafe partial class Tray : IDisposable
 	private const int _leftUp = 0x0202;
 	private const int _contextMenu = 0x007B;      // правый щелчок или Shift+F10 в версии 4
 	private const int _keySelect = 0x0401;        // NIN_KEYSELECT: Win+B, стрелки, Enter или пробел
+	private const uint _power = 0x0218;           // WM_POWERBROADCAST
+	private const int _resumed = 0x0012;          // PBT_APMRESUMEAUTOMATIC: приходит при любом пробуждении
 	private const uint _popupStyle = 0x80000000;  // WS_POPUP; окно никогда не показывается
 	private const int _smallIcon = 49;            // SM_CXSMICON
 
@@ -66,6 +68,9 @@ internal sealed unsafe partial class Tray : IDisposable
 
 	/// <summary>Значок выбрали с клавиатуры. Enter оболочка шлёт дважды — поэтому открыть, а не переключить.</summary>
 	public event Action? KeySelected;
+
+	/// <summary>Компьютер проснулся после сна или гибернации.</summary>
+	public event Action? Woke;
 
 	/// <summary>Сторона значка трея для текущего масштаба экрана, в точках.</summary>
 	public static int IconSize => GetSystemMetricsForDpi(_smallIcon, TaskbarDpi());
@@ -176,6 +181,12 @@ internal sealed unsafe partial class Tray : IDisposable
 				if (message == tray._taskbarCreated)
 				{
 					tray.Add();
+				}
+
+				// Окно скрытое, но верхнего уровня — такие получают и сообщения о питании.
+				if (message == _power && wParam == _resumed)
+				{
+					tray.Woke?.Invoke();
 				}
 			}
 		}
