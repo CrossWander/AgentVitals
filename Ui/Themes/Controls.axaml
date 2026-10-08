@@ -210,4 +210,23 @@
             </ControlTemplate>
         </Setter>
     </ControlTheme>
+
+    <!-- Метка ровного темпа поверх полоски: ширину до неё тоже считает ProgressBar, видна только правая грань -->
+    <ControlTheme x:Key="PaceMark" TargetType="ProgressBar">
+        <Setter Property="Height" Value="10"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Minimum" Value="0"/>
+        <Setter Property="Maximum" Value="100"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+        <Setter Property="IsHitTestVisible" Value="False"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <Border Name="PART_Indicator" HorizontalAlignment="Left" BorderThickness="0,0,2,0"
+                            BorderBrush="{TemplateBinding Foreground}"/>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
 </ResourceDictionary>

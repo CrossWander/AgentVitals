@@ -47,10 +47,14 @@
                                                                VerticalAlignment="Center"/>
                                                     <TextBlock Grid.Column="2" Text="{Binding Display}" FontWeight="Bold"/>
                                                 </Grid>
-                                                <ProgressBar Theme="{StaticResource Meter}" Height="4" Value="{Binding Fill}"
-                                                             Foreground="{Binding Meter}"/>
-                                                <TextBlock Classes="faint" Text="{Binding Resets}"
-                                                           IsVisible="{Binding Resets, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                <Panel>
+                                                    <ProgressBar Theme="{StaticResource Meter}" Height="4" Value="{Binding Fill}"
+                                                                 Foreground="{Binding Meter}"/>
+                                                    <ProgressBar Theme="{StaticResource PaceMark}" Height="8" Value="{Binding Pace}"
+                                                                 IsVisible="{Binding HasPace}"/>
+                                                </Panel>
+                                                <TextBlock Classes="faint" Text="{Binding Footer}"
+                                                           IsVisible="{Binding Footer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>

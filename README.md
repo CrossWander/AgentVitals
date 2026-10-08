@@ -10,7 +10,8 @@ Ukrainian and Russian, light and dark.
 
 - **Quotas.** The session, the week and per-model weekly limits, each as a card with the
   percentage used, a bar and the time left until it resets. A window at 100% says *used up*.
-  Extra usage, if enabled.
+  Extra usage, if enabled. The session and week bars carry a mark where even spending would be by
+  now, and the card says *ahead of pace*, *on pace* or *room to spare* (within 5 points is on pace).
 - **The tray icon** is a pulse line coloured by the window that limits you most: green under 50%,
   amber to 80%, red above, grey when there is no data. An exhausted week turns it red even with an
   empty session.

@@ -22,8 +22,23 @@ internal sealed record CardView(
 	double Fill,
 	IBrush Meter,
 	string Resets,
-	bool Limiting)
+	bool Limiting,
+	double? Pace = null,
+	string PaceWord = "",
+	IBrush? PaceBrush = null)
 {
+	/// <summary>Метка ровного темпа на полоске: где был бы расход, если тратить равномерно.</summary>
+	public bool HasPace => Pace is not null;
+
+	/// <summary>Подпись у числа в окне: темп, если он известен, иначе «использовано».</summary>
+	public string Caption => PaceWord.Length > 0 ? PaceWord : Note;
+
+	// Пустая кисть сделала бы подпись невидимой: у доплаты темпа нет.
+	public IBrush CaptionBrush => PaceBrush ?? Views.Brush("TextDim");
+
+	/// <summary>Нижняя строка в карточке наведения: там шире, темп встаёт после сброса.</summary>
+	public string Footer => PaceWord.Length > 0 && Resets.Length > 0 ? $"{Resets} · {PaceWord}" : Resets;
+
 	public string Display => Value + Unit;
 }
 
@@ -265,6 +280,9 @@ internal static class Views
 			_ => ("IconSpark", "IconModel"),
 		};
 
+		var pace = Quota.Expected(window, now);
+		var word = pace is { } expected ? Quota.Pace(window.Used, expected) : null;
+
 		return new(
 			Text.Title(window).ToUpper(Localization.Culture),
 			Shape(icon),
@@ -277,7 +295,15 @@ internal static class Views
 			Math.Min(window.Used, 100),
 			Brush(Meter(health)),
 			Text.Until(window.ResetsAt, now),
-			window.Limiting);
+			window.Limiting,
+			pace,
+			word is null ? "" : Localization.Get(word),
+			Brush(word switch
+			{
+				"langPaceAhead" => "Warn",
+				"langPaceSpare" => "Good",
+				_ => "TextDim",
+			}));
 	}
 
 	private static CardView Extra(Spend spend)

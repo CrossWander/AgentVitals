@@ -12,6 +12,9 @@
     <x:String x:Key="langResetsIn">сброс через {0}</x:String>
     <x:String x:Key="langResetsAt">сброс {0}</x:String>
     <x:String x:Key="langResetDone">сброшено</x:String>
+    <x:String x:Key="langPaceAhead">с опережением</x:String>
+    <x:String x:Key="langPaceEven">в норме</x:String>
+    <x:String x:Key="langPaceSpare">с запасом</x:String>
     <x:String x:Key="langHoursMinutes">{0} ч {1} мин</x:String>
     <x:String x:Key="langMinutes">{0} мин</x:String>
     <x:String x:Key="langMinutes1">1 мин</x:String>

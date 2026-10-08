@@ -50,6 +50,39 @@ public class ViewsTests
 	public void SessionTipShowsTheWholeName(string branch, string tip) => // в строке длинное имя обрезано троеточием
 		Assert.Equal(tip, new SessionView("POS20-13047-prepaid-internet-orders-report", branch, "", Avalonia.Media.Brushes.Gray).Tip);
 
+	[Theory]
+	[InlineData("langWindowSession", 2.5, 50d)] // половина пяти часов прошла — по ровному темпу половина и потрачена
+	[InlineData("langWindowWeek", 24 * 7, 0d)]
+	[InlineData("langWindowWeek", 24 * 3.5, 50d)]
+	[InlineData("langWindowModel", 24, null)] // длина окна модели неизвестна
+	[InlineData("langWindowSession", -0.1, null)] // сброс прошёл — сравнивать не с чем
+	public void ExpectedPaceIsTheElapsedShare(string key, double hoursLeft, double? expected)
+	{
+		var now = new DateTime(2026, 10, 8, 12, 0, 0, DateTimeKind.Utc);
+		var window = new QuotaWindow(key, null, 30, now.AddHours(hoursLeft), Limiting: true);
+
+		Assert.Equal(expected, Quota.Expected(window, now));
+	}
+
+	[Theory]
+	[InlineData(76, "langPaceAhead")]
+	[InlineData(54, "langPaceEven")] // ±5 пунктов — ещё ровно
+	[InlineData(20, "langPaceSpare")]
+	public void CardTellsThePace(double used, string word)
+	{
+		var now = DateTime.UtcNow;
+		var state = new ProviderState(new ClaudeProvider())
+		{
+			Snapshot = new("Max", null, [new("langWindowSession", null, used, now.AddHours(2.5), Limiting: true)], null),
+		};
+
+		var card = Assert.Single(Views.Provider(state, now).Cards);
+
+		Assert.Equal(word, card.Caption); // в окне — вместо «использовано» у числа
+		Assert.EndsWith(" · " + word, card.Footer); // в карточке наведения — после сброса
+		Assert.Equal(50, card.Pace!.Value, 3);
+	}
+
 	[Fact]
 	public void PassedResetShowsAnEmptyWindow() // после сна вход истёк, а сессия за это время сбросилась — не 91%
 	{

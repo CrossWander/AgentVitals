@@ -102,6 +102,31 @@ internal static class Quota
 	/// <summary>Худшее из состояний: серое уступает любому известному.</summary>
 	public static Health Worst(IEnumerable<Health> healths) => healths.DefaultIfEmpty(Health.Unknown).Max();
 
+	/// <summary>Сколько процентов было бы потрачено к этому моменту при ровном темпе; null — длина окна неизвестна
+	/// или сброс уже прошёл.</summary>
+	public static double? Expected(QuotaWindow window, DateTime now)
+	{
+		TimeSpan? length = window.Key switch
+		{
+			"langWindowSession" => TimeSpan.FromHours(5),
+			"langWindowWeek" => TimeSpan.FromDays(7),
+			_ => null,
+		};
+
+		if (length is not { } span || window.ResetsAt is not { } resets)
+		{
+			return null;
+		}
+
+		var left = resets.UtcDateTime - now;
+
+		return left <= TimeSpan.Zero || left > span ? null : (1 - (left / span)) * 100;
+	}
+
+	/// <summary>Ключ слова о темпе: дальше пяти пунктов от ровного — уже не ровно.</summary>
+	public static string Pace(double used, double expected) =>
+		used > expected + 5 ? "langPaceAhead" : used < expected - 5 ? "langPaceSpare" : "langPaceEven";
+
 	/// <summary>Тариф для показа: «claude_max» → «Max», «team» → «Team».</summary>
 	public static string PlanName(string? subscription) =>
 		string.IsNullOrEmpty(subscription)
