@@ -21,7 +21,8 @@ Ukrainian and Russian, light and dark.
   (as long as the mouse is on it) and opens the window on click. Every toast is also written to
   `log.txt`.
 - **Live sessions.** With the hooks connected, the pulse runs while Claude is working and a blue
-  dot blinks while it waits for your permission.
+  dot blinks while it waits for your permission. A turn stopped with Esc fires no hook; the
+  session's transcript says so, and the session goes idle at once instead of after 15 minutes.
 - **Anthropic status** from status.claude.com, with a toast when it changes.
 - **Usage statistics** (Claude). Today's cost, tokens and working time, each with yesterday's
   number, and a 30-day chart of cost, tokens or cache — see [Usage statistics](#usage-statistics).

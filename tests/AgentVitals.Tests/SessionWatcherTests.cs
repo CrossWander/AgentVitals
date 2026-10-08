@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace AgentVitals.Tests;
@@ -45,6 +47,42 @@ public class SessionWatcherTests
 		Assert.Empty(SessionWatcher.Read(temp.Path, _now));
 		Assert.False(File.Exists(temp.File("legacy.json")));
 	}
+
+	private static string Entry(string type, DateTime at, string text) => new JsonObject
+	{
+		["type"] = type,
+		["timestamp"] = at.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture),
+		["message"] = new JsonObject { ["role"] = type, ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = text }) },
+	}.ToJsonString();
+
+	private static SessionState AfterEsc(SessionState state, DateTime hook)
+	{
+		using var sessions = new TempDirectory();
+		using var logs = new TempDirectory();
+		var transcript = logs.File("session.jsonl");
+
+		File.WriteAllLines(transcript,
+		[
+			Entry("user", _now.AddMinutes(-3), "fix it"),
+			Entry("assistant", _now.AddMinutes(-2), "on it"),
+			Entry("user", _now.AddMinutes(-1), "[Request interrupted by user for tool use]"),
+			new JsonObject { ["type"] = "last-prompt" }.ToJsonString(), // служебные записи после прерывания не мешают
+		]);
+
+		File.WriteAllText(sessions.File("s.json"), JsonSerializer.Serialize(new Session(state, null, @"C:\nowhere", hook.Ticks, Transcript: transcript), HookWriter.Json));
+
+		return Assert.Single(SessionWatcher.Read(sessions.Path, _now)).State;
+	}
+
+	[Theory]
+	[InlineData(SessionState.Working)]
+	[InlineData(SessionState.Waiting)] // Esc на вопросе о разрешении
+	public void EscEndsTheTurn(SessionState state) => // Stop после Esc не приходит: иначе «работает» висело бы четверть часа
+		Assert.Equal(SessionState.Idle, AfterEsc(state, _now.AddMinutes(-2)));
+
+	[Fact]
+	public void NewPromptAfterEscWorks() => // hook нового хода позже прерывания, а сам запрос в транскрипт ещё не дописан
+		Assert.Equal(SessionState.Working, AfterEsc(SessionState.Working, _now.AddSeconds(-10)));
 
 	[Fact]
 	public void WaitingOutranksWorking()

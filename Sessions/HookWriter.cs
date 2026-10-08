@@ -56,7 +56,7 @@ internal static class HookWriter
 		var session = hookEvent == "SessionEnd"
 			? new Session(SessionState.Idle, null, cwd, at, Ended: true)
 			: Map(hookEvent, (string?)payload["notification_type"]) is { } state
-				? new Session(state, state == SessionState.Working ? (string?)payload["tool_name"] : null, cwd, at)
+				? new Session(state, state == SessionState.Working ? (string?)payload["tool_name"] : null, cwd, at, Transcript: (string?)payload["transcript_path"])
 				: null;
 
 		if (session is null)

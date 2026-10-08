@@ -14,7 +14,8 @@ public enum SessionState
 /// <summary>Запись о сессии, которую hook кладёт в файл. Utc — тики UTC момента, когда hook запустился.</summary>
 /// <remarks>Прежний формат хранил местное время в поле at: такие файлы читаются как очень старые и забываются.</remarks>
 /// <remarks>Ended — отметка SessionEnd: файл не удаляется сразу, чтобы опоздавшие события сессию не воскресили.</remarks>
-internal sealed record Session(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false)
+/// <remarks>Transcript — журнал сессии: по нему видно прерывание клавишей Esc, о котором hooks молчат.</remarks>
+internal sealed record Session(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false, string? Transcript = null)
 {
 	// Только для чтения в коде: в файле время хранится одним полем utc.
 	[JsonIgnore]
