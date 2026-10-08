@@ -7,7 +7,8 @@
         WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
         ShowInTaskbar="False" Topmost="True" ShowActivated="False">
 
-    <Border Classes="window" Margin="16,12,16,20" Padding="14,12" Cursor="Hand" PointerReleased="OnClick">
+    <!-- Прозрачный до первого въезда: анимация начинается со следующего кадра, а первый был бы виден целиком -->
+    <Border Name="Card" Classes="window" Margin="16,12,16,20" Padding="14,12" Cursor="Hand" Opacity="0" PointerReleased="OnClick">
         <Grid ColumnDefinitions="Auto,*">
             <Image Source="avares://AgentVitals/app.png" Width="36" Height="36" VerticalAlignment="Top" RenderOptions.BitmapInterpolationMode="HighQuality"/>
             <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="2">

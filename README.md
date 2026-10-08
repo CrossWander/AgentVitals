@@ -17,7 +17,9 @@ Ukrainian and Russian, light and dark.
 - **Toasts** when the session or the week reaches 75% (*important*, a quarter left) and 90%
   (*critical*, almost used up), with the time until it resets. Each comes once and again only
   after that window resets; a window that is already past a level when AgentVitals starts gets
-  its toast too. Every toast is also written to `log.txt`.
+  its toast too. A toast slides up in the bottom-right corner above the clock, stays four seconds
+  (as long as the mouse is on it) and opens the window on click. Every toast is also written to
+  `log.txt`.
 - **Live sessions.** With the hooks connected, the pulse runs while Claude is working and a blue
   dot blinks while it waits for your permission.
 - **Anthropic status** from status.claude.com, with a toast when it changes.

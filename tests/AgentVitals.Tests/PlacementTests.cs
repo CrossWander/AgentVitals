@@ -80,6 +80,14 @@ public class PlacementTests
 	}
 
 	[Fact]
+	public void ToastSitsInTheCornerOfTheWorkArea() // как карточка AudioDirigent: угол над часами, а не над значком
+	{
+		var point = Placement.Corner(new PixelRect(1920, 40, 1920, 1040), new PixelSize(372, 120), 6);
+
+		Assert.Equal(new PixelPoint(3462, 954), point);
+	}
+
+	[Fact]
 	public void SecondMonitorUsesItsOwnArea()
 	{
 		var point = Placement.Near(new PixelRect(3700, 1045, 24, 30), new PixelRect(1920, 0, 1920, 1040), _window);

@@ -44,15 +44,30 @@ internal static class Placement
 			Math.Max(Math.Min(y, work.Bottom - window.Height), work.Y));
 	}
 
+	/// <summary>Верхний левый угол окна в правом нижнем углу рабочей области — там, где Windows показывает уведомления.</summary>
+	public static PixelPoint Corner(PixelRect work, PixelSize window, int margin) =>
+		new(work.Right - window.Width - margin, work.Bottom - window.Height - margin);
+
 	public static void Place(Window window, PixelRect icon)
 	{
-		if ((window.Screens.ScreenFromPoint(icon.Center) ?? window.Screens.Primary) is not { } screen)
+		if (Screen(window, icon) is { } screen)
 		{
-			return;
+			window.Position = Near(icon, screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling));
 		}
-
-		window.Position = Near(icon, screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling));
 	}
+
+	/// <summary>В угол того экрана, где значок.</summary>
+	/// <param name="margin">Отступ от угла в точках интерфейса.</param>
+	public static void PlaceInCorner(Window window, PixelRect icon, double margin)
+	{
+		if (Screen(window, icon) is { } screen)
+		{
+			window.Position = Corner(screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling), (int)Math.Round(margin * screen.Scaling));
+		}
+	}
+
+	private static Avalonia.Platform.Screen? Screen(Window window, PixelRect icon) =>
+		window.Screens.ScreenFromPoint(icon.Center) ?? window.Screens.Primary;
 }
 
 /// <summary>Окно у значка в трее: поповер, карточка, меню, тост. Держится у значка при любой смене размера.</summary>
@@ -65,7 +80,7 @@ internal class TrayWindow : Window
 		// Высота зависит от содержимого: после смены экрана или вкладки окно ставится заново.
 		// Resized, а не SizeChanged: при показе Windows возвращает окну прежний размер, Avalonia
 		// растягивает его снова, а Bounds при этом не меняются и SizeChanged молчит.
-		Resized += (_, _) => Placement.Place(this, _anchor);
+		Resized += (_, _) => Place(_anchor);
 	}
 
 	/// <summary>Показать у значка.</summary>
@@ -74,6 +89,9 @@ internal class TrayWindow : Window
 	{
 		_anchor = anchor;
 		Show();
-		Placement.Place(this, anchor);
+		Place(anchor);
 	}
+
+	/// <summary>Куда встать относительно значка: по умолчанию — рядом с ним.</summary>
+	protected virtual void Place(PixelRect anchor) => Placement.Place(this, anchor);
 }
