@@ -50,15 +50,14 @@ internal sealed class QuotaAlarm
 
 	// Окно → уже сказали «критично» (true) или только «важно» (false).
 	private readonly Dictionary<string, bool> _fired = [];
-	private readonly HashSet<string> _seen = [];
 
-	/// <summary>Окна провайдера, которые только что дошли до следующего порога; первый снимок — точка отсчёта.</summary>
+	/// <summary>Окна провайдера, которые только что дошли до следующего порога. Уже высокое при запуске — тоже:
+	/// запуск утром или после обновления — как раз тот момент, когда об этом важно знать.</summary>
 	/// <param name="provider">Имя агента: у каждого свои окна.</param>
 	/// <param name="windows">Окна из свежего снимка.</param>
 	/// <returns>По тревоге на окно, только о самом высоком из пройденных порогов.</returns>
 	public IReadOnlyList<QuotaAlert> Check(string provider, IReadOnlyList<QuotaWindow> windows)
 	{
-		var first = _seen.Add(provider);
 		var alerts = new List<QuotaAlert>();
 
 		foreach (var window in windows.Where(window => window.Limiting))
@@ -81,11 +80,7 @@ internal sealed class QuotaAlarm
 			}
 
 			_fired[key] = critical;
-
-			if (!first)
-			{
-				alerts.Add(new(window, critical));
-			}
+			alerts.Add(new(window, critical));
 		}
 
 		return alerts;

@@ -46,16 +46,16 @@ public class QuotaAlarmTests
 	}
 
 	[Fact]
-	public void FirstSnapshotIsReference() // после запуска или входа цвет значка и так виден
+	public void AlreadyHighAtStartIsToldOnce() // запуск утром или после обновления — как раз когда важно знать
 	{
-		Assert.Empty(Check(Session(95)));
+		Assert.Equal([(95, true)], Check(Session(95)));
 		Assert.Empty(Check(Session(97)));
 	}
 
 	[Fact]
-	public void FirstSnapshotStillWarnsAtTheNextLevel()
+	public void StartPastAQuarterStillWarnsAtNinety()
 	{
-		Check(Session(80));
+		Assert.Equal([(80, false)], Check(Session(80)));
 
 		Assert.Equal([(91, true)], Check(Session(91)));
 	}

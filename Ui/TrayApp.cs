@@ -152,12 +152,15 @@ internal sealed class TrayApp
 			.SelectMany(state => _alarm.Check(state.Provider.Name, state.Snapshot!.Windows).Select(alert => (state.Provider.Name, alert)))
 			.ToList();
 
-		// Два окна за один опрос почти не доходят до порога — тост одного, самого серьёзного.
+		// Оба окна выше порога бывают разве что при запуске — тост одного, самого серьёзного.
 		if (alerts.Count > 0)
 		{
 			var (provider, alert) = alerts.MaxBy(item => (item.alert.Critical, item.alert.Window.Used));
 			var (title, message) = Text.Alert(provider, alert, DateTime.UtcNow);
 			_toast.Say(message, Anchor(), title, Views.Brush(alert.Critical ? "Bad" : "Warn"));
+
+			// Тост живёт секунды: по журналу видно, был ли он, если человек отошёл от экрана.
+			Journal.Add($"toast: {title}: {message}");
 		}
 
 		if (_poller.Status is { } status)
