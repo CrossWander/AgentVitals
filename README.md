@@ -30,7 +30,7 @@ Ukrainian and Russian, light and dark.
   in settings.
 - **Anthropic status** from status.claude.com, with a toast when it changes.
 - **Usage statistics** (Claude). Today's cost, tokens and working time, each with yesterday's
-  number, and a 30-day chart of cost, tokens or cache — see [Usage statistics](#usage-statistics).
+  number, and a 30-day chart of cost, tokens, cache or models — see [Usage statistics](#usage-statistics).
 
 Hover the icon for a quick card, click it for the full popover, right-click for the menu. The popover stays open while you work in other windows: close it with ✕, another click on the icon or Esc. F5 or Ctrl+R refreshes, Ctrl+1…3 switch the agent tabs.
 
@@ -65,6 +65,9 @@ once — Claude Code writes the same answer several times while it streams.
   once a day and are kept in `prices.md` next to the settings, so cost works offline. A model the
   page doesn't list yet gets no price rather than a guess. Fast mode is counted at standard prices.
 - **Working time** adds up stretches of activity; a pause longer than 30 minutes starts a new one.
+- **The chart** shows cost, tokens (input and output), cache (written and read) or cost by model
+  family (Opus, Sonnet, Haiku, Fable, other). In the cache view the corner says what the cache saved
+  over 30 days: what the cached tokens would have cost as plain input, minus what they did cost.
 - Codex and Gemini have no statistics yet: the slot is there (`IProvider.Usage`), the reader isn't.
 
 ## Live sessions

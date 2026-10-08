@@ -140,15 +140,40 @@ public class ViewsTests
 	{
 		var bars = Views.Bars([Day(6, input: 10, output: 30), Day(7, input: 20, output: 20)], ChartMode.Tokens);
 
-		Assert.Equal(22.5, bars[0].Low); // самый большой день — 40 — во всю высоту 90
-		Assert.Equal(67.5, bars[0].High);
-		Assert.Equal(45, bars[1].Low);
+		Assert.Equal([22.5, 67.5], bars[0].Parts.Select(part => part.Height)); // самый большой день — 40 — во всю высоту 90; снизу вход
+		Assert.Equal(45, bars[1].Parts[0].Height);
 		Assert.Equal(0.6, bars[0].Opacity);
 		Assert.Equal(1, bars[1].Opacity); // сегодня — ярче
 	}
 
 	[Fact]
-	public void EmptyMonthDrawsNothing() => Assert.All(Views.Bars([Day(6), Day(7)], ChartMode.Cost), bar => Assert.Equal(0, bar.Low));
+	public void EmptyMonthDrawsNothing() =>
+		Assert.All(Views.Bars([Day(6), Day(7)], ChartMode.Cost), bar => Assert.All(bar.Parts, part => Assert.Equal(0, part.Height)));
+
+	[Fact]
+	public void ModelsStackCostByFamily()
+	{
+		var today = Day(7, cost: 20) with { Models = new ModelCosts(15, 5, 0, 0, 0) };
+
+		var bar = Views.Bars([Day(6), today], ChartMode.Models)[1];
+
+		Assert.Equal([67.5, 22.5, 0, 0, 0], bar.Parts.Select(part => part.Height)); // $20 — верх шкалы, снизу Opus
+	}
+
+	[Fact]
+	public void LegendNamesEachLayer()
+	{
+		Assert.Equal(["langCostNote"], Views.Legend(ChartMode.Cost).Select(item => item.Text));
+		Assert.Equal(["langInput", "langOutput"], Views.Legend(ChartMode.Tokens).Select(item => item.Text));
+		Assert.Equal(["Opus", "Sonnet", "Haiku", "Fable", "langOther"], Views.Legend(ChartMode.Models).Select(item => item.Text));
+	}
+
+	[Fact]
+	public void CacheTotalSaysWhatTheCacheSaved()
+	{
+		Assert.EndsWith(" · langCacheSaved", Views.Total([Day(6) with { Saved = 3.80m }, Day(7) with { Saved = 1.20m }], ChartMode.Cache));
+		Assert.DoesNotContain("·", Views.Total([Day(6), Day(7)], ChartMode.Cache)); // без цен экономию не посчитать
+	}
 
 	[Theory]
 	[InlineData(21.3, 30)]

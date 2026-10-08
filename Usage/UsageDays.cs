@@ -50,13 +50,18 @@ internal static class UsageDays
 	private static UsageDay Day(DateOnly date, List<UsageRecord> records, PriceList? prices)
 	{
 		decimal? cost = prices is null ? null : 0m;
+		decimal? saved = prices is null ? null : 0m;
+		var models = prices is null ? null : ModelCosts.None;
 		var unpriced = false;
 
 		foreach (var record in records)
 		{
 			if (prices?.Find(record.Model) is { } price)
 			{
-				cost += PriceList.Cost(record, price);
+				var each = PriceList.Cost(record, price);
+				cost += each;
+				saved += PriceList.Saved(record, price);
+				models = models!.Add(ModelCosts.Family(record.Model), each);
 			}
 			else if (prices is not null)
 			{
@@ -72,6 +77,8 @@ internal static class UsageDays
 			records.Sum(record => record.CacheRead),
 			cost,
 			unpriced,
-			Working(records.Select(record => record.Utc)));
+			Working(records.Select(record => record.Utc)),
+			saved,
+			models);
 	}
 }

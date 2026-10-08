@@ -164,16 +164,9 @@ internal partial class Popover : TrayWindow
 			(AxisTop.Text, AxisMiddle.Text, AxisBottom.Text) = (axis[0], axis[1], axis[2]);
 			ShowDates(usage.Days);
 			_total = usage.Days.Count == 0 ? "" : Views.Total(usage.Days, _mode);
-			LegendLow.Text = Localization.Get(_mode switch
-			{
-				ChartMode.Tokens => "langInput",
-				ChartMode.Cache => "langCacheWrite",
-				_ => "langCostNote",
-			});
 
-			// У стоимости одна часть: второй пункт прозрачный, но место держит.
-			LegendHighItem.Opacity = _mode == ChartMode.Cost ? 0 : 1;
-			LegendHigh.Text = Localization.Get(_mode == ChartMode.Tokens ? "langOutput" : "langCacheRead");
+			// Легенда всегда в одну строку: у любой меры она есть, и окно не прыгает на её высоту.
+			Legend.ItemsSource = Views.Legend(_mode);
 		}
 
 		ChartLine.Text = _bars.FirstOrDefault(bar => bar.Date == _hovered)?.Line ?? _total;

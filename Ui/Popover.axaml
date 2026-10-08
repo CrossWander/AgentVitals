@@ -139,6 +139,8 @@
                                                  Content="{DynamicResource langChartTokens}" IsCheckedChanged="OnMode"/>
                                     <RadioButton Theme="{StaticResource Segment}" GroupName="chart" Tag="Cache"
                                                  Content="{DynamicResource langChartCache}" IsCheckedChanged="OnMode"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="chart" Tag="Models"
+                                                 Content="{DynamicResource langChartModels}" IsCheckedChanged="OnMode"/>
                                 </StackPanel>
                             </Border>
                             <!-- Слева столбики на сетке (верх шкалы, середина, ноль), справа подписи шкалы, снизу даты раз в неделю -->
@@ -162,10 +164,16 @@
                                                 <!-- Столбик ловит мышь во всю высоту: навести можно и на день с крошечным расходом -->
                                                 <Panel Background="Transparent" Opacity="{Binding Opacity}"
                                                        PointerEntered="OnBarEnter" PointerExited="OnBarLeave">
-                                                    <StackPanel VerticalAlignment="Bottom" Margin="1,0">
-                                                        <Border Height="{Binding High}" Background="{DynamicResource Good}" CornerRadius="2,2,0,0"/>
-                                                        <Border Height="{Binding Low}" Background="{DynamicResource Blue}"/>
-                                                    </StackPanel>
+                                                    <!-- Скругление у верха столбика, какой бы слой там ни оказался -->
+                                                    <Border VerticalAlignment="Bottom" Margin="1,0" CornerRadius="2,2,0,0" ClipToBounds="True">
+                                                        <ItemsControl ItemsSource="{Binding Stack}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="local:BarPart">
+                                                                    <Border Height="{Binding Height}" Background="{Binding Brush}"/>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </Border>
                                                 </Panel>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -181,16 +189,21 @@
                                 <Grid Name="AxisX" Grid.Row="1" Grid.ColumnSpan="2" Height="15" Margin="0,5,0,0"/>
                             </Grid>
                             <!-- Легенда есть при любой мере: появляйся она только у составных — окно прыгало бы на её высоту -->
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                    <Ellipse Width="7" Height="7" Fill="{DynamicResource Blue}" VerticalAlignment="Center"/>
-                                    <TextBlock Name="LegendLow" Classes="faint"/>
-                                </StackPanel>
-                                <StackPanel Name="LegendHighItem" Orientation="Horizontal" Spacing="5">
-                                    <Ellipse Width="7" Height="7" Fill="{DynamicResource Good}" VerticalAlignment="Center"/>
-                                    <TextBlock Name="LegendHigh" Classes="faint"/>
-                                </StackPanel>
-                            </StackPanel>
+                            <ItemsControl Name="Legend">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="12"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:LegendItem">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Ellipse Width="7" Height="7" Fill="{Binding Brush}" VerticalAlignment="Center"/>
+                                            <TextBlock Classes="faint" Text="{Binding Text}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                     </Border>
                 </StackPanel>

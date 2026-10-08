@@ -30,6 +30,35 @@ public class UsageDaysTests
 	}
 
 	[Fact]
+	public void CacheSavingsAndCostByModelFamily()
+	{
+		var prices = new PriceList(new Dictionary<string, Price>
+		{
+			["claude-opus-5-5"] = new(4, 5, 8, 0.20m, 20),
+			["claude-sonnet-5"] = new(3, 3.75m, 6, 0.30m, 15),
+		});
+
+		UsageRecord[] records =
+		[
+			new("a", Utc(7, 10, 0), "claude-opus-5-5", 0, 0, 0, 0, 1_000_000), // из кэша по $0.20 вместо $4
+			Answer(Utc(7, 10, 5), "claude-sonnet-5"),
+		];
+
+		var today = UsageDays.Build(records, prices, _today, _kyiv)[^1];
+
+		Assert.Equal(3.80m, today.Saved);
+		Assert.Equal(new ModelCosts(0.20m, 15m, 0, 0, 0), today.Models);
+	}
+
+	[Theory]
+	[InlineData("claude-opus-5-5[1m]", ModelFamily.Opus)]
+	[InlineData("claude-sonnet-5", ModelFamily.Sonnet)]
+	[InlineData("claude-haiku-4-5-20251001", ModelFamily.Haiku)]
+	[InlineData("fable", ModelFamily.Fable)]
+	[InlineData("<synthetic>", ModelFamily.Other)]
+	public void ModelFamilyFromItsName(string model, ModelFamily family) => Assert.Equal(family, ModelCosts.Family(model));
+
+	[Fact]
 	public void ThirtyDaysIncludingEmptyOnes()
 	{
 		var days = UsageDays.Build([], null, _today, _kyiv);

@@ -35,6 +35,9 @@ internal sealed class PriceList(IReadOnlyDictionary<string, Price> prices)
 			+ record.CacheRead * price.CacheRead
 			+ record.Output * price.Output) / 1_000_000m;
 
+	/// <summary>Сколько сэкономил кэш: прочитанное из него стоило бы как обычный вход.</summary>
+	public static decimal Saved(UsageRecord record, Price price) => record.CacheRead * (price.Input - price.CacheRead) / 1_000_000m;
+
 	/// <summary>Первая таблица после «## Model pricing». Колонки ищутся по названию; не разобралось — пусто.</summary>
 	public static PriceList Parse(string page)
 	{

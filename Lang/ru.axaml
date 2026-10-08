@@ -82,6 +82,9 @@
     <x:String x:Key="langInterval">ПРОВЕРЯТЬ КВОТЫ КАЖДЫЕ</x:String>
     <x:String x:Key="langAutostart">Запускать вместе с Windows</x:String>
     <x:String x:Key="langNotifications">УВЕДОМЛЕНИЯ</x:String>
+    <x:String x:Key="langChartModels">Модели</x:String>
+    <x:String x:Key="langOther">другие</x:String>
+    <x:String x:Key="langCacheSaved">кэш сэкономил {0}</x:String>
     <x:String x:Key="langLevelImportant">Квота: «важно» с</x:String>
     <x:String x:Key="langLevelCritical">Квота: «критично» с</x:String>
     <x:String x:Key="langSessionToasts">Сообщать о конце хода и вопросах</x:String>

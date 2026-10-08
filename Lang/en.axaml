@@ -82,6 +82,9 @@
     <x:String x:Key="langInterval">CHECK QUOTAS EVERY</x:String>
     <x:String x:Key="langAutostart">Start with Windows</x:String>
     <x:String x:Key="langNotifications">NOTIFICATIONS</x:String>
+    <x:String x:Key="langChartModels">Models</x:String>
+    <x:String x:Key="langOther">other</x:String>
+    <x:String x:Key="langCacheSaved">cache saved {0}</x:String>
     <x:String x:Key="langLevelImportant">Quota: important at</x:String>
     <x:String x:Key="langLevelCritical">Quota: critical at</x:String>
     <x:String x:Key="langSessionToasts">Tell me when Claude finishes or asks</x:String>

@@ -62,10 +62,22 @@ internal enum ChartMode
 	Cost,
 	Tokens,
 	Cache,
+	Models,
 }
 
 /// <summary>Столбик дня: нижняя и верхняя части в пикселях, прозрачность и строка для наведения.</summary>
-internal sealed record BarView(DateOnly Date, double Low, double High, double Opacity, string Line);
+/// <summary>Слой столбика: высота в точках и цвет.</summary>
+internal sealed record BarPart(double Height, IBrush Brush);
+
+/// <summary>Пункт легенды графика.</summary>
+internal sealed record LegendItem(IBrush Brush, string Text);
+
+/// <summary>Столбик дня: слои снизу вверх.</summary>
+internal sealed record BarView(DateOnly Date, IReadOnlyList<BarPart> Parts, double Opacity, string Line)
+{
+	/// <summary>Слои сверху вниз — в таком порядке их кладёт StackPanel.</summary>
+	public IReadOnlyList<BarPart> Stack => [.. Parts.Reverse()];
+}
 
 /// <summary>Блок статистики вкладки: «Сегодня» и дни для графика.</summary>
 internal sealed record UsageView(
@@ -201,21 +213,43 @@ internal static class Views
 	/// <summary>Столбики в выбранной мере: во всю высоту — верх шкалы, сегодняшний ярче.</summary>
 	internal static IReadOnlyList<BarView> Bars(IReadOnlyList<UsageDay> days, ChartMode mode)
 	{
-		var parts = days.Select(day => Parts(day, mode)).ToList();
+		var layers = Layers(mode);
 		var ceiling = Ceiling(Top(days, mode));
 		var scale = ceiling > 0 ? ChartHeight / ceiling : 0;
 
 		return [.. days.Select((day, index) => new BarView(
 			day.Date,
-			parts[index].Low * scale,
-			parts[index].High * scale,
+			[.. layers.Select(layer => new BarPart(layer.Value(day) * scale, Brush(layer.Brush)))],
 			index == days.Count - 1 ? 1 : 0.6,
 			Text.DayLine(day)))];
 	}
 
 	/// <summary>Самый большой день в выбранной мере.</summary>
 	internal static double Top(IReadOnlyList<UsageDay> days, ChartMode mode) =>
-		days.Select(day => Parts(day, mode)).Select(part => part.Low + part.High).DefaultIfEmpty(0).Max();
+		days.Select(day => Layers(mode).Sum(layer => layer.Value(day))).DefaultIfEmpty(0).Max();
+
+	/// <summary>Легенда под графиком: по пункту на слой.</summary>
+	internal static IReadOnlyList<LegendItem> Legend(ChartMode mode) => [.. Layers(mode).Select(layer => new LegendItem(Brush(layer.Brush), layer.Name))];
+
+	// Слои меры снизу вверх: цвет, подпись в легенде и значение дня. По ним — и столбики, и легенда, и шкала.
+	private static IReadOnlyList<(string Brush, string Name, Func<UsageDay, double> Value)> Layers(ChartMode mode) => mode switch
+	{
+		ChartMode.Cost => [("Blue", Localization.Get("langCostNote"), day => (double)(day.Cost ?? 0))],
+		ChartMode.Tokens => [("Blue", Localization.Get("langInput"), day => day.Input), ("Good", Localization.Get("langOutput"), day => day.Output)],
+		ChartMode.Cache => [("Blue", Localization.Get("langCacheWrite"), day => day.CacheWrite), ("Good", Localization.Get("langCacheRead"), day => day.CacheRead)],
+		ChartMode.Models => [.. Enum.GetValues<ModelFamily>().Select(family => (
+			family switch
+			{
+				ModelFamily.Opus => "Blue",
+				ModelFamily.Sonnet => "Good",
+				ModelFamily.Haiku => "Warn",
+				ModelFamily.Fable => "Bad",
+				_ => "TextFaint",
+			},
+			family == ModelFamily.Other ? Localization.Get("langOther") : family.ToString(),
+			(Func<UsageDay, double>)(day => (double)(day.Models?.All[(int)family] ?? 0))))],
+		_ => throw new NotImplementedException("ChartMode switch error"),
+	};
 
 	/// <summary>Верх шкалы: две «круглые» ступени, как $0 / $80 / $160, не ниже самого большого дня.</summary>
 	internal static double Ceiling(double top)
@@ -234,7 +268,7 @@ internal static class Views
 	/// <summary>Подписи оси Y сверху вниз: верх шкалы, середина, ноль.</summary>
 	internal static IReadOnlyList<string> AxisY(double ceiling, ChartMode mode)
 	{
-		string Label(double value) => mode == ChartMode.Cost
+		string Label(double value) => mode is ChartMode.Cost or ChartMode.Models
 			? "$" + value.ToString("0.##", CultureInfo.InvariantCulture)
 			: value == 0 ? "0" : Text.Tokens((long)value);
 
@@ -249,17 +283,12 @@ internal static class Views
 	/// <summary>Сумма за 30 дней в выбранной мере — в углу графика.</summary>
 	internal static string Total(IReadOnlyList<UsageDay> days, ChartMode mode) => mode switch
 	{
-		ChartMode.Cost => Text.Cost(days.All(day => day.Cost is not null) ? days.Sum(day => day.Cost!.Value) : null),
+		ChartMode.Cost or ChartMode.Models => Text.Cost(days.All(day => day.Cost is not null) ? days.Sum(day => day.Cost!.Value) : null),
 		ChartMode.Tokens => Text.Tokens(days.Sum(day => day.Input + day.Output)),
-		ChartMode.Cache => Text.Tokens(days.Sum(day => day.CacheWrite + day.CacheRead)),
-		_ => throw new NotImplementedException("ChartMode switch error"),
-	};
 
-	private static (double Low, double High) Parts(UsageDay day, ChartMode mode) => mode switch
-	{
-		ChartMode.Cost => ((double)(day.Cost ?? 0), 0),
-		ChartMode.Tokens => (day.Input, day.Output),
-		ChartMode.Cache => (day.CacheWrite, day.CacheRead),
+		// Без цен экономию не посчитать — тогда только токены.
+		ChartMode.Cache => Text.Tokens(days.Sum(day => day.CacheWrite + day.CacheRead))
+			+ (days.Any(day => day.Saved is not null) ? " · " + Localization.Format("langCacheSaved", Text.Cost(days.Sum(day => day.Saved ?? 0))) : ""),
 		_ => throw new NotImplementedException("ChartMode switch error"),
 	};
 
