@@ -15,6 +15,7 @@
     <x:String x:Key="langPaceAhead">з випередженням</x:String>
     <x:String x:Key="langPaceEven">у нормі</x:String>
     <x:String x:Key="langPaceSpare">із запасом</x:String>
+    <x:String x:Key="langPaceTip">Біла позначка — рівний темп: якщо витрачати рівномірно до скидання, зараз було б витрачено {0}%. У вас {1}%.</x:String>
     <x:String x:Key="langHoursMinutes">{0} год {1} хв</x:String>
     <x:String x:Key="langMinutes">{0} хв</x:String>
     <x:String x:Key="langMinutes1">1 хв</x:String>

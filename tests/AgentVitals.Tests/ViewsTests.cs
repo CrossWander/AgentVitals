@@ -81,6 +81,18 @@ public class ViewsTests
 		Assert.Equal(word, card.Caption); // в окне — вместо «использовано» у числа
 		Assert.EndsWith(" · " + word, card.Footer); // в карточке наведения — после сброса
 		Assert.Equal(50, card.Pace!.Value, 3);
+		Assert.Equal("langPaceTip", card.PaceTip); // что за белая метка — подсказкой над карточкой
+	}
+
+	[Fact]
+	public void NoPaceNoTip()
+	{
+		var state = new ProviderState(new ClaudeProvider())
+		{
+			Snapshot = new("Max", null, [new("langWindowModel", "Opus", 30, DateTime.UtcNow.AddDays(2), Limiting: false)], null),
+		};
+
+		Assert.Null(Assert.Single(Views.Provider(state, DateTime.UtcNow).Cards).PaceTip);
 	}
 
 	[Fact]

@@ -52,7 +52,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="local:CardView">
-                            <Border Classes="card" Margin="4">
+                            <Border Classes="card" Margin="4" ToolTip.Tip="{Binding PaceTip}">
                                 <StackPanel Spacing="6">
                                     <Grid ColumnDefinitions="Auto,*,Auto">
                                         <Path Classes="icon" Width="11" Height="11" Data="{Binding Icon}"

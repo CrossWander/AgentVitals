@@ -25,7 +25,8 @@ internal sealed record CardView(
 	bool Limiting,
 	double? Pace = null,
 	string PaceWord = "",
-	IBrush? PaceBrush = null)
+	IBrush? PaceBrush = null,
+	string? PaceTip = null)
 {
 	/// <summary>Метка ровного темпа на полоске: где был бы расход, если тратить равномерно.</summary>
 	public bool HasPace => Pace is not null;
@@ -332,7 +333,8 @@ internal static class Views
 				"langPaceAhead" => "Warn",
 				"langPaceSpare" => "Good",
 				_ => "TextDim",
-			}));
+			}),
+			pace is { } even ? Localization.Format("langPaceTip", Math.Round(even), Math.Round(window.Used)) : null);
 	}
 
 	private static CardView Extra(Spend spend)

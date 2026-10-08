@@ -39,7 +39,7 @@
                                 <ItemsControl ItemsSource="{Binding Glance}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="local:CardView">
-                                            <StackPanel Spacing="4" Margin="0,0,0,6">
+                                            <StackPanel Spacing="4" Margin="0,0,0,6" Background="Transparent" ToolTip.Tip="{Binding PaceTip}">
                                                 <Grid ColumnDefinitions="Auto,*,Auto">
                                                     <Path Classes="icon" Width="11" Height="11" Data="{Binding Icon}"
                                                           Stroke="{Binding IconBrush}" VerticalAlignment="Center"/>
