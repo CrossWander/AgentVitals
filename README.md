@@ -14,6 +14,10 @@ Anthropic is up. A toast warns you before you run out, when Claude finishes a lo
 asks for permission. Inspired by [ClaudeBar](https://github.com/tddworks/ClaudeBar) and
 [claude-status-bar](https://github.com/m1ckc3s/claude-status-bar), which do this on macOS.
 
+| Light | Dark |
+|---|---|
+| <img src="docs/popover-light.png" width="360" alt="AgentVitals window, light theme"> | <img src="docs/popover-dark.png" width="360" alt="AgentVitals window, dark theme"> |
+
 ## Quick start
 
 1. Download `AgentVitals.exe` from the [latest release](https://github.com/CrossWander/AgentVitals/releases/latest).
