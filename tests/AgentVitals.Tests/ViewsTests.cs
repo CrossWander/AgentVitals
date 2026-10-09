@@ -170,7 +170,7 @@ public class ViewsTests
 	[Fact]
 	public void StackedBarsShareOneScale()
 	{
-		var bars = Views.Bars([Day(6, input: 10, output: 30), Day(7, input: 20, output: 20)], ChartMode.Tokens);
+		var bars = Views.Chart([Day(6, input: 10, output: 30), Day(7, input: 20, output: 20)], ChartMode.Tokens).Bars;
 
 		Assert.Equal([22.5, 67.5], bars[0].Parts.Select(part => part.Height)); // самый большой день — 40 — во всю высоту 90; снизу вход
 		Assert.Equal(45, bars[1].Parts[0].Height);
@@ -180,17 +180,24 @@ public class ViewsTests
 
 	[Fact]
 	public void EmptyMonthDrawsNothing() =>
-		Assert.All(Views.Bars([Day(6), Day(7)], ChartMode.Cost), bar => Assert.All(bar.Parts, part => Assert.Equal(0, part.Height)));
+		Assert.All(Views.Chart([Day(6), Day(7)], ChartMode.Cost).Bars, bar => Assert.All(bar.Parts, part => Assert.Equal(0, part.Height)));
 
 	[Fact]
 	public void ModelsStackCostByFamily()
 	{
 		var today = Day(7, cost: 20) with { Models = new ModelCosts(15, 5, 0, 0, 0) };
 
-		var bar = Views.Bars([Day(6), today], ChartMode.Models)[1];
+		var bar = Views.Chart([Day(6), today], ChartMode.Models).Bars[1];
 
 		Assert.Equal([67.5, 22.5, 0, 0, 0], bar.Parts.Select(part => part.Height)); // $20 — верх шкалы, снизу Opus
 	}
+
+	[Fact]
+	public void ScaleFitsTheBiggestDay() =>
+		Assert.Equal(["$30", "$15", "$0"], Views.Chart([Day(6, cost: 10m), Day(7, cost: 21.3m)], ChartMode.Cost).AxisY);
+
+	[Fact]
+	public void NoDaysNoTotal() => Assert.Equal("", Views.Chart([], ChartMode.Cost).Total); // «$0.00» за месяц, которого нет, — неправда
 
 	[Fact]
 	public void LegendNamesEachLayer()

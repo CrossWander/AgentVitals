@@ -54,8 +54,8 @@ internal sealed class TrayApp
 	{
 		_poller.Changed += OnPolled;
 		_popover.RefreshRequested += Refresh;
-		_popover.Changed += Render;
-		_popover.ExitRequested += Exit;
+		_popover.Settings.Changed += Render;
+		_popover.Settings.ExitRequested += Exit;
 		_menu.RefreshRequested += Refresh;
 		_menu.SettingsRequested += () => OpenPopover(settings: true);
 		_menu.ExitRequested += Exit;

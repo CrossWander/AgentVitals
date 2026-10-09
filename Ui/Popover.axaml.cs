@@ -26,16 +26,9 @@ internal partial class Popover : TrayWindow
 		InitializeComponent();
 
 		Settings.Back += () => ShowSettings(false);
-		Settings.Changed += () => Changed?.Invoke();
-		Settings.ExitRequested += () => ExitRequested?.Invoke();
 	}
 
 	public event Action? RefreshRequested;
-
-	/// <summary>В настройках что-то поменяли — подписи из кода пора перерисовать.</summary>
-	public event Action? Changed;
-
-	public event Action? ExitRequested;
 
 	public void Open(PixelRect anchor, bool settings)
 	{
@@ -142,14 +135,7 @@ internal partial class Popover : TrayWindow
 
 	private void ShowUsage(UsageView usage)
 	{
-		CostValue.Text = usage.Cost;
-		CostNote.Text = usage.CostNote;
-		CostYesterday.Text = usage.CostYesterday;
-		TokensValue.Text = usage.Tokens;
-		TokensNote.Text = usage.TokensNote;
-		TokensYesterday.Text = usage.TokensYesterday;
-		WorkValue.Text = usage.WorkTime;
-		WorkYesterday.Text = usage.WorkTimeYesterday;
+		UsageBlock.DataContext = usage;
 
 		// Render бывает раз в секунду, пока Claude работает: столбики пересоздаются, только когда сменились
 		// дни, мера, язык или тема (цвета слоёв берутся из её палитры), — иначе столбик под мышью терял бы свою строку.
@@ -158,34 +144,34 @@ internal partial class Popover : TrayWindow
 		if (shown != _shown)
 		{
 			_shown = shown;
-			_bars = Views.Bars(usage.Days, _mode);
+			var chart = Views.Chart(usage.Days, _mode);
+			_bars = chart.Bars;
 			Bars.ItemsSource = _bars;
-			var axis = Views.AxisY(Views.Ceiling(Views.Top(usage.Days, _mode)), _mode);
-			(AxisTop.Text, AxisMiddle.Text, AxisBottom.Text) = (axis[0], axis[1], axis[2]);
-			ShowDates(usage.Days);
-			_total = usage.Days.Count == 0 ? "" : Views.Total(usage.Days, _mode);
+			(AxisTop.Text, AxisMiddle.Text, AxisBottom.Text) = (chart.AxisY[0], chart.AxisY[1], chart.AxisY[2]);
+			ShowDates(usage.Days.Count, chart.AxisX);
+			_total = chart.Total;
 
 			// Легенда всегда в одну строку: у любой меры она есть, и окно не прыгает на её высоту.
-			Legend.ItemsSource = Views.Legend(_mode);
+			Legend.ItemsSource = chart.Legend;
 		}
 
 		ChartLine.Text = _bars.FirstOrDefault(bar => bar.Date == _hovered)?.Line ?? _total;
 	}
 
 	/// <summary>Даты под столбиками: по колонке на день и последняя — шириной с подписи шкалы; подпись тянется на неделю вправо.</summary>
-	private void ShowDates(IReadOnlyList<UsageDay> days)
+	private void ShowDates(int days, IReadOnlyList<(int Index, string Text)> ticks)
 	{
 		AxisX.Children.Clear();
 		AxisX.ColumnDefinitions.Clear();
 
-		foreach (var _ in days)
+		for (var day = 0; day < days; day++)
 		{
 			AxisX.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
 		}
 
 		AxisX.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto) { SharedSizeGroup = "Axis" });
 
-		foreach (var (index, text) in Views.AxisX(days))
+		foreach (var (index, text) in ticks)
 		{
 			var label = new TextBlock
 			{
@@ -194,7 +180,7 @@ internal partial class Popover : TrayWindow
 			};
 
 			Grid.SetColumn(label, index);
-			Grid.SetColumnSpan(label, Math.Min(7, days.Count + 1 - index));
+			Grid.SetColumnSpan(label, Math.Min(7, days + 1 - index));
 			AxisX.Children.Add(label);
 		}
 	}

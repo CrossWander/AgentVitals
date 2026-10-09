@@ -78,6 +78,14 @@ internal sealed record BarView(DateOnly Date, IReadOnlyList<BarPart> Parts, doub
 	public IReadOnlyList<BarPart> Stack => [.. Parts.Reverse()];
 }
 
+/// <summary>График в выбранной мере: столбики, шкала сверху вниз, даты под столбиками, легенда и сумма за 30 дней.</summary>
+internal sealed record ChartView(
+	IReadOnlyList<BarView> Bars,
+	IReadOnlyList<string> AxisY,
+	IReadOnlyList<(int Index, string Text)> AxisX,
+	IReadOnlyList<LegendItem> Legend,
+	string Total);
+
 /// <summary>Блок статистики вкладки: «Сегодня» и дни для графика.</summary>
 internal sealed record UsageView(
 	string Cost,
@@ -193,11 +201,19 @@ internal static class Views
 			days);
 	}
 
+	/// <summary>Всё, что рисует график, — за один подсчёт шкалы.</summary>
+	internal static ChartView Chart(IReadOnlyList<UsageDay> days, ChartMode mode)
+	{
+		var ceiling = Ceiling(Top(days, mode));
+
+		// Без дней «$0.00 за месяц» было бы неправдой: дней просто ещё нет.
+		return new(Bars(days, mode, ceiling), AxisY(ceiling, mode), AxisX(days), Legend(mode), days.Count == 0 ? "" : Total(days, mode));
+	}
+
 	/// <summary>Столбики в выбранной мере: во всю высоту — верх шкалы, сегодняшний ярче.</summary>
-	internal static IReadOnlyList<BarView> Bars(IReadOnlyList<UsageDay> days, ChartMode mode)
+	private static IReadOnlyList<BarView> Bars(IReadOnlyList<UsageDay> days, ChartMode mode, double ceiling)
 	{
 		var layers = Layers(mode);
-		var ceiling = Ceiling(Top(days, mode));
 		var scale = ceiling > 0 ? ChartHeight / ceiling : 0;
 
 		return [.. days.Select((day, index) => new BarView(
@@ -208,7 +224,7 @@ internal static class Views
 	}
 
 	/// <summary>Самый большой день в выбранной мере.</summary>
-	internal static double Top(IReadOnlyList<UsageDay> days, ChartMode mode) =>
+	private static double Top(IReadOnlyList<UsageDay> days, ChartMode mode) =>
 		days.Select(day => Layers(mode).Sum(layer => layer.Value(day))).DefaultIfEmpty(0).Max();
 
 	/// <summary>Легенда под графиком: по пункту на слой.</summary>

@@ -93,32 +93,32 @@
                 <TextBlock Name="ErrorLine" Classes="error"/>
 
                 <!-- Статистика из локальных логов агента: сегодня и 30 дней. Нет читателя логов — блока нет -->
-                <StackPanel Name="UsageBlock" Spacing="8">
+                <StackPanel Name="UsageBlock" Spacing="8" x:DataType="local:UsageView">
                     <TextBlock Classes="label" Text="{DynamicResource langToday}"/>
                     <UniformGrid Columns="3" Margin="-4">
                         <Border Classes="card" Margin="4">
                             <StackPanel Spacing="3">
                                 <TextBlock Classes="label" Text="{DynamicResource langCostTitle}"/>
-                                <TextBlock Name="CostValue" FontSize="18" FontWeight="Bold"/>
-                                <TextBlock Name="CostNote" Classes="faint" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Name="CostYesterday" Classes="faint" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding Cost}" FontSize="18" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding CostNote}" Classes="faint" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding CostYesterday}" Classes="faint" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                         </Border>
                         <Border Classes="card" Margin="4">
                             <StackPanel Spacing="3">
                                 <TextBlock Classes="label" Text="{DynamicResource langTokensTitle}"/>
-                                <TextBlock Name="TokensValue" FontSize="18" FontWeight="Bold"/>
-                                <TextBlock Name="TokensNote" Classes="faint" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Name="TokensYesterday" Classes="faint" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding Tokens}" FontSize="18" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding TokensNote}" Classes="faint" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding TokensYesterday}" Classes="faint" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                         </Border>
                         <Border Classes="card" Margin="4">
                             <StackPanel Spacing="3">
                                 <TextBlock Classes="label" Text="{DynamicResource langWorkTitle}"/>
-                                <TextBlock Name="WorkValue" FontSize="18" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding WorkTime}" FontSize="18" FontWeight="Bold"/>
                                 <!-- Подписи у времени нет: пустая строка держит «вчера» вровень с соседями -->
                                 <TextBlock Classes="faint" Text=" "/>
-                                <TextBlock Name="WorkYesterday" Classes="faint" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding WorkTimeYesterday}" Classes="faint" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                         </Border>
                     </UniformGrid>
