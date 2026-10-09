@@ -31,7 +31,7 @@ internal sealed record UsageDay(
 	long CacheRead,
 	decimal? Cost,
 	bool Unpriced,
-	TimeSpan Working,
+	TimeSpan WorkTime,
 	decimal? Saved = null,
 	ModelCosts? Models = null)
 {

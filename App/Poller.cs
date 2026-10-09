@@ -16,7 +16,7 @@ internal sealed class ProviderState(IProvider provider)
 	public IProvider Provider { get; } = provider;
 
 	/// <summary>Агент установлен: его файл входа на месте. Проверяется раз в тик опроса, а не каждым читателем.</summary>
-	public bool Available { get; private set; } = File.Exists(provider.Credentials);
+	public bool Installed { get; private set; } = File.Exists(provider.Credentials);
 
 	public Snapshot? Snapshot { get; set; }
 
@@ -69,7 +69,7 @@ internal sealed class ProviderState(IProvider provider)
 	}
 
 	/// <summary>Агента установили или удалили, пока программа работает.</summary>
-	public void CheckInstalled() => Available = File.Exists(Provider.Credentials);
+	public void CheckInstalled() => Installed = File.Exists(Provider.Credentials);
 
 	/// <summary>Время записи файла входа — снимать до запроса и передавать в <see cref="Record"/>.</summary>
 	public DateTime Stamp() => File.GetLastWriteTimeUtc(Provider.Credentials);
@@ -116,10 +116,10 @@ internal sealed class Poller
 		[new(new ClaudeProvider()), new(new CodexProvider()), new(new GeminiProvider())];
 
 	/// <summary>Установленные агенты: только их показывают и спрашивают.</summary>
-	public IEnumerable<ProviderState> Available => Providers.Where(state => state.Available);
+	public IEnumerable<ProviderState> Installed => Providers.Where(state => state.Installed);
 
 	/// <summary>Самое узкое окно среди установленных агентов; null — ни у кого нет свежих данных.</summary>
-	public double? Tightest(DateTime now) => Available.Max(state => state.Tightest(now));
+	public double? Tightest(DateTime now) => Installed.Max(state => state.Tightest(now));
 
 	/// <summary>Общее состояние квот — по самому узкому окну.</summary>
 	public Health Health(DateTime now, Thresholds levels) => Tightest(now) is { } used ? Quota.Rate(used, levels) : AgentVitals.Health.Unknown;
@@ -154,7 +154,7 @@ internal sealed class Poller
 			await Task.Delay(delay);
 			await TickAsync(force: true);
 
-			if (!Offline(Available, Status))
+			if (!Offline(Installed, Status))
 			{
 				return;
 			}
@@ -200,7 +200,7 @@ internal sealed class Poller
 				state.CheckInstalled();
 			}
 
-			var due = Available
+			var due = Installed
 				.Where(state => now >= state.NextFetch(Store.Current.IntervalSeconds) || (force && state.Error is not RateLimitedException))
 				.ToList();
 
@@ -217,7 +217,7 @@ internal sealed class Poller
 			}
 
 			// Статистика — после квот и статуса: первое чтение логов занимает секунды.
-			foreach (var state in Available)
+			foreach (var state in Installed)
 			{
 				await state.ReadUsageAsync(_http, now);
 			}

@@ -148,8 +148,8 @@ internal partial class Popover : TrayWindow
 		TokensValue.Text = usage.Tokens;
 		TokensNote.Text = usage.TokensNote;
 		TokensYesterday.Text = usage.TokensYesterday;
-		WorkValue.Text = usage.Working;
-		WorkYesterday.Text = usage.WorkingYesterday;
+		WorkValue.Text = usage.WorkTime;
+		WorkYesterday.Text = usage.WorkTimeYesterday;
 
 		// Render бывает раз в секунду, пока Claude работает: столбики пересоздаются, только когда сменились
 		// дни, мера, язык или тема (цвета слоёв берутся из её палитры), — иначе столбик под мышью терял бы свою строку.

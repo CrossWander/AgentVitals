@@ -48,7 +48,7 @@ internal static class Text
 		Math.Round(used) >= 100 ? Localization.Get("langHealthExhausted") : HealthName(Quota.Rate(used, levels));
 
 	/// <summary>Тост о пороге: заголовок — насколько серьёзно, текст — что, сколько осталось и когда сброс.</summary>
-	public static (string Title, string Message) Alert(string provider, QuotaAlert alert, DateTime now)
+	public static (string Title, string Message) QuotaToast(string provider, QuotaAlert alert, DateTime now)
 	{
 		var left = Math.Max(0, 100 - Math.Round(alert.Window.Used));
 		var message = Localization.Format("langAlertLeft", provider, Title(alert.Window), left);
@@ -101,11 +101,11 @@ internal static class Text
 
 	public static string Status(ServiceStatus? status) =>
 		status is null ? Localization.Get("langStatusUnknown")
-		: status.Indicator == "none" ? Localization.Get("langStatusOk")
+		: status.Health == Health.Good ? Localization.Get("langStatusOk")
 		: status.Incident ?? status.Description;
 
 	public static string StatusToast(ServiceStatus status) =>
-		status.Indicator == "none"
+		status.Health == Health.Good
 			? Localization.Get("langToastStatusOk")
 			: Localization.Format("langToastStatus", status.Incident ?? status.Description);
 
@@ -141,5 +141,5 @@ internal static class Text
 
 	/// <summary>Строка дня для графика: «7 окт · $12.34 · 152,3 млн · 3 ч 12 мин».</summary>
 	public static string DayLine(UsageDay day) =>
-		string.Join(" · ", day.Date.ToString("d MMM", Localization.Culture), Cost(day.Cost), Tokens(day.Total), Working(day.Working));
+		string.Join(" · ", day.Date.ToString("d MMM", Localization.Culture), Cost(day.Cost), Tokens(day.Total), Working(day.WorkTime));
 }

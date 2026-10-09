@@ -69,19 +69,19 @@ internal sealed class GeminiProvider : IProvider
 		var windows = (quota["buckets"] as JsonArray ?? [])
 			.OfType<JsonObject>()
 			.Select(bucket => (
-				Tier: Tier((string?)bucket["modelId"] ?? ""),
+				Family: Family((string?)bucket["modelId"] ?? ""),
 				Left: (double?)bucket["remainingFraction"] ?? 1,
 				Resets: Api.Date(bucket["resetTime"])))
-			.GroupBy(bucket => bucket.Tier)
+			.GroupBy(bucket => bucket.Family)
 			.Select(group => group.MinBy(bucket => bucket.Left))
-			.Select(bucket => new QuotaWindow(WindowKind.Model,bucket.Tier, (1 - bucket.Left) * 100, bucket.Resets, Limiting: true))
+			.Select(bucket => new QuotaWindow(WindowKind.Model, bucket.Family, (1 - bucket.Left) * 100, bucket.Resets, Limiting: true))
 			.OrderByDescending(window => window.Used)
 			.ToList();
 
 		return new(tier ?? "", null, windows, null);
 	}
 
-	private static string Tier(string model) =>
+	private static string Family(string model) =>
 		model.Contains("flash-lite", StringComparison.OrdinalIgnoreCase) ? "Flash Lite"
 		: model.Contains("flash", StringComparison.OrdinalIgnoreCase) ? "Flash"
 		: model.Contains("pro", StringComparison.OrdinalIgnoreCase) ? "Pro"

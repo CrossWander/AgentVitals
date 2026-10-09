@@ -37,10 +37,10 @@ internal sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, 
 }
 
 /// <summary>Расход сверх тарифа в деньгах; Limit null — потолка нет.</summary>
-internal sealed record Spend(decimal Used, decimal? Limit, string Currency);
+internal sealed record ExtraUsage(decimal Used, decimal? Limit, string Currency);
 
 /// <summary>Квоты одного провайдера на момент запроса.</summary>
-internal sealed record Snapshot(string Plan, string? Account, IReadOnlyList<QuotaWindow> Windows, Spend? Extra);
+internal sealed record Snapshot(string Plan, string? Account, IReadOnlyList<QuotaWindow> Windows, ExtraUsage? Extra);
 
 /// <summary>Темп расхода против ровного: с запасом, ровно, с опережением.</summary>
 internal enum Pace

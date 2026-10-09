@@ -29,7 +29,7 @@ internal static class UsageDays
 	}
 
 	/// <summary>Сумма отрезков работы: перерыв дольше получаса начинает новый отрезок.</summary>
-	internal static TimeSpan Working(IEnumerable<DateTime> times)
+	internal static TimeSpan WorkTime(IEnumerable<DateTime> times)
 	{
 		var sorted = times.Order().ToList();
 		var total = TimeSpan.Zero;
@@ -77,7 +77,7 @@ internal static class UsageDays
 			records.Sum(record => record.CacheRead),
 			cost,
 			unpriced,
-			Working(records.Select(record => record.Utc)),
+			WorkTime(records.Select(record => record.Utc)),
 			saved,
 			models);
 	}

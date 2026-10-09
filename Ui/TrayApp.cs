@@ -153,7 +153,7 @@ internal sealed class TrayApp
 	/// <summary>Тост, когда сессия или неделя дошли до 75% или 90% или сменился статус Anthropic.</summary>
 	private void Notify()
 	{
-		var alerts = _poller.Available
+		var alerts = _poller.Installed
 			.Where(state => state.Snapshot is not null)
 			.SelectMany(state => _alarm.Check(state.Provider.Name, state.Windows(DateTime.UtcNow), Store.Current.Thresholds).Select(alert => (state.Provider.Name, alert)))
 			.ToList();
@@ -162,7 +162,7 @@ internal sealed class TrayApp
 		if (alerts.Count > 0)
 		{
 			var (provider, alert) = alerts.MaxBy(item => (item.alert.Critical, item.alert.Window.Used));
-			var (title, message) = Text.Alert(provider, alert, DateTime.UtcNow);
+			var (title, message) = Text.QuotaToast(provider, alert, DateTime.UtcNow);
 			_toast.Say(message, Anchor(), title, Views.Brush(alert.Critical ? "Bad" : "Warn"), Toast.Long);
 
 			// Тост живёт секунды: по журналу видно, был ли он, если человек отошёл от экрана.

@@ -78,11 +78,11 @@ public class UsageDaysTests
 	{
 		DateTime[] times = [Utc(7, 10, 0), Utc(7, 10, 10), Utc(7, 10, 20), Utc(7, 11, 0), Utc(7, 11, 5)];
 
-		Assert.Equal(TimeSpan.FromMinutes(25), UsageDays.Working(times)); // 20 мин + 5 мин, 40 мин перерыва — не работа
+		Assert.Equal(TimeSpan.FromMinutes(25), UsageDays.WorkTime(times)); // 20 мин + 5 мин, 40 мин перерыва — не работа
 	}
 
 	[Fact]
-	public void SingleAnswerIsNoWorkTime() => Assert.Equal(TimeSpan.Zero, UsageDays.Working([Utc(7, 10, 0)]));
+	public void SingleAnswerIsNoWorkTime() => Assert.Equal(TimeSpan.Zero, UsageDays.WorkTime([Utc(7, 10, 0)]));
 
 	[Fact]
 	public void NoPricesNoCost() => Assert.Null(UsageDays.Build([Answer(Utc(7, 10, 0))], null, _today, _kyiv)[^1].Cost);

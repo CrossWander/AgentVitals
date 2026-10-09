@@ -123,13 +123,13 @@ public class PollerTests
 		using var temp = new TempDirectory();
 		var credentials = temp.File("auth.json");
 		var state = new ProviderState(new SignedOut(credentials));
-		Assert.False(state.Available);
+		Assert.False(state.Installed);
 
 		File.WriteAllText(credentials, "{}"); // человек вошёл в CLI агента
-		Assert.False(state.Available);
+		Assert.False(state.Installed);
 
 		state.CheckInstalled();
-		Assert.True(state.Available);
+		Assert.True(state.Installed);
 	}
 
 	[Fact]

@@ -69,6 +69,6 @@ internal sealed class CodexProvider : IProvider
 		}
 
 		DateTimeOffset? resets = (long?)window["reset_at"] is { } at ? DateTimeOffset.FromUnixTimeSeconds(at) : null;
-		windows.Add(new(kind, null,(double?)window["used_percent"] ?? 0, resets, Limiting: true));
+		windows.Add(new(kind, null, (double?)window["used_percent"] ?? 0, resets, Limiting: true));
 	}
 }

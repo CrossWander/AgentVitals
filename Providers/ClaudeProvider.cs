@@ -114,7 +114,7 @@ internal sealed class ClaudeProvider : IProvider
 		}
 	}
 
-	private static Spend? Extra(JsonNode usage)
+	private static ExtraUsage? Extra(JsonNode usage)
 	{
 		if (usage["spend"] is JsonObject spend && (bool?)spend["enabled"] == true)
 		{

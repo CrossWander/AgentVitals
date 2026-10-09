@@ -36,7 +36,7 @@
                                     <TextBlock Grid.Column="1" Classes="faint" Text="{Binding Info}" Margin="8,0,0,0"
                                                HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                 </Grid>
-                                <ItemsControl ItemsSource="{Binding Glance}">
+                                <ItemsControl ItemsSource="{Binding LimitingCards}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="local:CardView">
                                             <StackPanel Spacing="4" Margin="0,0,0,6" Background="Transparent" ToolTip.Tip="{Binding PaceTip}">

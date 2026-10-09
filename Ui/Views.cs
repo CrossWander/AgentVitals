@@ -46,7 +46,7 @@ internal sealed record CardView(
 internal sealed record ProviderView(string Name, string Info, string Updated, IReadOnlyList<CardView> Cards, string Error, string? Dashboard, UsageView? Usage)
 {
 	/// <summary>Для карточки по наведению — только окна, которые блокируют всю работу.</summary>
-	public IReadOnlyList<CardView> Glance => [.. Cards.Where(card => card.Limiting)];
+	public IReadOnlyList<CardView> LimitingCards => [.. Cards.Where(card => card.Limiting)];
 
 	public bool HasError => Error.Length > 0;
 }
@@ -88,8 +88,8 @@ internal sealed record UsageView(
 	string Tokens,
 	string TokensNote,
 	string TokensYesterday,
-	string Working,
-	string WorkingYesterday,
+	string WorkTime,
+	string WorkTimeYesterday,
 	IReadOnlyList<UsageDay> Days);
 
 /// <summary>Всё, что показывают окна, одним снимком.</summary>
@@ -112,7 +112,7 @@ internal static class Views
 {
 	public static Vitals Build(Poller poller, IReadOnlyList<Session> sessions, DateTime now)
 	{
-		var available = poller.Available.ToList();
+		var available = poller.Installed.ToList();
 		var levels = Store.Current.Thresholds;
 		var health = poller.Health(now, levels);
 
@@ -203,8 +203,8 @@ internal static class Views
 			Text.Tokens(today.Total),
 			today.Total == 0 ? "" : Localization.Format("langFromCache", Math.Round(100.0 * today.CacheRead / today.Total)),
 			Localization.Format("langYesterday", Text.Tokens(yesterday.Total)),
-			Text.Working(today.Working),
-			Localization.Format("langYesterday", Text.Working(yesterday.Working)),
+			Text.Working(today.WorkTime),
+			Localization.Format("langYesterday", Text.Working(yesterday.WorkTime)),
 			days);
 	}
 
@@ -329,9 +329,9 @@ internal static class Views
 			pace is { } even ? Localization.Format("langPaceTip", Math.Round(even), Math.Round(window.Used)) : null);
 	}
 
-	private static CardView Extra(Spend spend, Thresholds levels)
+	private static CardView Extra(ExtraUsage extra, Thresholds levels)
 	{
-		var fill = spend.Limit is { } limit && limit > 0 ? (double)(spend.Used / limit * 100) : 0;
+		var fill = extra.Limit is { } limit && limit > 0 ? (double)(extra.Used / limit * 100) : 0;
 
 		return new(
 			Localization.Get("langExtra").ToUpper(Localization.Culture),
@@ -339,9 +339,9 @@ internal static class Views
 			Brush("IconExtra"),
 			"",
 			Brushes.Transparent,
-			Text.Money(spend.Used, spend.Currency),
+			Text.Money(extra.Used, extra.Currency),
 			"",
-			spend.Limit is { } ceiling ? Localization.Format("langExtraOf", Text.Money(ceiling, spend.Currency)) : Localization.Get("langExtraSpent"),
+			extra.Limit is { } ceiling ? Localization.Format("langExtraOf", Text.Money(ceiling, extra.Currency)) : Localization.Get("langExtraSpent"),
 			Math.Min(fill, 100),
 			Brush(Meter(Quota.Rate(fill, levels))),
 			"",

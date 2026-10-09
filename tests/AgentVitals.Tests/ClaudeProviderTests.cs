@@ -80,7 +80,7 @@ public class ClaudeProviderTests
 		Assert.Equal(17, model.Used);
 		Assert.False(model.Limiting);
 
-		Assert.Equal(new Spend(4.95m, 500m, "USD"), snapshot.Extra);
+		Assert.Equal(new ExtraUsage(4.95m, 500m, "USD"), snapshot.Extra);
 	}
 
 	[Fact]
@@ -124,6 +124,6 @@ public class ClaudeProviderTests
 			{ "extra_usage": { "is_enabled": true, "used_credits": 541, "monthly_limit": 2000, "decimal_places": 2, "currency": "USD" } }
 			""")!;
 
-		Assert.Equal(new Spend(5.41m, 20m, "USD"), ClaudeProvider.Parse(usage, "", null).Extra);
+		Assert.Equal(new ExtraUsage(5.41m, 20m, "USD"), ClaudeProvider.Parse(usage, "", null).Extra);
 	}
 }
