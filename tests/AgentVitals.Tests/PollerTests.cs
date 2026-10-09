@@ -13,6 +13,8 @@ public class PollerTests
 {
 	private static readonly DateTime _now = new(2026, 10, 7, 12, 0, 0);
 
+	private static readonly Snapshot _snapshot = new("Max", null, [], null);
+
 	[Fact]
 	public void SuccessWaitsInterval() => Assert.Equal(_now.AddMinutes(2), Poller.Schedule(null, 120, _now));
 
@@ -29,21 +31,26 @@ public class PollerTests
 		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new JsonException("truncated"), 60, _now));
 
 	[Fact]
-	public void WakeRetriesOnlyWhileTheNetworkIsDown() // после сна сеть поднимается не сразу
+	public async Task WakeRetriesOnlyWhileTheNetworkIsDown() // после сна сеть поднимается не сразу
 	{
-		var state = new ProviderState(new ClaudeProvider());
+		using var http = new HttpClient();
+		Exception? answer = new HttpRequestException();
+		var state = new ProviderState(new Fake(() => answer is null ? _snapshot : throw answer));
 		var status = new ServiceStatus("none", "All Systems Operational", null);
 
-		state.Record(new HttpRequestException(), _now);
+		await state.FetchAsync(http, _now);
 		Assert.True(Poller.Offline([state], status));
 
-		state.Record(new TaskCanceledException(), _now); // таймаут HttpClient
+		answer = new TaskCanceledException(); // таймаут HttpClient
+		await state.FetchAsync(http, _now);
 		Assert.True(Poller.Offline([state], status));
 
-		state.Record(new TokenExpiredException("claude"), _now); // сервер ответил: сеть есть, повтор не поможет
+		answer = new TokenExpiredException("fake"); // сервер ответил: сеть есть, повтор не поможет
+		await state.FetchAsync(http, _now);
 		Assert.False(Poller.Offline([state], status));
 
-		state.Record(null, _now);
+		answer = null;
+		await state.FetchAsync(http, _now);
 		Assert.False(Poller.Offline([state], status));
 		Assert.True(Poller.Offline([state], null)); // статус-страница не ответила
 	}
@@ -59,16 +66,30 @@ public class PollerTests
 	}
 
 	[Fact]
-	public void ExpiredSignInHasNoTightest() // старые проценты при истёкшем входе ничего не говорят — серое
+	public async Task ExpiredSignInHasNoTightest() // старые проценты при истёкшем входе ничего не говорят — серое
 	{
-		var state = new ProviderState(new ClaudeProvider())
+		using var http = new HttpClient();
+		var state = new ProviderState(new Fake(() => throw new TokenExpiredException("fake")))
 		{
 			Snapshot = new("Max", null, [new(WindowKind.Session, null, 40, null, Limiting: true)], null),
 		};
 
 		Assert.Equal(40, state.Tightest(_now));
-		state.Record(new TokenExpiredException("claude"), _now);
+		await state.FetchAsync(http, _now);
 		Assert.Null(state.Tightest(_now));
+	}
+
+	[Fact]
+	public async Task AnswerIsKeptWithItsTime()
+	{
+		using var http = new HttpClient();
+		var state = new ProviderState(new Fake(() => _snapshot));
+
+		await state.FetchAsync(http, _now);
+
+		Assert.Same(_snapshot, state.Snapshot);
+		Assert.NotNull(state.Updated);
+		Assert.Null(state.Error);
 	}
 
 	[Fact]
@@ -76,23 +97,27 @@ public class PollerTests
 		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new HttpRequestException(), 60, _now));
 
 	[Fact]
-	public void NewIntervalAppliesAtOnce() // с 10 минут на минуту — без ожидания прежних 10 минут
+	public async Task NewIntervalAppliesAtOnce() // с 10 минут на минуту — без ожидания прежних 10 минут
 	{
-		var state = new ProviderState(new ClaudeProvider()) { Started = _now };
+		using var http = new HttpClient();
+		var state = new ProviderState(new Fake(() => _snapshot));
+
+		await state.FetchAsync(http, _now);
 
 		Assert.Equal(_now.AddMinutes(10), state.NextFetch(600));
 		Assert.Equal(_now.AddMinutes(1), state.NextFetch(60));
 	}
 
 	[Fact]
-	public void RejectedSignInWaitsForNewCredentials() // 401 при свежем expiresAt или истёкший вход Codex/Gemini
+	public async Task RejectedSignInWaitsForNewCredentials() // 401 при свежем expiresAt или истёкший вход Codex/Gemini
 	{
 		using var temp = new TempDirectory();
+		using var http = new HttpClient();
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
-		var state = new ProviderState(new SignedOut(credentials)) { Started = _now };
+		var state = new ProviderState(new Fake(() => throw new TokenExpiredException("fake"), credentials));
 
-		state.Record(new TokenExpiredException("fake"), File.GetLastWriteTimeUtc(credentials));
+		await state.FetchAsync(http, _now);
 		Assert.Equal(DateTime.MaxValue, state.NextFetch(60));
 
 		File.SetLastWriteTimeUtc(credentials, DateTime.UtcNow.AddMinutes(1)); // CLI агента обновил вход
@@ -100,16 +125,20 @@ public class PollerTests
 	}
 
 	[Fact]
-	public void SignInRefreshedDuringRequestIsTriedAgain() // Claude Code обновил вход, пока шёл запрос с 401
+	public async Task SignInRefreshedDuringRequestIsTriedAgain() // Claude Code обновил вход, пока шёл запрос с 401
 	{
 		using var temp = new TempDirectory();
+		using var http = new HttpClient();
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
-		var state = new ProviderState(new SignedOut(credentials)) { Started = _now };
-		var before = File.GetLastWriteTimeUtc(credentials);
+		var state = new ProviderState(new Fake(() =>
+		{
+			File.SetLastWriteTimeUtc(credentials, DateTime.UtcNow.AddMinutes(1));
 
-		File.SetLastWriteTimeUtc(credentials, DateTime.UtcNow.AddMinutes(1));
-		state.Record(new TokenExpiredException("fake"), before);
+			throw new TokenExpiredException("fake");
+		}, credentials));
+
+		await state.FetchAsync(http, _now);
 
 		Assert.Equal(_now, state.NextFetch(60));
 	}
@@ -122,7 +151,7 @@ public class PollerTests
 	{
 		using var temp = new TempDirectory();
 		var credentials = temp.File("auth.json");
-		var state = new ProviderState(new SignedOut(credentials));
+		var state = new ProviderState(new Fake(() => _snapshot, credentials));
 		Assert.False(state.Installed);
 
 		File.WriteAllText(credentials, "{}"); // человек вошёл в CLI агента
@@ -164,7 +193,8 @@ public class PollerTests
 	public void ClampsHandEditedInterval(int seconds, int expected) =>
 		Assert.Equal(_now.AddSeconds(expected), Poller.Schedule(null, seconds, _now));
 
-	private sealed class SignedOut(string credentials) : IProvider
+	/// <summary>Агент, который отвечает тем, что вернёт или бросит answer.</summary>
+	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json") : IProvider
 	{
 		public string Name => "Fake";
 
@@ -176,7 +206,7 @@ public class PollerTests
 
 		public IUsageLog? Usage => null;
 
-		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => throw new TokenExpiredException(Cli);
+		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => Task.FromResult(answer());
 	}
 
 	private sealed class WithLog(IUsageLog log) : IProvider

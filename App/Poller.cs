@@ -28,18 +28,44 @@ internal sealed class ProviderState(IProvider provider)
 	public IReadOnlyList<UsageDay>? Days { get; private set; }
 
 	/// <summary>Начало тика, в котором провайдера спрашивали последний раз.</summary>
-	public DateTime Started { get; set; } = DateTime.MinValue;
+	public DateTime Started { get; private set; } = DateTime.MinValue;
 
 	// Время записи файла входа, когда вход отклонили: пока файл тот же, спрашивать снова бесполезно.
 	private DateTime? _rejected;
 
 	private string? _usageError;
 
-	/// <summary>Запомнить исход запроса; null — удача.</summary>
-	/// <param name="error">Ошибка запроса или null.</param>
+	/// <summary>Спросить агента и запомнить исход. Ошибка не бросается: её показывают, и по ней решают, когда спросить снова.</summary>
+	/// <param name="started">Начало тика: следующий запрос считается от него, а не от ответа, — иначе минутный тик
+	/// приходит на долю секунды раньше срока и интервал молча вырастает на целую минуту.</param>
+	public async Task FetchAsync(HttpClient http, DateTime started)
+	{
+		var credentials = Stamp();
+
+		try
+		{
+			Snapshot = await Provider.FetchAsync(http, CancellationToken.None);
+			Record(null, credentials);
+			Updated = DateTime.UtcNow;
+		}
+		catch (Exception exception)
+		{
+			// В журнал — при смене вида ошибки, а не каждую минуту одно и то же.
+			if (Error?.GetType() != exception.GetType())
+			{
+				Journal.Add($"{Provider.Name}: {exception.GetType().Name}: {exception.Message}");
+			}
+
+			Record(exception, credentials);
+		}
+
+		Started = started;
+	}
+
+	/// <param name="error">Ошибка запроса или null — удача.</param>
 	/// <param name="credentials">Время записи файла входа до запроса: если CLI переписал его, пока шёл
 	/// запрос, отказ относился к старому входу и новый надо попробовать.</param>
-	public void Record(Exception? error, DateTime credentials)
+	private void Record(Exception? error, DateTime credentials)
 	{
 		Error = error;
 		_rejected = error is TokenExpiredException ? credentials : null;
@@ -71,8 +97,7 @@ internal sealed class ProviderState(IProvider provider)
 	/// <summary>Агента установили или удалили, пока программа работает.</summary>
 	public void CheckInstalled() => Installed = File.Exists(Provider.Credentials);
 
-	/// <summary>Время записи файла входа — снимать до запроса и передавать в <see cref="Record"/>.</summary>
-	public DateTime Stamp() => File.GetLastWriteTimeUtc(Provider.Credentials);
+	private DateTime Stamp() => File.GetLastWriteTimeUtc(Provider.Credentials);
 
 	/// <summary>Считается при каждом тике, а не запоминается: новый интервал из настроек действует сразу.</summary>
 	public DateTime NextFetch(int intervalSeconds) =>
@@ -205,11 +230,9 @@ internal sealed class Poller
 				.Where(state => now >= state.NextFetch(Store.Current.IntervalSeconds) || (force && state.Error is not RateLimitedException))
 				.ToList();
 
-			// Следующий запрос считается от начала тика, а не от ответа: иначе минутный тик приходит
-			// на долю секунды раньше срока и интервал молча вырастает на целую минуту.
 			foreach (var state in due)
 			{
-				await FetchAsync(state, now);
+				await state.FetchAsync(_http, now);
 			}
 
 			if (force || now >= _nextStatus)
@@ -234,30 +257,6 @@ internal sealed class Poller
 			_again = null;
 			await TickAsync(again);
 		}
-	}
-
-	private async Task FetchAsync(ProviderState state, DateTime started)
-	{
-		var credentials = state.Stamp();
-
-		try
-		{
-			state.Snapshot = await state.Provider.FetchAsync(_http, CancellationToken.None);
-			state.Record(null, credentials);
-			state.Updated = DateTime.UtcNow;
-		}
-		catch (Exception exception)
-		{
-			// В журнал — при смене вида ошибки, а не каждую минуту одно и то же.
-			if (state.Error?.GetType() != exception.GetType())
-			{
-				Journal.Add($"{state.Provider.Name}: {exception.GetType().Name}: {exception.Message}");
-			}
-
-			state.Record(exception, credentials);
-		}
-
-		state.Started = started;
 	}
 
 	private async Task FetchStatusAsync(DateTime started)
