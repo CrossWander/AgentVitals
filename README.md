@@ -21,8 +21,8 @@ Ukrainian and Russian, light and dark.
   between 50% and 95% in settings. Each comes once and again only
   after that window resets; a window that is already past a level when AgentVitals starts gets
   its toast too. A toast slides up in the bottom-right corner above the clock, stays ten seconds for a quota and
-  four for anything else (as long as the mouse is on it); when the AgentVitals window is open, the
-  toast stands to its left instead of hiding behind it and opens the window on click. Every toast is also written to
+  four for anything else (as long as the mouse is on it), comes up over the AgentVitals window if
+  that is open, and opens the window on click. Every toast is also written to
   `log.txt`.
 - **Live sessions.** With the hooks connected, the pulse runs while Claude is working and a blue
   dot blinks while it waits for your permission. A turn stopped with Esc fires no hook; the

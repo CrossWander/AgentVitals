@@ -88,22 +88,6 @@ public class PlacementTests
 	}
 
 	[Fact]
-	public void ToastStandsLeftOfAnOpenWindow() // окно у значка закрыло бы угол: тост рядом, на той же высоте
-	{
-		var point = Placement.Corner(new PixelRect(0, 0, 1920, 1040), new PixelSize(372, 120), 6, avoid: new PixelRect(1370, 200, 420, 840));
-
-		Assert.Equal(new PixelPoint(998, 914), point);
-	}
-
-	[Fact]
-	public void ToastKeepsTheCornerBesideAWindowElsewhere()
-	{
-		var point = Placement.Corner(new PixelRect(0, 0, 1920, 1040), new PixelSize(372, 120), 6, avoid: new PixelRect(0, 600, 420, 440));
-
-		Assert.Equal(new PixelPoint(1542, 914), point);
-	}
-
-	[Fact]
 	public void SecondMonitorUsesItsOwnArea()
 	{
 		var point = Placement.Near(new PixelRect(3700, 1045, 24, 30), new PixelRect(1920, 0, 1920, 1040), _window);

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -24,6 +25,11 @@ internal partial class Toast : TrayWindow
 
 	// Отступ окна от угла рабочей области; ещё полтора-два десятка точек внутри окна занимает поле под тень.
 	private const double _margin = 6;
+
+	// SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE: только наверх среди окон поверх всех, фокус не трогать.
+	private const uint _keepPlaceAndFocus = 0x1 | 0x2 | 0x10;
+
+	private static readonly IntPtr _topmost = -1;
 
 	private static readonly TimeSpan _rise = TimeSpan.FromMilliseconds(380);
 	private static readonly TimeSpan _fall = TimeSpan.FromMilliseconds(220);
@@ -53,9 +59,6 @@ internal partial class Toast : TrayWindow
 
 	public event Action? Clicked;
 
-	/// <summary>Открытое окно программы у значка, если есть: оно активно и встало бы поверх тоста в углу.</summary>
-	public Func<Window?>? Open { get; set; }
-
 	/// <summary>Показать уведомление. Повторный вызов заменяет текст и продлевает показ.</summary>
 	/// <param name="message">Текст.</param>
 	/// <param name="anchor">Где значок: тост встаёт в угол того же экрана.</param>
@@ -78,12 +81,22 @@ internal partial class Toast : TrayWindow
 
 		Message.Text = message;
 		ShowAt(anchor);
+		Raise();
 		Move(1, _rise, new CubicEaseOut(), then: null);
 		_life.Stop();
 		_life.Start();
 	}
 
-	protected override void Place(PixelRect anchor) => Placement.PlaceInCorner(this, anchor, _margin, Open?.Invoke());
+	protected override void Place(PixelRect anchor) => Placement.PlaceInCorner(this, anchor, _margin);
+
+	// Показ без активации не меняет порядок окон: открытое окно программы, активное, осталось бы поверх тоста.
+	private void Raise()
+	{
+		if (OperatingSystem.IsWindows() && TryGetPlatformHandle() is { } handle)
+		{
+			SetWindowPos(handle.Handle, _topmost, 0, 0, 0, 0, _keepPlaceAndFocus);
+		}
+	}
 
 	protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
 	{
@@ -140,4 +153,8 @@ internal partial class Toast : TrayWindow
 		Hide();
 		Clicked?.Invoke();
 	}
+
+	[LibraryImport("user32.dll")]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	private static partial bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height, uint flags);
 }

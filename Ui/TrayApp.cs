@@ -60,7 +60,6 @@ internal sealed class TrayApp
 		_menu.SettingsRequested += () => OpenPopover(settings: true);
 		_menu.ExitRequested += Exit;
 		_toast.Clicked += () => OpenPopover(settings: false);
-		_toast.Open = () => new TrayWindow[] { _popover, _menu, _card }.FirstOrDefault(window => window.IsVisible);
 		_hover.Tick += (_, _) => OnHoverTick();
 		_watch.Tick += (_, _) => OnWatchTick();
 		_sessionTimer.Tick += (_, _) => ReadSessions();
