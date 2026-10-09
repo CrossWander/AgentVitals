@@ -64,7 +64,6 @@ internal enum ChartMode
 	Models,
 }
 
-/// <summary>Столбик дня: нижняя и верхняя части в пикселях, прозрачность и строка для наведения.</summary>
 /// <summary>Слой столбика: высота в точках и цвет.</summary>
 internal sealed record BarPart(double Height, IBrush Brush);
 
@@ -196,8 +195,8 @@ internal static class Views
 			Text.Tokens(today.Total),
 			today.Total == 0 ? "" : Localization.Format("langFromCache", Math.Round(100.0 * today.CacheRead / today.Total)),
 			Localization.Format("langYesterday", Text.Tokens(yesterday.Total)),
-			Text.Working(today.WorkTime),
-			Localization.Format("langYesterday", Text.Working(yesterday.WorkTime)),
+			Text.Span(today.WorkTime, least: 0),
+			Localization.Format("langYesterday", Text.Span(yesterday.WorkTime, least: 0)),
 			days);
 	}
 

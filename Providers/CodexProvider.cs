@@ -20,21 +20,19 @@ internal sealed class CodexProvider : IProvider
 
 	public string Cli => "codex";
 
-	public string Credentials => Auth;
+	public string Credentials { get; } = Path.Combine(
+		Environment.GetEnvironmentVariable("CODEX_HOME") is { Length: > 0 } home ? home : Path.Combine(Paths.Home, ".codex"),
+		"auth.json");
 
 	public string? Dashboard => "https://chatgpt.com/codex/settings/usage";
 
 	// Логи Codex лежат в ~/.codex/sessions — читатель будет, когда появится, кому им пользоваться.
 	public IUsageLog? Usage => null;
 
-	private static string Auth => Path.Combine(
-		Environment.GetEnvironmentVariable("CODEX_HOME") is { Length: > 0 } home ? home : Path.Combine(Paths.Home, ".codex"),
-		"auth.json");
-
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{
-		var tokens = JsonNode.Parse(await SharedFile.ReadAllTextAsync(Auth, cancellation))?["tokens"];
+		var tokens = JsonNode.Parse(await SharedFile.ReadAllTextAsync(Credentials, cancellation))?["tokens"];
 
 		if ((string?)tokens?["access_token"] is not { Length: > 0 } token)
 		{

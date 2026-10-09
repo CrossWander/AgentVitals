@@ -18,14 +18,13 @@ internal sealed class ClaudeProvider : IProvider
 {
 	private const string _url = "https://api.anthropic.com/api/oauth/usage";
 
-	private static readonly string _credentials = Path.Combine(Paths.Home, ".claude", ".credentials.json");
 	private static readonly string _account = Path.Combine(Paths.Home, ".claude.json");
 
 	public string Name => "Claude";
 
 	public string Cli => "claude";
 
-	public string Credentials => _credentials;
+	public string Credentials { get; } = Path.Combine(Paths.Home, ".claude", ".credentials.json");
 
 	public string? Dashboard => "https://claude.ai/settings/usage";
 
@@ -35,7 +34,7 @@ internal sealed class ClaudeProvider : IProvider
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{
 		// Файл перечитывается каждый раз: Claude Code меняет токен, не спрашивая нас.
-		var oauth = JsonNode.Parse(await SharedFile.ReadAllTextAsync(_credentials, cancellation))?["claudeAiOauth"]
+		var oauth = JsonNode.Parse(await SharedFile.ReadAllTextAsync(Credentials, cancellation))?["claudeAiOauth"]
 			?? throw new TokenExpiredException(Cli);
 
 		var token = (string?)oauth["accessToken"];

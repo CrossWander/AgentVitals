@@ -17,13 +17,11 @@ internal sealed class GeminiProvider : IProvider
 {
 	private const string _api = "https://cloudcode-pa.googleapis.com/v1internal:";
 
-	private static readonly string _credentials = Path.Combine(Paths.Home, ".gemini", "oauth_creds.json");
-
 	public string Name => "Gemini";
 
 	public string Cli => "gemini";
 
-	public string Credentials => _credentials;
+	public string Credentials { get; } = Path.Combine(Paths.Home, ".gemini", "oauth_creds.json");
 
 	// У Gemini CLI нет страницы с квотами — кнопки не будет.
 	public string? Dashboard => null;
@@ -33,7 +31,7 @@ internal sealed class GeminiProvider : IProvider
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{
-		if ((string?)JsonNode.Parse(await SharedFile.ReadAllTextAsync(_credentials, cancellation))?["access_token"] is not { Length: > 0 } token)
+		if ((string?)JsonNode.Parse(await SharedFile.ReadAllTextAsync(Credentials, cancellation))?["access_token"] is not { Length: > 0 } token)
 		{
 			throw new TokenExpiredException(Cli);
 		}

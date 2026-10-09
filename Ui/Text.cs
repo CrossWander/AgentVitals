@@ -25,10 +25,11 @@ internal static class Text
 			: Localization.Format("langResetsIn", Span(left));
 	}
 
-	public static string Span(TimeSpan span) =>
+	/// <param name="least">Меньше скольких минут не показывать: сброс через полминуты — «1 мин», а день без работы — «0 мин».</param>
+	public static string Span(TimeSpan span, int least = 1) =>
 		span.TotalHours >= 1
 			? Localization.Format("langHoursMinutes", (int)span.TotalHours, span.Minutes)
-			: Localization.Format("langMinutes", Math.Max(1, span.Minutes));
+			: Localization.Format("langMinutes", Math.Max(least, span.Minutes));
 
 	public static string Ago(DateTime? at, DateTime now) =>
 		at is not { } time ? ""
@@ -131,12 +132,7 @@ internal static class Text
 		: ("langUnits", count);
 
 	/// <summary>Время работы: «3 ч 12 мин», меньше часа — минуты; ноль — честные «0 мин», а не «1 мин», как у Span.</summary>
-	public static string Working(TimeSpan span) =>
-		span.TotalHours >= 1
-			? Localization.Format("langHoursMinutes", (int)span.TotalHours, span.Minutes)
-			: Localization.Format("langMinutes", span.Minutes);
-
 	/// <summary>Строка дня для графика: «7 окт · $12.34 · 152,3 млн · 3 ч 12 мин».</summary>
 	public static string DayLine(UsageDay day) =>
-		string.Join(" · ", day.Date.ToString("d MMM", Localization.Culture), Cost(day.Cost), Tokens(day.Total), Working(day.WorkTime));
+		string.Join(" · ", day.Date.ToString("d MMM", Localization.Culture), Cost(day.Cost), Tokens(day.Total), Span(day.WorkTime, least: 0));
 }
