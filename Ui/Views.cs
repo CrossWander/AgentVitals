@@ -110,7 +110,7 @@ internal sealed record Vitals(
 /// <summary>Собирает представления из данных опроса и сессий. Кисти — из палитры текущей темы.</summary>
 internal static class Views
 {
-	public static Vitals Build(Poller poller, IReadOnlyList<LiveSession> sessions, DateTime now)
+	public static Vitals Build(Poller poller, IReadOnlyList<Session> sessions, DateTime now)
 	{
 		var available = poller.Available.ToList();
 		var levels = Store.Current.Thresholds;

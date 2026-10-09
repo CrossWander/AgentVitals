@@ -13,7 +13,7 @@ public class SessionWatcherTests
 	private static readonly DateTime _now = new(2026, 10, 7, 12, 0, 0);
 
 	private static void Write(TempDirectory temp, string id, SessionState state, DateTime at, string cwd = @"C:\nowhere") =>
-		File.WriteAllText(temp.File(id + ".json"), JsonSerializer.Serialize(new Session(state, null, cwd, at.Ticks), HookWriter.Json));
+		File.WriteAllText(temp.File(id + ".json"), JsonSerializer.Serialize(new SessionRecord(state, null, cwd, at.Ticks), HookWriter.Json));
 
 	[Theory]
 	[InlineData(SessionState.Working, 14, SessionState.Working)]
@@ -43,8 +43,8 @@ public class SessionWatcherTests
 	{
 		using var temp = new TempDirectory();
 		var now = DateTime.UtcNow;
-		File.WriteAllText(temp.File("gone.json"), JsonSerializer.Serialize(new Session(SessionState.Working, null, @"C:\x", now.Ticks, Pid: Exited()), HookWriter.Json));
-		File.WriteAllText(temp.File("live.json"), JsonSerializer.Serialize(new Session(SessionState.Working, null, @"C:\x", now.Ticks, Pid: Environment.ProcessId), HookWriter.Json));
+		File.WriteAllText(temp.File("gone.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Working, null, @"C:\x", now.Ticks, Pid: Exited()), HookWriter.Json));
+		File.WriteAllText(temp.File("live.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Working, null, @"C:\x", now.Ticks, Pid: Environment.ProcessId), HookWriter.Json));
 
 		Assert.Equal("live", Assert.Single(SessionWatcher.Read(temp.Path, now)).Id);
 		Assert.False(File.Exists(temp.File("gone.json")));
@@ -89,7 +89,7 @@ public class SessionWatcherTests
 			new JsonObject { ["type"] = "last-prompt" }.ToJsonString(), // служебные записи после прерывания не мешают
 		]);
 
-		File.WriteAllText(sessions.File("s.json"), JsonSerializer.Serialize(new Session(state, null, @"C:\nowhere", hook.Ticks, Transcript: transcript), HookWriter.Json));
+		File.WriteAllText(sessions.File("s.json"), JsonSerializer.Serialize(new SessionRecord(state, null, @"C:\nowhere", hook.Ticks, Transcript: transcript), HookWriter.Json));
 
 		return Assert.Single(SessionWatcher.Read(sessions.Path, _now)).State;
 	}
@@ -109,30 +109,30 @@ public class SessionWatcherTests
 	{
 		using var temp = new TempDirectory();
 		var turn = _now.AddMinutes(-3);
-		File.WriteAllText(temp.File("s.json"), JsonSerializer.Serialize(new Session(SessionState.Working, null, @"C:\x", _now.AddMinutes(-1).Ticks, Turn: turn.Ticks), HookWriter.Json));
+		File.WriteAllText(temp.File("s.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Working, null, @"C:\x", _now.AddMinutes(-1).Ticks, Turn: turn.Ticks), HookWriter.Json));
 
 		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now));
 
-		Assert.Equal(turn, session.Since);
-		Assert.Null(session.Took);
+		Assert.Equal(turn, session.TurnStarted);
+		Assert.Null(session.TurnDuration);
 	}
 
 	[Fact]
 	public void FinishedTurnTellsHowLongItTook()
 	{
 		using var temp = new TempDirectory();
-		File.WriteAllText(temp.File("s.json"), JsonSerializer.Serialize(new Session(SessionState.Idle, null, @"C:\x", _now.AddMinutes(-1).Ticks, Turn: _now.AddMinutes(-13).Ticks), HookWriter.Json));
+		File.WriteAllText(temp.File("s.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Idle, null, @"C:\x", _now.AddMinutes(-1).Ticks, Turn: _now.AddMinutes(-13).Ticks), HookWriter.Json));
 
 		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now));
 
-		Assert.Equal(TimeSpan.FromMinutes(12), session.Took);
-		Assert.Null(session.Since);
+		Assert.Equal(TimeSpan.FromMinutes(12), session.TurnDuration);
+		Assert.Null(session.TurnStarted);
 	}
 
 	[Fact]
 	public void WaitingOutranksWorking()
 	{
-		LiveSession[] sessions =
+		Session[] sessions =
 		[
 			new("a", SessionState.Idle, null, "a", null),
 			new("b", SessionState.Waiting, null, "b", null),
@@ -147,8 +147,8 @@ public class SessionWatcherTests
 	public void ForgetsEndedSessionsAfterAMinute() // отметке хватает минуты, чтобы опоздавшие hooks её увидели
 	{
 		using var temp = new TempDirectory();
-		File.WriteAllText(temp.File("fresh.json"), JsonSerializer.Serialize(new Session(SessionState.Idle, null, "C:\\x", _now.AddSeconds(-30).Ticks, Ended: true), HookWriter.Json));
-		File.WriteAllText(temp.File("old.json"), JsonSerializer.Serialize(new Session(SessionState.Idle, null, "C:\\x", _now.AddMinutes(-2).Ticks, Ended: true), HookWriter.Json));
+		File.WriteAllText(temp.File("fresh.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Idle, null, "C:\\x", _now.AddSeconds(-30).Ticks, Ended: true), HookWriter.Json));
+		File.WriteAllText(temp.File("old.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Idle, null, "C:\\x", _now.AddMinutes(-2).Ticks, Ended: true), HookWriter.Json));
 
 		Assert.Empty(SessionWatcher.Read(temp.Path, _now));
 		Assert.True(File.Exists(temp.File("fresh.json")));

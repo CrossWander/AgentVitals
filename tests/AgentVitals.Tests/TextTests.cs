@@ -34,18 +34,18 @@ public class TextTests
 	public void TurnShowsHowLongItRuns() // «работает · 3 мин»; первую минуту — без таймера
 	{
 		var now = System.DateTime.UtcNow;
-		var session = new LiveSession("s", SessionState.Working, null, "repo", null, Since: now.AddMinutes(-3));
+		var session = new Session("s", SessionState.Working, null, "repo", null, TurnStarted: now.AddMinutes(-3));
 
 		Assert.Equal("langSessionWorking · langMinutes", Text.Session(session, now));
-		Assert.Equal("langSessionWorking", Text.Session(session with { Since = now.AddSeconds(-20) }, now));
+		Assert.Equal("langSessionWorking", Text.Session(session with { TurnStarted = now.AddSeconds(-20) }, now));
 	}
 
 	[Fact]
 	public void SessionToastSaysWhatHappened()
 	{
-		var session = new LiveSession("s", SessionState.Waiting, null, "repo", null);
+		var session = new Session("s", SessionState.Waiting, null, "repo", null);
 
 		Assert.Equal(("langToastWaiting", "repo"), Text.SessionToast(new SessionAlert(session, Waiting: true)));
-		Assert.Equal("langToastDone", Text.SessionToast(new SessionAlert(session with { State = SessionState.Idle, Took = System.TimeSpan.FromMinutes(12) }, Waiting: false)).Title);
+		Assert.Equal("langToastDone", Text.SessionToast(new SessionAlert(session with { State = SessionState.Idle, TurnDuration = System.TimeSpan.FromMinutes(12) }, Waiting: false)).Title);
 	}
 }

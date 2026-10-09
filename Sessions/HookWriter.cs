@@ -70,8 +70,8 @@ internal static class HookWriter
 			// SessionEnd не удаляет файл, а оставляет отметку: async-событие, запущенное перед выходом
 			// и финишировавшее после, иначе воскресило бы сессию. Отметку через минуту убирает трей.
 			var session = hookEvent == "SessionEnd"
-				? new Session(SessionState.Idle, null, cwd, at, Ended: true)
-				: new Session(
+				? new SessionRecord(SessionState.Idle, null, cwd, at, Ended: true)
+				: new SessionRecord(
 					state.Value,
 					state == SessionState.Working ? (string?)payload["tool_name"] : null,
 					cwd,
@@ -113,7 +113,7 @@ internal static class HookWriter
 	/// Async-hooks финишируют не по порядку. Время старта процессов совпадает с точностью до тика таймера,
 	/// а из «ждёт» в «работает» без ответа человека не попасть — значит, это одно мгновение и «ждёт» главнее.
 	/// </remarks>
-	private static bool Stale(Session? recorded, Session next) =>
+	private static bool Stale(SessionRecord? recorded, SessionRecord next) =>
 		recorded is not null
 		&& (recorded.Utc > next.Utc
 			|| (!next.Ended
@@ -154,7 +154,7 @@ internal static class HookWriter
 	}
 
 	/// <summary>Начало хода — запрос человека. События хода его наследуют, Stop тоже: по нему трей узнаёт длительность.</summary>
-	private static long? Turn(string? hookEvent, SessionState state, Session? recorded, long at) =>
+	private static long? Turn(string? hookEvent, SessionState state, SessionRecord? recorded, long at) =>
 		hookEvent == "UserPromptSubmit" ? at
 		: hookEvent == "SessionStart" ? null
 		: state == SessionState.Idle ? recorded?.Turn
@@ -172,11 +172,11 @@ internal static class HookWriter
 		_ => null,
 	};
 
-	internal static Session? Read(string file)
+	internal static SessionRecord? Read(string file)
 	{
 		try
 		{
-			return File.Exists(file) ? JsonSerializer.Deserialize<Session>(SharedFile.ReadAllText(file), Json) : null;
+			return File.Exists(file) ? JsonSerializer.Deserialize<SessionRecord>(SharedFile.ReadAllText(file), Json) : null;
 		}
 		catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
 		{

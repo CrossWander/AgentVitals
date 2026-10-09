@@ -71,7 +71,7 @@ internal static class Text
 	});
 
 	/// <summary>Состояние сессии, а у идущего хода — и сколько он длится: «работает · 3 мин». Первую минуту таймера нет.</summary>
-	public static string Session(LiveSession session, DateTime now)
+	public static string Session(Session session, DateTime now)
 	{
 		var state = session.State switch
 		{
@@ -81,15 +81,15 @@ internal static class Text
 			_ => throw new NotImplementedException("SessionState switch error"),
 		};
 
-		return session.Since is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
+		return session.TurnStarted is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
 	}
 
 	/// <summary>Тост о сессии: заголовок — что случилось, текст — где и сколько ход занял.</summary>
 	public static (string Title, string Message) SessionToast(SessionAlert alert) => alert.Waiting
 		? (Localization.Get("langToastWaiting"), alert.Session.Folder)
-		: (Localization.Get("langToastDone"), Localization.Format("langToastDoneText", alert.Session.Folder, Span(alert.Session.Took ?? TimeSpan.Zero)));
+		: (Localization.Get("langToastDone"), Localization.Format("langToastDoneText", alert.Session.Folder, Span(alert.Session.TurnDuration ?? TimeSpan.Zero)));
 
-	public static string Live(LiveSession session) => session.State switch
+	public static string Live(Session session) => session.State switch
 	{
 		SessionState.Idle => "",
 		SessionState.Working => session.Tool is { } tool

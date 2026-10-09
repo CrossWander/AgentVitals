@@ -45,7 +45,7 @@ internal sealed class TrayApp
 	};
 
 	private Tray? _tray;
-	private IReadOnlyList<LiveSession> _sessions = [];
+	private IReadOnlyList<Session> _sessions = [];
 	private bool _darkTaskbar = true;
 	private int _tick;
 	private string? _lastIndicator;
@@ -181,7 +181,7 @@ internal sealed class TrayApp
 	}
 
 	/// <summary>Тост, когда Claude закончил долгий ход или ждёт разрешения, — пока человек в другом окне.</summary>
-	private void NotifySessions(IReadOnlyList<LiveSession> before, IReadOnlyList<LiveSession> after)
+	private void NotifySessions(IReadOnlyList<Session> before, IReadOnlyList<Session> after)
 	{
 		if (!Store.Current.SessionToasts)
 		{

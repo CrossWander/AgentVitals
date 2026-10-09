@@ -25,14 +25,14 @@ internal static class SessionWatcher
 	// Отметка о закрытии нужна, пока могут финишировать async-hooks, запущенные перед выходом.
 	private static readonly TimeSpan _endedForgotten = TimeSpan.FromMinutes(1);
 
-	public static IReadOnlyList<LiveSession> Read(string directory, DateTime now)
+	public static IReadOnlyList<Session> Read(string directory, DateTime now)
 	{
 		if (!Directory.Exists(directory))
 		{
 			return [];
 		}
 
-		List<LiveSession> sessions = [];
+		List<Session> sessions = [];
 
 		foreach (var file in Directory.EnumerateFiles(directory, "*.json"))
 		{
@@ -158,7 +158,7 @@ internal static class SessionWatcher
 		}
 	}
 
-	public static SessionState Overall(IEnumerable<LiveSession> sessions) =>
+	public static SessionState Overall(IEnumerable<Session> sessions) =>
 		sessions
 			.Select(session => session.State)
 			.DefaultIfEmpty(SessionState.Idle)
