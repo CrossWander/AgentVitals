@@ -45,6 +45,16 @@ stays open while you work in other windows: close it with ✕, another click on 
 | Languages and themes | English, Ukrainian and Russian; light, dark or as in Windows |
 | Keyboard | Esc closes the window, F5 or Ctrl+R refreshes, Ctrl+1…3 switch the agent tabs |
 
+## Settings
+
+The sliders button at the bottom of the window, or *Settings* in the right-click menu, opens
+settings: language, theme, how often to check quotas, the *important* and *critical* levels,
+session toasts, start with Windows and the Claude Code hooks for live sessions.
+
+| Light | Dark |
+|---|---|
+| <img src="docs/settings-light.png" width="360" alt="AgentVitals settings, light theme"> | <img src="docs/settings-dark.png" width="360" alt="AgentVitals settings, dark theme"> |
+
 ## Providers
 
 | Provider | Source | Status |
