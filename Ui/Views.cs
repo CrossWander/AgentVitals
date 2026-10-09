@@ -130,10 +130,10 @@ internal static class Views
 
 		return new(
 			tightest is { } used ? Text.Badge(used, levels) : Text.HealthName(health),
-			Brush(Tone(health)),
+			Brush(Level(health)),
 			[.. agents.Select(state => Provider(state, now, levels))],
 			Text.Status(status),
-			Brush(status is not null ? Tone(status.Health) : "Muted"),
+			Brush(Level(status?.Health ?? Health.Unknown)),
 			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State))))],
 			hint,
 			focus is null ? "" : Text.Live(focus),
@@ -294,12 +294,12 @@ internal static class Views
 			Shape(icon),
 			Brush(tint),
 			Text.Badge(window.Used, levels),
-			Brush(Badge(health)),
+			Brush("Badge" + Level(health)),
 			Math.Round(window.Used).ToString(CultureInfo.InvariantCulture),
 			"%",
 			Localization.Get("langUsed"),
 			Math.Min(window.Used, 100),
-			Brush(Meter(health)),
+			Brush("Meter" + Level(health)),
 			Text.Until(window.ResetsAt, now),
 			window.Limiting,
 			pace,
@@ -328,35 +328,18 @@ internal static class Views
 			"",
 			extra.Limit is { } ceiling ? Localization.Format("langExtraOf", Text.Money(ceiling, extra.Currency)) : Localization.Get("langExtraSpent"),
 			Math.Min(fill, 100),
-			Brush(Meter(Quota.Rate(fill, levels))),
+			Brush("Meter" + Level(Quota.Rate(fill, levels))),
 			"",
 			false);
 	}
 
-	private static string Tone(Health health) => health switch
+	// Цвет состояния в палитре; с приставкой «Badge» и «Meter» — его вариант для бейджа и полоски.
+	private static string Level(Health health) => health switch
 	{
 		Health.Unknown => "Muted",
 		Health.Good => "Good",
 		Health.Warning => "Warn",
 		Health.Critical => "Bad",
-		_ => throw new NotImplementedException("Health switch error"),
-	};
-
-	private static string Badge(Health health) => health switch
-	{
-		Health.Unknown => "BadgeNone",
-		Health.Good => "BadgeGood",
-		Health.Warning => "BadgeWarn",
-		Health.Critical => "BadgeBad",
-		_ => throw new NotImplementedException("Health switch error"),
-	};
-
-	private static string Meter(Health health) => health switch
-	{
-		Health.Unknown => "MeterNone",
-		Health.Good => "MeterGood",
-		Health.Warning => "MeterWarn",
-		Health.Critical => "MeterBad",
 		_ => throw new NotImplementedException("Health switch error"),
 	};
 

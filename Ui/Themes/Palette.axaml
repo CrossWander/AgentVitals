@@ -72,11 +72,11 @@
         <GradientStop Offset="0" Color="#FB923C"/>
         <GradientStop Offset="1" Color="#EF4444"/>
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="MeterNone" Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="MeterMuted" Color="#9CA3AF"/>
     <SolidColorBrush x:Key="BadgeGood" Color="#22C55E"/>
     <SolidColorBrush x:Key="BadgeWarn" Color="#F59E0B"/>
     <SolidColorBrush x:Key="BadgeBad" Color="#EF4444"/>
-    <SolidColorBrush x:Key="BadgeNone" Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="BadgeMuted" Color="#9CA3AF"/>
     <SolidColorBrush x:Key="Switch" Color="#34C759"/>
     <SolidColorBrush x:Key="IconSession" Color="#34D399"/>
     <SolidColorBrush x:Key="IconWeek" Color="#60A5FA"/>
