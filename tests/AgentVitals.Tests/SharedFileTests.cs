@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text.Json.Nodes;
 using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace AgentVitals.Tests;
@@ -42,17 +41,24 @@ public class SharedFileTests
 	}
 
 	[Fact]
-	public async Task HookWaitsOutAReader() // подмену переименованием Windows не пускает, пока файл открыт
+	public void HookWaitsOutAReader() // подмену переименованием Windows не пускает, пока файл открыт
 	{
 		using var temp = new TempDirectory();
 		var file = temp.File("s1.json");
 		HookWriter.Apply(Stop, temp.Path, at: 1);
 
+		// Читателя закрывает свой поток, а не продолжение после await: тому нужен свободный поток xUnit, а их
+		// могут занять соседние тесты — на CI так и было, и hook исчерпывал попытки раньше, чем файл освобождался.
 		var reader = SharedFile.Open(file);
-		var write = Task.Run(() => HookWriter.Apply(Stop, temp.Path, at: 2), TestContext.Current.CancellationToken);
-		await Task.Delay(30, TestContext.Current.CancellationToken);
-		await reader.DisposeAsync();
-		await write;
+		var release = new Thread(() =>
+		{
+			Thread.Sleep(30);
+			reader.Dispose();
+		});
+
+		release.Start();
+		HookWriter.Apply(Stop, temp.Path, at: 2);
+		release.Join();
 
 		Assert.Equal(2, HookWriter.Read(file)!.Utc);
 	}
