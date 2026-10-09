@@ -22,7 +22,6 @@ internal static class Theme
 			ThemeMode.Auto => ThemeVariant.Default,
 			ThemeMode.Light => ThemeVariant.Light,
 			ThemeMode.Dark => ThemeVariant.Dark,
-			_ => throw new NotImplementedException("ThemeMode switch error"),
 		};
 	}
 }

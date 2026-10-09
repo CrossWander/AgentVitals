@@ -4,6 +4,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <!-- Switch по enum без «_»: забытое значение — ошибка сборки, а неименованное число и так бросит исключение. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CS8509</WarningsAsErrors>
+    <NoWarn>$(NoWarn);CS8524</NoWarn>
     <ImplicitUsings>disable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>

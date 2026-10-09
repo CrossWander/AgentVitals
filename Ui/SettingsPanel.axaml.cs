@@ -188,7 +188,6 @@ internal partial class SettingsPanel : UserControl
 				HookLink.Off => "langHooksOff",
 				HookLink.On => "langHooksOn",
 				HookLink.Moved => "langHooksMoved",
-				_ => throw new NotImplementedException("HookLink switch error"),
 			});
 
 		HooksConnect.IsVisible = state != HookLink.On;

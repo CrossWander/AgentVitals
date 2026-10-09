@@ -30,7 +30,6 @@ internal static unsafe partial class TrayGlyph
 			SessionState.Idle => -1,
 			SessionState.Working => tick % _frames,
 			SessionState.Waiting => _frames + tick / 4 % 2,
-			_ => throw new NotImplementedException("SessionState switch error"),
 		};
 
 		var key = (health, dark, frame, size);

@@ -28,7 +28,6 @@ internal sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, 
 		WindowKind.Session => TimeSpan.FromHours(5),
 		WindowKind.Week or WindowKind.WeekModel => TimeSpan.FromDays(7),
 		WindowKind.Model => null,
-		_ => throw new NotImplementedException("WindowKind switch error"),
 	};
 
 	/// <summary>Окно на этот момент. Сброс прошёл, а свежего снимка нет — после сна вход истёк или нет сети: окно точно обнулилось.</summary>

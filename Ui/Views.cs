@@ -231,7 +231,6 @@ internal static class Views
 			},
 			family == ModelFamily.Other ? Localization.Get("langOther") : family.ToString(),
 			(Func<UsageDay, double>)(day => (double)(day.Models?.All[(int)family] ?? 0))))],
-		_ => throw new NotImplementedException("ChartMode switch error"),
 	};
 
 	/// <summary>Верх шкалы: две «круглые» ступени, как $0 / $80 / $160, не ниже самого большого дня.</summary>
@@ -272,7 +271,6 @@ internal static class Views
 		// Без цен экономию не посчитать — тогда только токены.
 		ChartMode.Cache => Text.Tokens(days.Sum(day => day.CacheWrite + day.CacheRead))
 			+ (days.Any(day => day.Saved is not null) ? " · " + Localization.Format("langCacheSaved", Text.Cost(days.Sum(day => day.Saved ?? 0))) : ""),
-		_ => throw new NotImplementedException("ChartMode switch error"),
 	};
 
 	private static CardView Card(QuotaWindow window, DateTime now, Thresholds levels)
@@ -283,7 +281,6 @@ internal static class Views
 			WindowKind.Session => ("IconBolt", "IconSession"),
 			WindowKind.Week => ("IconCalendar", "IconWeek"),
 			WindowKind.WeekModel or WindowKind.Model => ("IconSpark", "IconModel"),
-			_ => throw new NotImplementedException("WindowKind switch error"),
 		};
 
 		var pace = Quota.Expected(window, now);
@@ -309,7 +306,6 @@ internal static class Views
 				Pace.Ahead => "Warn",
 				Pace.Spare => "Good",
 				Pace.Even or null => "TextDim",
-				_ => throw new NotImplementedException("Pace switch error"),
 			}),
 			pace is { } even ? Localization.Format("langPaceTip", Math.Round(even), Math.Round(window.Used)) : null);
 	}
@@ -340,7 +336,6 @@ internal static class Views
 		Health.Good => "Good",
 		Health.Warning => "Warn",
 		Health.Critical => "Bad",
-		_ => throw new NotImplementedException("Health switch error"),
 	};
 
 	private static string Dot(SessionState state) => state switch
@@ -348,7 +343,6 @@ internal static class Views
 		SessionState.Idle => "Muted",
 		SessionState.Working => "Good",
 		SessionState.Waiting => "Blue",
-		_ => throw new NotImplementedException("SessionState switch error"),
 	};
 
 	internal static IBrush Brush(string key) => Find(key) as IBrush ?? Brushes.Gray;

@@ -67,7 +67,6 @@ internal static class Text
 		Health.Good => "langHealthGood",
 		Health.Warning => "langHealthWarning",
 		Health.Critical => "langHealthCritical",
-		_ => throw new NotImplementedException("Health switch error"),
 	});
 
 	/// <summary>Состояние сессии, а у идущего хода — и сколько он длится: «работает · 3 мин». Первую минуту таймера нет.</summary>
@@ -78,7 +77,6 @@ internal static class Text
 			SessionState.Idle => Localization.Get("langSessionIdle"),
 			SessionState.Working => session.Tool is { } tool ? Localization.Format("langSessionWorkingTool", tool) : Localization.Get("langSessionWorking"),
 			SessionState.Waiting => Localization.Get("langSessionWaiting"),
-			_ => throw new NotImplementedException("SessionState switch error"),
 		};
 
 		return session.TurnStarted is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
@@ -96,7 +94,6 @@ internal static class Text
 			? Localization.Format("langLiveTool", tool, session.Folder)
 			: Localization.Format("langLiveWorking", session.Folder),
 		SessionState.Waiting => Localization.Format("langLiveWaiting", session.Folder),
-		_ => throw new NotImplementedException("SessionState switch error"),
 	};
 
 	public static string Status(ServiceStatus? status) =>
