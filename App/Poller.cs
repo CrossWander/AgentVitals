@@ -78,8 +78,12 @@ internal sealed class ProviderState(IProvider provider)
 	public DateTime NextFetch(int intervalSeconds) =>
 		_rejected is { } rejected && rejected == Stamp() ? DateTime.MaxValue : Poller.Schedule(Error, intervalSeconds, Started);
 
-	/// <summary>Истёкший вход — серое: старые проценты уже ничего не говорят о том, можно ли работать.</summary>
-	public Health Health => Snapshot is null || Error is TokenExpiredException ? Health.Unknown : Quota.Rate(Snapshot.Windows);
+	/// <summary>Окна последнего снимка на этот момент: у прошедших сброс — 0%. Одни и те же для карточек, значка и тостов.</summary>
+	public IReadOnlyList<QuotaWindow> Windows(DateTime now) => [.. Snapshot?.Windows.Select(window => window.At(now)) ?? []];
+
+	/// <summary>Сколько израсходовано в самом узком окне; null — не известно. Истёкший вход — тоже null: старые
+	/// проценты уже ничего не говорят о том, можно ли работать.</summary>
+	public double? Tightest(DateTime now) => Error is TokenExpiredException ? null : Quota.Bottleneck(Windows(now))?.Used;
 }
 
 /// <summary>Расписание запросов к провайдерам и статус-странице.</summary>
@@ -111,8 +115,11 @@ internal sealed class Poller
 	/// <summary>Установленные агенты: только их показывают и спрашивают.</summary>
 	public IEnumerable<ProviderState> Available => Providers.Where(state => state.Available);
 
-	/// <summary>Общее состояние квот: худшее среди установленных агентов.</summary>
-	public Health Health => Quota.Worst(Available.Select(state => state.Health));
+	/// <summary>Самое узкое окно среди установленных агентов; null — ни у кого нет свежих данных.</summary>
+	public double? Tightest(DateTime now) => Available.Max(state => state.Tightest(now));
+
+	/// <summary>Общее состояние квот — по самому узкому окну.</summary>
+	public Health Health(DateTime now) => Tightest(now) is { } used ? Quota.Rate(used) : AgentVitals.Health.Unknown;
 
 	public ServiceStatus? Status { get; private set; }
 

@@ -7,7 +7,12 @@ namespace AgentVitals;
 
 /// <summary>Окно квоты: сколько израсходовано и когда сброс. Key — ключ строки названия, Label — подстановка в неё.</summary>
 /// <remarks>Limiting — окно блокирует всю работу (сессия, неделя), а не одну модель. Used может быть больше 100.</remarks>
-internal sealed record QuotaWindow(string Key, string? Label, double Used, DateTimeOffset? ResetsAt, bool Limiting);
+internal sealed record QuotaWindow(string Key, string? Label, double Used, DateTimeOffset? ResetsAt, bool Limiting)
+{
+	/// <summary>Окно на этот момент. Сброс прошёл, а свежего снимка нет — после сна вход истёк или нет сети: окно точно обнулилось.</summary>
+	/// <remarks>ponytail: расход с других устройств после сброса не виден, пока не придёт новый снимок.</remarks>
+	public QuotaWindow At(DateTime now) => ResetsAt?.UtcDateTime <= now ? this with { Used = 0 } : this;
+}
 
 /// <summary>Расход сверх тарифа в деньгах; Limit null — потолка нет.</summary>
 internal sealed record Spend(decimal Used, decimal? Limit, string Currency);
@@ -103,12 +108,6 @@ internal static class Quota
 			.MaxBy(window => window.Used);
 
 	public static Health Rate(double used) => used >= 80 ? Health.Critical : used >= 50 ? Health.Warning : Health.Good;
-
-	public static Health Rate(IReadOnlyList<QuotaWindow> windows) =>
-		Bottleneck(windows) is { } window ? Rate(window.Used) : Health.Unknown;
-
-	/// <summary>Худшее из состояний: серое уступает любому известному.</summary>
-	public static Health Worst(IEnumerable<Health> healths) => healths.DefaultIfEmpty(Health.Unknown).Max();
 
 	/// <summary>Сколько процентов было бы потрачено к этому моменту при ровном темпе; null — длина окна неизвестна
 	/// или сброс уже прошёл.</summary>

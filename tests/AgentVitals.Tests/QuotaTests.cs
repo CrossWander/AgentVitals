@@ -20,39 +20,26 @@ public class QuotaTests
 	public void RatesByThreshold(double used, Health expected) => Assert.Equal(expected, Quota.Rate(used));
 
 	[Fact]
-	public void ExhaustedWeekBeatsEmptySession()
-	{
-		List<QuotaWindow> windows = [Window(0), Window(100)];
-
-		Assert.Equal(100, Quota.Bottleneck(windows)!.Used);
-		Assert.Equal(Health.Critical, Quota.Rate(windows));
-	}
+	public void ExhaustedWeekBeatsEmptySession() => Assert.Equal(100, Quota.Bottleneck([Window(0), Window(100)])!.Used);
 
 	[Fact]
-	public void ModelWindowDoesNotColourWhileLimitingWindowsExist()
-	{
-		List<QuotaWindow> windows = [Window(10), Window(95, limiting: false)];
-
-		Assert.Equal(Health.Good, Quota.Rate(windows));
-	}
+	public void ModelWindowDoesNotColourWhileLimitingWindowsExist() =>
+		Assert.Equal(10, Quota.Bottleneck([Window(10), Window(95, limiting: false)])!.Used);
 
 	[Fact]
-	public void OnlyModelWindowsStillColour()
-	{
-		List<QuotaWindow> windows = [Window(95, limiting: false)];
-
-		Assert.Equal(Health.Critical, Quota.Rate(windows));
-	}
+	public void OnlyModelWindowsStillColour() => Assert.Equal(95, Quota.Bottleneck([Window(95, limiting: false)])!.Used);
 
 	[Fact]
-	public void NoWindowsIsUnknown() => Assert.Equal(Health.Unknown, Quota.Rate([]));
+	public void NoWindowsIsUnknown() => Assert.Null(Quota.Bottleneck([]));
 
 	[Fact]
-	public void WorstPrefersKnownOverUnknown()
+	public void PassedResetEmptiesTheWindow() // после сна снимок старый, но сброс уже прошёл — окно точно пустое
 	{
-		Assert.Equal(Health.Good, Quota.Worst([Health.Unknown, Health.Good]));
-		Assert.Equal(Health.Critical, Quota.Worst([Health.Warning, Health.Critical]));
-		Assert.Equal(Health.Unknown, Quota.Worst([]));
+		var now = new DateTime(2026, 10, 9, 12, 0, 0, DateTimeKind.Utc);
+
+		Assert.Equal(0, (Window(91) with { ResetsAt = now.AddMinutes(-1) }).At(now).Used);
+		Assert.Equal(91, (Window(91) with { ResetsAt = now.AddMinutes(1) }).At(now).Used);
+		Assert.Equal(91, Window(91).At(now).Used);
 	}
 
 	[Theory]

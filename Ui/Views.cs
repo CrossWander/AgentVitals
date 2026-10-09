@@ -113,14 +113,10 @@ internal static class Views
 	public static Vitals Build(Poller poller, IReadOnlyList<LiveSession> sessions, DateTime now)
 	{
 		var available = poller.Available.ToList();
-		var health = poller.Health;
+		var health = poller.Health(now);
 
 		// Шапка говорит о самом узком окне: исчерпано оно — «исчерпано», как на его карточке.
-		var tightest = available
-			.Where(state => state.Health != Health.Unknown)
-			.Select(state => Quota.Bottleneck(state.Snapshot!.Windows)?.Used ?? 0)
-			.DefaultIfEmpty(0)
-			.Max();
+		var tightest = poller.Tightest(now);
 
 		var live = SessionWatcher.Overall(sessions);
 		var focus = sessions.FirstOrDefault(session => session.State == live);
@@ -130,7 +126,7 @@ internal static class Views
 			: "";
 
 		return new(
-			health == Health.Unknown ? Text.HealthName(health) : Text.Badge(tightest),
+			tightest is { } used ? Text.Badge(used) : Text.HealthName(health),
 			Brush(Tone(health)),
 			[.. available.Select(state => Provider(state, now))],
 			Text.Status(poller.Status),
@@ -164,7 +160,7 @@ internal static class Views
 
 		if (state.Snapshot is { } snapshot)
 		{
-			cards.AddRange(snapshot.Windows.Select(window => Card(window, now)));
+			cards.AddRange(state.Windows(now).Select(window => Card(window, now)));
 
 			if (snapshot.Extra is { } extra)
 			{
@@ -295,13 +291,6 @@ internal static class Views
 
 	private static CardView Card(QuotaWindow window, DateTime now)
 	{
-		// Сброс прошёл, а свежих данных нет — после сна вход истёк или нет сети: окно точно обнулилось.
-		// ponytail: расход с других устройств после сброса не виден, пока не придёт новый снимок.
-		if (window.ResetsAt?.UtcDateTime <= now)
-		{
-			window = window with { Used = 0 };
-		}
-
 		var health = Quota.Rate(window.Used);
 		var (icon, tint) = window.Key switch
 		{
