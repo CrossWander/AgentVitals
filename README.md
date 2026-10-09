@@ -1,61 +1,102 @@
-# AgentVitals
+# <img src="app.png" width="36" height="36" valign="middle" alt=""> AgentVitals
 
-A Windows tray app (Avalonia, .NET 10) that keeps an eye on your AI coding agents: how much of
-each quota window is used and when it resets, what your Claude Code sessions are doing right now,
-and whether Anthropic's services are healthy. Inspired by [ClaudeBar](https://github.com/tddworks/ClaudeBar)
-and [claude-status-bar](https://github.com/m1ckc3s/claude-status-bar). Interface in English,
-Ukrainian and Russian, light and dark.
+**Claude Code quotas, live sessions and spend — in the Windows tray.**
 
-## What it shows
+[![Release](https://github.com/CrossWander/AgentVitals/actions/workflows/release.yml/badge.svg)](https://github.com/CrossWander/AgentVitals/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/CrossWander/AgentVitals)](https://github.com/CrossWander/AgentVitals/releases/latest)
+[![.NET 10](https://img.shields.io/badge/.NET-10-blue.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![Platform](https://img.shields.io/badge/Platform-Windows-0078D4.svg)](https://www.microsoft.com/windows)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
-- **Quotas.** The session, the week and per-model weekly limits, each as a card with the
-  percentage used, a bar and the time left until it resets. A window at 100% says *used up*.
-  Extra usage, if enabled. The session and week bars carry a mark where even spending would be by
-  now, and the card says *ahead of pace*, *on pace* or *room to spare* (within 5 points is on pace).
-  Hovering the card explains the mark with both numbers.
-- **The tray icon** is a pulse line coloured by the window that limits you most: green under 50%,
-  amber to 80%, red above, grey when there is no data. An exhausted week turns it red even with an
-  empty session.
-- **Toasts** when the session or the week reaches 75% (*important*, a quarter left) and 90%
-  (*critical*, almost used up), with the time until it resets; both levels move in steps of 5
-  between 50% and 95% in settings. Each comes once and again only
-  after that window resets; a window that is already past a level when AgentVitals starts gets
-  its toast too. A toast slides up in the bottom-right corner above the clock, stays ten seconds for a quota and
-  four for anything else (as long as the mouse is on it), comes up over the AgentVitals window if
-  that is open, and opens the window on click. Every toast is also written to
-  `log.txt`.
-- **Live sessions.** With the hooks connected, the pulse runs while Claude is working and a blue
-  dot blinks while it waits for your permission. A turn stopped with Esc fires no hook; the
-  session's transcript says so, and the session goes idle at once instead of after 15 minutes.
-  A terminal closed without `/exit` fires no hook either: the hook records the Claude Code
-  process, and the session leaves the list as soon as that process is gone.
-  A running turn shows how long it has been going (*working · 3 min*). A toast says when Claude
-  finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
-  in settings.
-- **Anthropic status** from status.claude.com, with a toast when it changes.
-- **Usage statistics** (Claude). Today's cost, tokens and working time, each with yesterday's
-  number, and a 30-day chart of cost, tokens, cache or models — see [Usage statistics](#usage-statistics).
+A Windows tray app that shows how much of your Claude quota is left and when it resets, what each
+Claude Code session is doing right now, what today's work would cost at API prices, and whether
+Anthropic is up. A toast warns you before you run out, when Claude finishes a long turn and when it
+asks for permission. Inspired by [ClaudeBar](https://github.com/tddworks/ClaudeBar) and
+[claude-status-bar](https://github.com/m1ckc3s/claude-status-bar), which do this on macOS.
 
-Hover the icon for a quick card, click it for the full popover, right-click for the menu. The popover stays open while you work in other windows: close it with ✕, another click on the icon or Esc. F5 or Ctrl+R refreshes, Ctrl+1…3 switch the agent tabs.
+## Quick start
 
-## Where the data comes from
+1. Download `AgentVitals.exe` from the [latest release](https://github.com/CrossWander/AgentVitals/releases/latest).
+   It needs the [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0). There is no
+   installer: the exe runs from any folder.
+2. Start it. A pulse icon appears in the tray. Windows 10 may put it into the hidden area — drag it
+   onto the taskbar once.
+3. If you are signed in to Claude Code, the quotas show up right away. To see live sessions, open
+   Settings → *Live sessions* → **Connect**.
 
-| Agent | Source | Status |
+Hover the icon for a quick card, click it for the full window, right-click for the menu. The window
+stays open while you work in other windows: close it with ✕, another click on the icon or Esc.
+
+## What it covers
+
+| Area | What you get |
+|---|---|
+| Quotas | Session, week and per-model weekly limits with a reset countdown; a mark on the bar shows where even spending would be by now → [more](#quotas-and-alerts) |
+| Tray icon | A pulse line coloured by the limit closest to running out; it beats while Claude works, and a blue dot blinks while Claude waits for you |
+| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a long turn ends, when Claude asks for permission and when Anthropic's status changes |
+| Live sessions | Every open Claude Code session with its folder, git branch, state and turn timer → [more](#live-sessions) |
+| Usage statistics | Today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
+| Anthropic status | The status.claude.com indicator, with a toast when it changes |
+| After sleep | Asks again as soon as the PC wakes; a window whose reset time has passed shows 0% instead of stale numbers |
+| Languages and themes | English, Ukrainian and Russian; light, dark or as in Windows |
+| Keyboard | Esc closes the window, F5 or Ctrl+R refreshes, Ctrl+1…3 switch the agent tabs |
+
+## Providers
+
+| Provider | Source | Status |
 |---|---|---|
 | Claude | `GET api.anthropic.com/api/oauth/usage` with the Claude Code token from `~/.claude/.credentials.json` | working |
 | Codex | `GET chatgpt.com/backend-api/wham/usage` with `~/.codex/auth.json` | not verified |
 | Gemini | `cloudcode-pa.googleapis.com` quota calls with `~/.gemini/oauth_creds.json` | not verified |
 
-The token is only ever read. AgentVitals never refreshes it: Claude Code does that itself, and a
-refresh token spent by someone else would sign Claude Code out. After a night's sleep the token
-has usually expired: the card keeps the last numbers and waits, except a window whose reset time
-has passed, which shows 0% and "reset" (use from other devices since then is not visible until fresh
-data arrives). Claude Code renews the sign-in on
-its first request, and AgentVitals notices the new file and fetches at once. Quotas are checked every
-minute by default (2, 5 or 10 minutes in settings; more often the server answers 429);
-`Retry-After` is respected.
+An agent whose credential file is missing is simply not shown.
 
-Agents whose credential file is missing are simply not shown.
+## Quotas and alerts
+
+- **Cards.** Each quota window is a card with the percentage used, a bar and the time left until it
+  resets. A window at 100% says *used up*. Extra usage is shown if it is enabled.
+- **Pace.** The session and week bars carry a mark where even spending would be by now, and the
+  card says *ahead of pace*, *on pace* or *room to spare* (within 5 points is on pace). Hovering the
+  card explains the mark with both numbers.
+- **Tray icon.** The pulse line takes the colour of the window that limits you most: green under
+  50%, amber to 80%, red above, grey when there is no data. An exhausted week turns it red even
+  with an empty session.
+- **Toasts.** When the session or the week reaches 75% (*important*, a quarter left) and 90%
+  (*critical*, almost used up), with the time until it resets. Both levels move in steps of 5
+  between 50% and 95% in settings. Each toast comes once, and again only after that window resets;
+  a window that is already past a level when AgentVitals starts gets its toast too.
+- **How a toast looks.** It slides up in the bottom-right corner above the clock and stays ten
+  seconds for a quota and four for anything else, for as long as the mouse is on it. It comes up
+  over the AgentVitals window if that is open, and a click opens the window. Every toast is also
+  written to `log.txt`.
+
+Quotas are checked every minute by default (2, 5 or 10 minutes in settings; more often the server
+answers 429), and `Retry-After` is respected. After a night's sleep the Claude Code token has
+usually expired: the card keeps the last numbers and waits, except a window whose reset time has
+passed, which shows 0% and *reset* (use from other devices since then is not visible until fresh
+data arrives). Claude Code renews the sign-in on its first request, and AgentVitals notices the
+new file and asks at once.
+
+## Live sessions
+
+Settings → *Live sessions* → **Connect** adds AgentVitals hooks to `~/.claude/settings.json`.
+Each hook runs `AgentVitals.exe hook` in the background, which writes one small state file per
+session into `sessions\` next to the exe. **Disconnect** removes only AgentVitals' entries.
+
+- The pulse runs while Claude is working, and a blue dot blinks while it waits for your permission.
+- A running turn shows how long it has been going (*working · 3 min*). A toast says when Claude
+  finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
+  in settings.
+- A turn stopped with Esc fires no hook. The session's transcript says so, and the session goes
+  idle at once instead of after 15 minutes.
+- A terminal closed without `/exit` fires no hook either. The hook records the Claude Code process,
+  and the session leaves the list as soon as that process is gone.
+- Claude Code reads hooks when a session starts: sessions that were already open show up after
+  you restart them.
+- AgentVitals rewrites `settings.json` as plain JSON, so comments in it are not kept. Before every
+  change the file is copied to `settings.json.agentvitals.bak`, comments included.
+- If you move the exe, settings say so — reconnect. Before deleting the exe, press **Disconnect**:
+  otherwise Claude Code keeps calling a program that is no longer there.
 
 ## Usage statistics
 
@@ -74,27 +115,24 @@ once — Claude Code writes the same answer several times while it streams.
   over 30 days: what the cached tokens would have cost as plain input, minus what they did cost.
 - Codex and Gemini have no statistics yet: the slot is there (`IProvider.Usage`), the reader isn't.
 
-## Live sessions
+## Privacy
 
-Settings → *Live sessions* → **Connect** adds AgentVitals hooks to `~/.claude/settings.json`.
-Each hook runs `AgentVitals.exe hook` in the background, which writes one small state file per
-session into `sessions\` next to the exe. **Disconnect** removes only AgentVitals' entries.
-
-- Claude Code reads hooks when a session starts: sessions that were already open show up after
-  you restart them.
-- AgentVitals rewrites `settings.json` as plain JSON, so comments in it are not kept. Before every
-  change the file is copied to `settings.json.agentvitals.bak`, comments included.
-- If you move the exe, settings say so — reconnect. Before deleting the exe, press **Disconnect**:
-  otherwise Claude Code keeps calling a program that is no longer there.
+- **The token is only ever read.** AgentVitals never refreshes it: Claude Code does that itself, and
+  a refresh token spent by someone else would sign Claude Code out.
+- **No tokens are spent.** The quota endpoint is not a model call, so checking it costs nothing
+  from your limits.
+- **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com, and
+  Anthropic's pricing page once a day. Nothing else — no account of its own, no telemetry.
+- **Logs stay on this machine.** The statistics keep only token counts. To notice a turn stopped
+  with Esc, the end of a live session's transcript is checked for Claude Code's interruption mark.
+  Nothing from the logs leaves the computer.
 
 ## Files
 
 Everything lives next to the exe: `config.json` (settings), `log.txt` (two days of errors and
-changes), `sessions\` (session states), `prices.md` (Anthropic's price list). If that folder is read-only (say, under `Program Files`),
-they go to `%LOCALAPPDATA%\AgentVitals` instead. Start with Windows is a value in
-`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
-
-Windows 10 may put a new tray icon into the hidden area — drag it onto the taskbar once.
+changes), `sessions\` (session states), `prices.md` (Anthropic's price list). If that folder is
+read-only (say, under `Program Files`), they go to `%LOCALAPPDATA%\AgentVitals` instead. Start with
+Windows is a value in `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
 
 ## Build
 
