@@ -16,7 +16,7 @@ internal partial class Popover : TrayWindow
 	private Vitals? _vitals;
 	private string? _selected;
 	private ChartMode _mode = ChartMode.Cost;
-	private (IReadOnlyList<UsageDay>? Days, ChartMode Mode, string Language) _shown;
+	private (IReadOnlyList<UsageDay>? Days, ChartMode Mode, string Language, ThemeVariant? Theme) _shown;
 	private IReadOnlyList<BarView> _bars = [];
 	private string _total = "";
 	private DateOnly? _hovered;
@@ -152,8 +152,8 @@ internal partial class Popover : TrayWindow
 		WorkYesterday.Text = usage.WorkingYesterday;
 
 		// Render бывает раз в секунду, пока Claude работает: столбики пересоздаются, только когда сменились
-		// дни, мера или язык, — иначе столбик под мышью терял бы свою строку.
-		var shown = (usage.Days, _mode, Localization.Current);
+		// дни, мера, язык или тема (цвета слоёв берутся из её палитры), — иначе столбик под мышью терял бы свою строку.
+		var shown = (usage.Days, _mode, Localization.Current, Application.Current?.ActualThemeVariant);
 
 		if (shown != _shown)
 		{
