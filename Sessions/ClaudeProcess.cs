@@ -17,6 +17,13 @@ internal static unsafe partial class ClaudeProcess
 	/// <summary>Ближайший предок-Claude процесса hook; null — hook запущен не им или Windows не дала снимок.</summary>
 	public static int? Find()
 	{
+		// Снимок процессов — вызов Windows: в другой системе его нет, и hook упал бы, не записав состояние.
+		// ponytail: там сессия без PID уходит по прежним срокам; понадобится — родитель из /proc.
+		if (!OperatingSystem.IsWindows())
+		{
+			return null;
+		}
+
 		try
 		{
 			return Ancestor(Snapshot(), Environment.ProcessId);
