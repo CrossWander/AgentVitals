@@ -49,7 +49,7 @@ internal enum Pace
 	Ahead,
 }
 
-/// <summary>Состояние квот; порядок значений — от лучшего к худшему, поэтому худшее — это Max.</summary>
+/// <summary>Состояние квот или сервиса Anthropic.</summary>
 public enum Health
 {
 	Unknown,

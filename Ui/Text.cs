@@ -131,7 +131,6 @@ internal static class Text
 		: count >= 1_000 ? ("langThousands", count / 1e3)
 		: ("langUnits", count);
 
-	/// <summary>Время работы: «3 ч 12 мин», меньше часа — минуты; ноль — честные «0 мин», а не «1 мин», как у Span.</summary>
 	/// <summary>Строка дня для графика: «7 окт · $12.34 · 152,3 млн · 3 ч 12 мин».</summary>
 	public static string DayLine(UsageDay day) =>
 		string.Join(" · ", day.Date.ToString("d MMM", Localization.Culture), Cost(day.Cost), Tokens(day.Total), Span(day.WorkTime, least: 0));

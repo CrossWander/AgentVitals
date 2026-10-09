@@ -62,7 +62,7 @@ internal sealed class GeminiProvider : IProvider
 		return Parse(await PostAsync(http, token, "retrieveUserQuota", body, cancellation), (string?)load["currentTier"]?["name"]);
 	}
 
-	internal static Snapshot Parse(JsonNode quota, string? tier)
+	internal static Snapshot Parse(JsonNode quota, string? plan)
 	{
 		var windows = (quota["buckets"] as JsonArray ?? [])
 			.OfType<JsonObject>()
@@ -76,7 +76,7 @@ internal sealed class GeminiProvider : IProvider
 			.OrderByDescending(window => window.Used)
 			.ToList();
 
-		return new(tier ?? "", null, windows, null);
+		return new(plan ?? "", null, windows, null);
 	}
 
 	private static string Family(string model) =>

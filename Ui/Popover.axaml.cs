@@ -126,6 +126,7 @@ internal partial class Popover : TrayWindow
 
 		var usage = provider?.Usage;
 		UsageBlock.IsVisible = usage is not null;
+		UsageBlock.DataContext = usage;
 
 		if (usage is not null)
 		{
@@ -135,8 +136,6 @@ internal partial class Popover : TrayWindow
 
 	private void ShowUsage(UsageView usage)
 	{
-		UsageBlock.DataContext = usage;
-
 		// Render бывает раз в секунду, пока Claude работает: столбики пересоздаются, только когда сменились
 		// дни, мера, язык или тема (цвета слоёв берутся из её палитры), — иначе столбик под мышью терял бы свою строку.
 		var shown = (usage.Days, _mode, Localization.Current, Application.Current?.ActualThemeVariant);

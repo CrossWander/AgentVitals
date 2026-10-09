@@ -15,7 +15,7 @@ An agent is installed when its sign-in file is on the computer; only installed a
 _Avoid_: available, enabled
 
 **Plan**:
-The agent's subscription tier, such as Pro or Max.
+What the person pays the agent's maker for, such as Pro or Max.
 _Avoid_: tier, subscription
 
 **Quota window**:
@@ -23,7 +23,7 @@ An allowance that fills up with use and empties at its reset; it has a used shar
 _Avoid_: limit, bucket
 
 **Session window**:
-The five-hour quota window. Never just "session": that word belongs to live sessions.
+The five-hour quota window.
 
 **Week window**:
 The seven-day quota window, either for all models or for one model family.
@@ -70,7 +70,7 @@ _Avoid_: logged out, unauthorized
 
 **Live session**:
 A running Claude Code conversation in one folder, reported by the hooks.
-_Avoid_: chat, conversation, "session" alone
+_Avoid_: chat, conversation
 
 **Session state**:
 Idle, Working or Waiting; Waiting means the session asks for permission and stands still until answered.
@@ -101,7 +101,7 @@ What a day's tokens would cost at API prices; a subscription does not bill it, i
 _Avoid_: spend, price
 
 **Work time**:
-How long Claude spent in turns during a day.
+How long a day's logs show the agent busy; pauses longer than half an hour are left out.
 _Avoid_: working, active time, uptime
 
 **Model family**:

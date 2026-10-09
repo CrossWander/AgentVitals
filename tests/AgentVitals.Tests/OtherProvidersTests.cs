@@ -31,7 +31,7 @@ public class OtherProvidersTests
 		Assert.Empty(CodexProvider.Parse(JsonNode.Parse("""{ "plan_type": "free" }""")!).Windows);
 
 	[Fact]
-	public void FoldsGeminiModelsIntoTiers()
+	public void FoldsGeminiModelsIntoFamilies()
 	{
 		var quota = JsonNode.Parse("""
 			{ "buckets": [
