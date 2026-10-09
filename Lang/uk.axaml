@@ -32,7 +32,7 @@
     <x:String x:Key="langHealthUnknown">НЕМАЄ ДАНИХ</x:String>
     <x:String x:Key="langHealthExhausted">ВИЧЕРПАНО</x:String>
     <x:String x:Key="langNoAgents">Агентів не знайдено. Встанови Claude Code, Codex або Gemini CLI.</x:String>
-    <x:String x:Key="langErrorExpired">Вхід минув, оновиться, коли запрацює {0}, — дані повернуться самі</x:String>
+    <x:String x:Key="langErrorExpired">Вхід минув. Дані повернуться після першого запиту в {0}</x:String>
     <x:String x:Key="langErrorRateLimited">Сервер просить питати рідше, повтор о {0}</x:String>
     <x:String x:Key="langErrorNetwork">Немає зв'язку</x:String>
     <x:String x:Key="langErrorParse">Не вдалося розібрати відповідь</x:String>

@@ -163,7 +163,7 @@ internal sealed class TrayApp
 		{
 			var (provider, alert) = alerts.MaxBy(item => (item.alert.Critical, item.alert.Window.Used));
 			var (title, message) = Text.Alert(provider, alert, DateTime.UtcNow);
-			_toast.Say(message, Anchor(), title, Views.Brush(alert.Critical ? "Bad" : "Warn"));
+			_toast.Say(message, Anchor(), title, Views.Brush(alert.Critical ? "Bad" : "Warn"), Toast.Long);
 
 			// Тост живёт секунды: по журналу видно, был ли он, если человек отошёл от экрана.
 			Journal.Add($"toast: {title}: {message}");

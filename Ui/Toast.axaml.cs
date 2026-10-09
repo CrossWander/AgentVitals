@@ -12,20 +12,23 @@ using Avalonia.Threading;
 
 namespace AgentVitals;
 
-/// <summary>Уведомление в углу над часами, как карточка AudioDirigent: выезжает снизу, живёт четыре секунды,
+/// <summary>Уведомление в углу над часами, как карточка AudioDirigent: выезжает снизу, живёт несколько секунд,
 /// под мышью не уходит. Своё окно вместо системного тоста.</summary>
 internal partial class Toast : TrayWindow
 {
+	/// <summary>Сколько живёт обычный тост.</summary>
+	public static readonly TimeSpan Brief = TimeSpan.FromSeconds(4);
+
+	/// <summary>Сколько живёт тост о квоте: его нельзя пропустить, а за четыре секунды взгляд до угла не доходит.</summary>
+	public static readonly TimeSpan Long = TimeSpan.FromSeconds(10);
+
 	// Отступ окна от угла рабочей области; ещё полтора-два десятка точек внутри окна занимает поле под тень.
 	private const double _margin = 6;
 
 	private static readonly TimeSpan _rise = TimeSpan.FromMilliseconds(380);
 	private static readonly TimeSpan _fall = TimeSpan.FromMilliseconds(220);
 
-	private readonly DispatcherTimer _life = new()
-	{
-		Interval = TimeSpan.FromSeconds(4),
-	};
+	private readonly DispatcherTimer _life = new();
 
 	// Анимация в Avalonia 12 водит только свойства элементов, а не самого сдвига: окно водит своё, а сдвиг идёт следом.
 	private static readonly StyledProperty<double> ShiftProperty = AvaloniaProperty.Register<Toast, double>("Shift");
@@ -55,8 +58,10 @@ internal partial class Toast : TrayWindow
 	/// <param name="anchor">Где значок: тост встаёт в угол того же экрана.</param>
 	/// <param name="title">Заголовок; без него — имя программы.</param>
 	/// <param name="accent">Цвет заголовка: насколько серьёзно; без него — обычный текст.</param>
-	public void Say(string message, PixelRect anchor, string? title = null, IBrush? accent = null)
+	/// <param name="life">Сколько показывать; без него — <see cref="Brief"/>.</param>
+	public void Say(string message, PixelRect anchor, string? title = null, IBrush? accent = null, TimeSpan? life = null)
 	{
+		_life.Interval = life ?? Brief;
 		Heading.Text = title ?? "AgentVitals";
 
 		if (accent is null)
