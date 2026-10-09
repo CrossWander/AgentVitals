@@ -53,6 +53,9 @@ internal partial class Toast : TrayWindow
 
 	public event Action? Clicked;
 
+	/// <summary>Открытое окно программы у значка, если есть: оно активно и встало бы поверх тоста в углу.</summary>
+	public Func<Window?>? Open { get; set; }
+
 	/// <summary>Показать уведомление. Повторный вызов заменяет текст и продлевает показ.</summary>
 	/// <param name="message">Текст.</param>
 	/// <param name="anchor">Где значок: тост встаёт в угол того же экрана.</param>
@@ -80,7 +83,7 @@ internal partial class Toast : TrayWindow
 		_life.Start();
 	}
 
-	protected override void Place(PixelRect anchor) => Placement.PlaceInCorner(this, anchor, _margin);
+	protected override void Place(PixelRect anchor) => Placement.PlaceInCorner(this, anchor, _margin, Open?.Invoke());
 
 	protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
 	{

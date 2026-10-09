@@ -45,8 +45,16 @@ internal static class Placement
 	}
 
 	/// <summary>Верхний левый угол окна в правом нижнем углу рабочей области — там, где Windows показывает уведомления.</summary>
-	public static PixelPoint Corner(PixelRect work, PixelSize window, int margin) =>
-		new(work.Right - window.Width - margin, work.Bottom - window.Height - margin);
+	/// <param name="avoid">Открытое окно программы: закрывает угол — встать слева от него, на той же высоте.</param>
+	public static PixelPoint Corner(PixelRect work, PixelSize window, int margin, PixelRect? avoid = null)
+	{
+		var corner = new PixelPoint(work.Right - window.Width - margin, work.Bottom - window.Height - margin);
+
+		// Слева, а не справа: окно стоит у значка, а правее значка — только край экрана.
+		return avoid is { } open && open.Intersects(new PixelRect(corner, window))
+			? new(Math.Max(open.X - window.Width, work.X), corner.Y)
+			: corner;
+	}
 
 	public static void Place(Window window, PixelRect icon)
 	{
@@ -58,11 +66,16 @@ internal static class Placement
 
 	/// <summary>В угол того экрана, где значок.</summary>
 	/// <param name="margin">Отступ от угла в точках интерфейса.</param>
-	public static void PlaceInCorner(Window window, PixelRect icon, double margin)
+	/// <param name="avoid">Окно, которое нельзя заслонять собой и которое не должно заслонять это.</param>
+	public static void PlaceInCorner(Window window, PixelRect icon, double margin, Window? avoid = null)
 	{
 		if (Screen(window, icon) is { } screen)
 		{
-			window.Position = Corner(screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling), (int)Math.Round(margin * screen.Scaling));
+			window.Position = Corner(
+				screen.WorkingArea,
+				PixelSize.FromSize(window.ClientSize, screen.Scaling),
+				(int)Math.Round(margin * screen.Scaling),
+				avoid is { IsVisible: true } open ? new PixelRect(open.Position, PixelSize.FromSize(open.ClientSize, open.DesktopScaling)) : null);
 		}
 	}
 
