@@ -119,7 +119,7 @@ internal sealed class Poller
 	public double? Tightest(DateTime now) => Available.Max(state => state.Tightest(now));
 
 	/// <summary>Общее состояние квот — по самому узкому окну.</summary>
-	public Health Health(DateTime now) => Tightest(now) is { } used ? Quota.Rate(used) : AgentVitals.Health.Unknown;
+	public Health Health(DateTime now, Thresholds levels) => Tightest(now) is { } used ? Quota.Rate(used, levels) : AgentVitals.Health.Unknown;
 
 	public ServiceStatus? Status { get; private set; }
 

@@ -97,10 +97,12 @@ internal partial class SettingsPanel : UserControl
 	{
 		if (sender is Button { Tag: string tag } && tag.Split(':') is [var which, var step])
 		{
-			(Store.Current.ImportantAt, Store.Current.CriticalAt) = QuotaAlarm.Shift(
-				Store.Current.ImportantAt, Store.Current.CriticalAt, which == "critical", int.Parse(step, CultureInfo.InvariantCulture));
+			Store.Current.Thresholds = QuotaAlarm.Shift(Store.Current.Thresholds, which == "critical", int.Parse(step, CultureInfo.InvariantCulture));
 			Store.Save();
 			ShowLevels();
+
+			// По порогам и цвета: значок и карточки перекрашиваются сразу, а не со следующим опросом.
+			Changed?.Invoke();
 		}
 	}
 

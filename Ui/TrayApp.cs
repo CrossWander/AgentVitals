@@ -155,7 +155,7 @@ internal sealed class TrayApp
 	{
 		var alerts = _poller.Available
 			.Where(state => state.Snapshot is not null)
-			.SelectMany(state => _alarm.Check(state.Provider.Name, state.Windows(DateTime.UtcNow), Store.Current.ImportantAt, Store.Current.CriticalAt).Select(alert => (state.Provider.Name, alert)))
+			.SelectMany(state => _alarm.Check(state.Provider.Name, state.Windows(DateTime.UtcNow), Store.Current.Thresholds).Select(alert => (state.Provider.Name, alert)))
 			.ToList();
 
 		// Оба окна выше порога бывают разве что при запуске — тост одного, самого серьёзного.
@@ -207,7 +207,7 @@ internal sealed class TrayApp
 
 	[SupportedOSPlatform("windows")]
 	private IntPtr Glyph() =>
-		TrayGlyph.Get(_poller.Health(DateTime.UtcNow), SessionWatcher.Overall(_sessions), _tick, _darkTaskbar, Tray.IconSize);
+		TrayGlyph.Get(_poller.Health(DateTime.UtcNow, Store.Current.Thresholds),SessionWatcher.Overall(_sessions), _tick, _darkTaskbar, Tray.IconSize);
 
 	private void OnTrayMove()
 	{

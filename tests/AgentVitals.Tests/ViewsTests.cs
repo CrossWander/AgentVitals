@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -7,6 +7,8 @@ namespace AgentVitals.Tests;
 
 public class ViewsTests
 {
+	private static readonly Thresholds _levels = new(75, 90);
+
 	[Fact]
 	public void EachTabShowsItsOwnUpdateTime() // у Codex со вчерашними данными не должно быть «только что»
 	{
@@ -14,8 +16,8 @@ public class ViewsTests
 		var claude = new ProviderState(new ClaudeProvider()) { Updated = now };
 		var codex = new ProviderState(new CodexProvider());
 
-		Assert.Equal("langUpdatedNow", Views.Provider(claude, now).Updated);
-		Assert.Equal("", Views.Provider(codex, now).Updated);
+		Assert.Equal("langUpdatedNow", Views.Provider(claude, now, _levels).Updated);
+		Assert.Equal("", Views.Provider(codex, now, _levels).Updated);
 	}
 
 	[Theory]
@@ -42,7 +44,7 @@ public class ViewsTests
 
 	[Fact]
 	public void TabOpensItsAgentsUsagePage() =>
-		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow).Dashboard);
+		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Dashboard);
 
 	[Theory]
 	[InlineData("feature/POS20-13047", "POS20-13047-prepaid-internet-orders-report\nfeature/POS20-13047")]
@@ -76,7 +78,7 @@ public class ViewsTests
 			Snapshot = new("Max", null, [new("langWindowSession", null, used, now.AddHours(2.5), Limiting: true)], null),
 		};
 
-		var card = Assert.Single(Views.Provider(state, now).Cards);
+		var card = Assert.Single(Views.Provider(state, now, _levels).Cards);
 
 		Assert.Equal(word, card.Caption); // в окне — вместо «использовано» у числа
 		Assert.EndsWith(" · " + word, card.Footer); // в карточке наведения — после сброса
@@ -92,7 +94,7 @@ public class ViewsTests
 			Snapshot = new("Max", null, [new("langWindowModel", "Opus", 30, DateTime.UtcNow.AddDays(2), Limiting: false)], null),
 		};
 
-		Assert.Null(Assert.Single(Views.Provider(state, DateTime.UtcNow).Cards).PaceTip);
+		Assert.Null(Assert.Single(Views.Provider(state, DateTime.UtcNow, _levels).Cards).PaceTip);
 	}
 
 	[Fact]
@@ -108,7 +110,7 @@ public class ViewsTests
 			], null),
 		};
 
-		var cards = Views.Provider(state, now).Cards;
+		var cards = Views.Provider(state, now, _levels).Cards;
 
 		Assert.Equal(("0", 0d, "langResetDone"), (cards[0].Value, cards[0].Fill, cards[0].Resets));
 		Assert.Equal("40", cards[1].Value);
@@ -119,12 +121,12 @@ public class ViewsTests
 
 	[Fact]
 	public void CodexHasNoStatisticsBlock() =>
-		Assert.Null(Views.Provider(new ProviderState(new CodexProvider()), DateTime.UtcNow).Usage);
+		Assert.Null(Views.Provider(new ProviderState(new CodexProvider()), DateTime.UtcNow, _levels).Usage);
 
 	[Fact]
 	public void ClaudeCountsUntilTheFirstRead() // первое чтение логов — секунды: не нули, а «считаю…»
 	{
-		var usage = Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow).Usage!;
+		var usage = Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Usage!;
 
 		Assert.Equal("…", usage.Cost);
 		Assert.Equal("langCounting", usage.CostNote);

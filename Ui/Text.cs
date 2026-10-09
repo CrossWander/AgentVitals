@@ -44,8 +44,8 @@ internal static class Text
 	};
 
 	/// <summary>Плашка окна: по проценту, а исчерпанное — «исчерпано», а не «критично».</summary>
-	public static string Badge(double used) =>
-		Math.Round(used) >= 100 ? Localization.Get("langHealthExhausted") : HealthName(Quota.Rate(used));
+	public static string Badge(double used, Thresholds levels) =>
+		Math.Round(used) >= 100 ? Localization.Get("langHealthExhausted") : HealthName(Quota.Rate(used, levels));
 
 	/// <summary>Тост о пороге: заголовок — насколько серьёзно, текст — что, сколько осталось и когда сброс.</summary>
 	public static (string Title, string Message) Alert(string provider, QuotaAlert alert, DateTime now)

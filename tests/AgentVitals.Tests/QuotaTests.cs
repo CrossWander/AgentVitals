@@ -12,12 +12,20 @@ public class QuotaTests
 
 	[Theory]
 	[InlineData(0, Health.Good)]
-	[InlineData(49.9, Health.Good)]
-	[InlineData(50, Health.Warning)]
-	[InlineData(79.9, Health.Warning)]
-	[InlineData(80, Health.Critical)]
+	[InlineData(74.9, Health.Good)]
+	[InlineData(75, Health.Warning)]
+	[InlineData(89.9, Health.Warning)]
+	[InlineData(90, Health.Critical)]
 	[InlineData(130, Health.Critical)]
-	public void RatesByThreshold(double used, Health expected) => Assert.Equal(expected, Quota.Rate(used));
+	public void ColoursByTheToastThresholds(double used, Health expected) => // что красное, о том и тост «критично»
+		Assert.Equal(expected, Quota.Rate(used, new Thresholds(75, 90)));
+
+	[Fact]
+	public void ColoursFollowThresholdsFromSettings()
+	{
+		Assert.Equal(Health.Warning, Quota.Rate(55, new Thresholds(50, 60)));
+		Assert.Equal(Health.Critical, Quota.Rate(60, new Thresholds(50, 60)));
+	}
 
 	[Fact]
 	public void ExhaustedWeekBeatsEmptySession() => Assert.Equal(100, Quota.Bottleneck([Window(0), Window(100)])!.Used);

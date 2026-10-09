@@ -41,7 +41,10 @@ internal sealed class RateLimitedException(DateTime until) : Exception($"rate li
 	public DateTime Until { get; } = until;
 }
 
-/// <summary>Окно дошло до порога: осталась четверть (важно) или десятая часть (критично).</summary>
+/// <summary>Пороги «важно» и «критично», %: с них и тосты, и жёлтый с красным — что красное, о том и тост.</summary>
+internal sealed record Thresholds(int Important, int Critical);
+
+/// <summary>Окно дошло до порога «важно» или «критично».</summary>
 internal sealed record QuotaAlert(QuotaWindow Window, bool Critical);
 
 /// <summary>
@@ -58,18 +61,17 @@ internal sealed class QuotaAlarm
 	private readonly Dictionary<string, bool> _fired = [];
 
 	/// <summary>Сдвинуть порог на шаг: от 50 до 95, «важно» всегда хотя бы на шаг ниже «критично».</summary>
-	public static (int Important, int Critical) Shift(int important, int critical, bool moveCritical, int delta) => moveCritical
-		? (important, Math.Clamp(critical + delta, Math.Max(_lowest, important + _step), _highest))
-		: (Math.Clamp(important + delta, _lowest, Math.Min(_highest, critical - _step)), critical);
+	public static Thresholds Shift(Thresholds levels, bool moveCritical, int delta) => moveCritical
+		? levels with { Critical = Math.Clamp(levels.Critical + delta, Math.Max(_lowest, levels.Important + _step), _highest) }
+		: levels with { Important = Math.Clamp(levels.Important + delta, _lowest, Math.Min(_highest, levels.Critical - _step)) };
 
 	/// <summary>Окна провайдера, которые только что дошли до следующего порога. Уже высокое при запуске — тоже:
 	/// запуск утром или после обновления — как раз тот момент, когда об этом важно знать.</summary>
 	/// <param name="provider">Имя агента: у каждого свои окна.</param>
 	/// <param name="windows">Окна из свежего снимка.</param>
-	/// <param name="important">Порог «важно», %.</param>
-	/// <param name="critical">Порог «критично», %.</param>
+	/// <param name="levels">Пороги из настроек.</param>
 	/// <returns>По тревоге на окно, только о самом высоком из пройденных порогов.</returns>
-	public IReadOnlyList<QuotaAlert> Check(string provider, IReadOnlyList<QuotaWindow> windows, double important, double critical)
+	public IReadOnlyList<QuotaAlert> Check(string provider, IReadOnlyList<QuotaWindow> windows, Thresholds levels)
 	{
 		var alerts = new List<QuotaAlert>();
 
@@ -77,14 +79,14 @@ internal sealed class QuotaAlarm
 		{
 			var key = $"{provider}/{window.Key}/{window.Label}";
 
-			if (window.Used < important)
+			if (window.Used < levels.Important)
 			{
 				_fired.Remove(key);
 
 				continue;
 			}
 
-			var high = window.Used >= critical;
+			var high = window.Used >= levels.Critical;
 
 			// Уже сказали то же или больше.
 			if (_fired.TryGetValue(key, out var said) && (said || !high))
@@ -107,7 +109,8 @@ internal static class Quota
 		(windows.Any(window => window.Limiting) ? windows.Where(window => window.Limiting) : windows)
 			.MaxBy(window => window.Used);
 
-	public static Health Rate(double used) => used >= 80 ? Health.Critical : used >= 50 ? Health.Warning : Health.Good;
+	public static Health Rate(double used, Thresholds levels) =>
+		used >= levels.Critical ? Health.Critical : used >= levels.Important ? Health.Warning : Health.Good;
 
 	/// <summary>Сколько процентов было бы потрачено к этому моменту при ровном темпе; null — длина окна неизвестна
 	/// или сброс уже прошёл.</summary>

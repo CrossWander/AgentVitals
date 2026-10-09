@@ -113,7 +113,8 @@ internal static class Views
 	public static Vitals Build(Poller poller, IReadOnlyList<LiveSession> sessions, DateTime now)
 	{
 		var available = poller.Available.ToList();
-		var health = poller.Health(now);
+		var levels = Store.Current.Thresholds;
+		var health = poller.Health(now, levels);
 
 		// Шапка говорит о самом узком окне: исчерпано оно — «исчерпано», как на его карточке.
 		var tightest = poller.Tightest(now);
@@ -126,9 +127,9 @@ internal static class Views
 			: "";
 
 		return new(
-			tightest is { } used ? Text.Badge(used) : Text.HealthName(health),
+			tightest is { } used ? Text.Badge(used, levels) : Text.HealthName(health),
 			Brush(Tone(health)),
-			[.. available.Select(state => Provider(state, now))],
+			[.. available.Select(state => Provider(state, now, levels))],
 			Text.Status(poller.Status),
 			Brush(poller.Status is { } status ? Tone(status.Health) : "Muted"),
 			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State))))],
@@ -154,17 +155,17 @@ internal static class Views
 		}
 	}
 
-	internal static ProviderView Provider(ProviderState state, DateTime now)
+	internal static ProviderView Provider(ProviderState state, DateTime now, Thresholds levels)
 	{
 		List<CardView> cards = [];
 
 		if (state.Snapshot is { } snapshot)
 		{
-			cards.AddRange(state.Windows(now).Select(window => Card(window, now)));
+			cards.AddRange(state.Windows(now).Select(window => Card(window, now, levels)));
 
 			if (snapshot.Extra is { } extra)
 			{
-				cards.Add(Extra(extra));
+				cards.Add(Extra(extra, levels));
 			}
 		}
 
@@ -289,9 +290,9 @@ internal static class Views
 		_ => throw new NotImplementedException("ChartMode switch error"),
 	};
 
-	private static CardView Card(QuotaWindow window, DateTime now)
+	private static CardView Card(QuotaWindow window, DateTime now, Thresholds levels)
 	{
-		var health = Quota.Rate(window.Used);
+		var health = Quota.Rate(window.Used, levels);
 		var (icon, tint) = window.Key switch
 		{
 			"langWindowSession" => ("IconBolt", "IconSession"),
@@ -306,7 +307,7 @@ internal static class Views
 			Text.Title(window).ToUpper(Localization.Culture),
 			Shape(icon),
 			Brush(tint),
-			Text.Badge(window.Used),
+			Text.Badge(window.Used, levels),
 			Brush(Badge(health)),
 			Math.Round(window.Used).ToString(CultureInfo.InvariantCulture),
 			"%",
@@ -326,7 +327,7 @@ internal static class Views
 			pace is { } even ? Localization.Format("langPaceTip", Math.Round(even), Math.Round(window.Used)) : null);
 	}
 
-	private static CardView Extra(Spend spend)
+	private static CardView Extra(Spend spend, Thresholds levels)
 	{
 		var fill = spend.Limit is { } limit && limit > 0 ? (double)(spend.Used / limit * 100) : 0;
 
@@ -340,7 +341,7 @@ internal static class Views
 			"",
 			spend.Limit is { } ceiling ? Localization.Format("langExtraOf", Text.Money(ceiling, spend.Currency)) : Localization.Get("langExtraSpent"),
 			Math.Min(fill, 100),
-			Brush(Meter(Quota.Rate(fill))),
+			Brush(Meter(Quota.Rate(fill, levels))),
 			"",
 			false);
 	}

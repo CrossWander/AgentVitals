@@ -24,10 +24,18 @@ internal static class Store
 
 		public int TurnMinutes { get; set; } = 5;
 
-		// Пороги тостов о квоте, %: осталась четверть и десятая часть.
+		// Пороги квоты, %: с них тосты «важно» и «критично», жёлтый и красный.
 		public int ImportantAt { get; set; } = 75;
 
 		public int CriticalAt { get; set; } = 90;
+
+		// В файле — два числа, как их правит человек; правилам — одной парой.
+		[JsonIgnore]
+		public Thresholds Thresholds
+		{
+			get => new(ImportantAt, CriticalAt);
+			set => (ImportantAt, CriticalAt) = (value.Important, value.Critical);
+		}
 	}
 
 	private static readonly string _path = Path.Combine(Paths.Data, "config.json");

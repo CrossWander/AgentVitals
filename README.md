@@ -62,8 +62,10 @@ An agent whose credential file is missing is simply not shown.
 - **Pace.** The session and week bars carry a mark where even spending would be by now, and the
   card says *ahead of pace*, *on pace* or *room to spare* (within 5 points is on pace). Hovering the
   card explains the mark with both numbers.
-- **Tray icon.** The pulse line takes the colour of the window that limits you most: green under
-  50%, amber to 80%, red above, grey when there is no data. An exhausted week turns it red even
+- **Colours.** The pulse line in the tray takes the colour of the window that limits you most:
+  green below the *important* level, amber from it, red from *critical*, grey when there is no
+  data. These are the same levels the toasts use, so what turns red is what you were warned
+  about; cards, bars and the header follow them too. An exhausted week turns the icon red even
   with an empty session.
 - **Toasts.** When the session or the week reaches 75% (*important*, a quarter left) and 90%
   (*critical*, almost used up), with the time until it resets. Both levels move in steps of 5
