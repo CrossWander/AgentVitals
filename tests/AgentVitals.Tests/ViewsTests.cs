@@ -64,10 +64,10 @@ public class ViewsTests
 		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Dashboard);
 
 	[Theory]
-	[InlineData("feature/POS20-13047", "POS20-13047-prepaid-internet-orders-report\nfeature/POS20-13047")]
-	[InlineData("", "POS20-13047-prepaid-internet-orders-report")]
+	[InlineData("feature/APP-1234", "APP-1234-retry-failed-payments-in-checkout\nfeature/APP-1234")]
+	[InlineData("", "APP-1234-retry-failed-payments-in-checkout")]
 	public void SessionTipShowsTheWholeName(string branch, string tip) => // в строке длинное имя обрезано троеточием
-		Assert.Equal(tip, new SessionView("POS20-13047-prepaid-internet-orders-report", branch, "", Avalonia.Media.Brushes.Gray).Tip);
+		Assert.Equal(tip, new SessionView("APP-1234-retry-failed-payments-in-checkout", branch, "", Avalonia.Media.Brushes.Gray).Tip);
 
 	[Theory]
 	[InlineData(WindowKind.Session, 2.5, 50d)] // половина пяти часов прошла — по ровному темпу половина и потрачена
