@@ -109,6 +109,9 @@ internal sealed class Poller
 	private DateTime _nextStatus = DateTime.MinValue;
 	private bool _busy;
 
+	// Тик попросили, пока шёл другой: null — никто, true — «Обновить», который не ждёт срока.
+	private bool? _again;
+
 	public IReadOnlyList<ProviderState> Providers { get; } =
 		[new(new ClaudeProvider()), new(new CodexProvider()), new(new GeminiProvider())];
 
@@ -177,8 +180,12 @@ internal sealed class Poller
 
 	private async Task TickAsync(bool force)
 	{
+		// Первое чтение логов идёт секунды, запрос при плохой сети — до 15 с: «Обновить» и новый файл входа
+		// в это время не теряются, а выполняются сразу после — один раз, сколько бы их ни пришло.
 		if (_busy)
 		{
+			_again = _again == true || force;
+
 			return;
 		}
 
@@ -219,6 +226,12 @@ internal sealed class Poller
 		{
 			_busy = false;
 			Changed?.Invoke();
+		}
+
+		if (_again is { } again)
+		{
+			_again = null;
+			await TickAsync(again);
 		}
 	}
 
