@@ -108,11 +108,15 @@ internal sealed class TrayApp
 
 	private void Render()
 	{
-		var vitals = Views.Build(_poller, _sessions, DateTime.UtcNow);
+		var vitals = Gather();
 		_popover.Render(vitals);
 		_card.Render(vitals);
 		ShowIcon();
 	}
+
+	/// <summary>Свежий снимок: «обновлено N мин назад» и «сброс через» сдвигаются со временем.</summary>
+	private Vitals Gather() =>
+		Views.Build([.. _poller.Installed], _poller.Status, HookInstaller.Link(out _), _sessions, DateTime.UtcNow, Store.Current.Thresholds);
 
 	private void ReadSessions()
 	{
@@ -153,16 +157,11 @@ internal sealed class TrayApp
 	/// <summary>Тост, когда сессия или неделя дошли до 75% или 90% или сменился статус Anthropic.</summary>
 	private void Notify()
 	{
-		var alerts = _poller.Installed
-			.Where(state => state.Snapshot is not null)
-			.SelectMany(state => _alarm.Check(state.Provider.Name, state.Windows(DateTime.UtcNow), Store.Current.Thresholds).Select(alert => (state.Provider.Name, alert)))
-			.ToList();
+		var now = DateTime.UtcNow;
 
-		// Оба окна выше порога бывают разве что при запуске — тост одного, самого серьёзного.
-		if (alerts.Count > 0)
+		if (_alarm.Check(_poller.Installed.Select(state => (state.Provider.Name, state.Windows(now))), Store.Current.Thresholds) is { } alert)
 		{
-			var (provider, alert) = alerts.MaxBy(item => (item.alert.Critical, item.alert.Window.Used));
-			var (title, message) = Text.QuotaToast(provider, alert, DateTime.UtcNow);
+			var (title, message) = Text.QuotaToast(alert, now);
 			_toast.Say(message, Anchor(), title, Views.Brush(alert.Critical ? "Bad" : "Warn"), Toast.Long);
 
 			// Тост живёт секунды: по журналу видно, был ли он, если человек отошёл от экрана.
@@ -188,8 +187,7 @@ internal sealed class TrayApp
 			return;
 		}
 
-		// Несколько разом бывает редко — сказать о главном: вопрос о разрешении держит Claude, пока не ответят.
-		if (SessionAlarm.Check(before, after, TimeSpan.FromMinutes(Store.Current.TurnMinutes)).MaxBy(alert => alert.Waiting) is { } alert)
+		if (SessionAlarm.Check(before, after, TimeSpan.FromMinutes(Store.Current.TurnMinutes)) is { } alert)
 		{
 			var (title, message) = Text.SessionToast(alert);
 			_toast.Say(message, Anchor(), title, Views.Brush(alert.Waiting ? "Blue" : "Good"));
@@ -207,7 +205,7 @@ internal sealed class TrayApp
 
 	[SupportedOSPlatform("windows")]
 	private IntPtr Glyph() =>
-		TrayGlyph.Get(_poller.Health(DateTime.UtcNow, Store.Current.Thresholds),SessionWatcher.Overall(_sessions), _tick, _darkTaskbar, Tray.IconSize);
+		TrayGlyph.Get(Poller.Health(_poller.Installed, DateTime.UtcNow, Store.Current.Thresholds), SessionWatcher.Overall(_sessions), _tick, _darkTaskbar, Tray.IconSize);
 
 	private void OnTrayMove()
 	{
@@ -226,8 +224,7 @@ internal sealed class TrayApp
 
 		if (OverIcon() && !_popover.IsVisible && !_menu.IsVisible)
 		{
-			// Свежий снимок: «обновлено N мин назад» и «сброс через» сдвигаются со временем.
-			_card.Render(Views.Build(_poller, _sessions, DateTime.UtcNow));
+			_card.Render(Gather());
 			_card.Open(Anchor());
 			_watch.Start();
 		}
@@ -276,7 +273,7 @@ internal sealed class TrayApp
 	{
 		HideGlance();
 		_menu.Hide();
-		_popover.Render(Views.Build(_poller, _sessions, DateTime.UtcNow));
+		_popover.Render(Gather());
 		_popover.Open(Anchor(), settings);
 
 		if (OperatingSystem.IsWindows())

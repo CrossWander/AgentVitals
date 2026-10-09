@@ -9,7 +9,7 @@ using System.Text.Json.Nodes;
 namespace AgentVitals;
 
 /// <summary>Подключены ли hooks AgentVitals к Claude Code.</summary>
-internal enum HookLink
+public enum HookLink
 {
 	Off,
 	On,
@@ -53,6 +53,23 @@ internal static class HookInstaller
 	};
 
 	public static string SettingsPath { get; } = Path.Combine(Paths.Home, ".claude", "settings.json");
+
+	/// <summary>Подключены ли hooks этой программы; ошибка чтения settings.json — «нет» с текстом ошибки.</summary>
+	public static HookLink Link(out string? error)
+	{
+		error = null;
+
+		try
+		{
+			return State(SettingsPath, Environment.ProcessPath ?? "");
+		}
+		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException)
+		{
+			error = exception.Message;
+
+			return HookLink.Off;
+		}
+	}
 
 	public static HookLink State(string settings, string exe)
 	{

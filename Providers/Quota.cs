@@ -74,8 +74,8 @@ internal sealed class RateLimitedException(DateTime until) : Exception($"rate li
 /// <summary>Пороги «важно» и «критично», %: с них и тосты, и жёлтый с красным — что красное, о том и тост.</summary>
 internal sealed record Thresholds(int Important, int Critical);
 
-/// <summary>Окно дошло до порога «важно» или «критично».</summary>
-internal sealed record QuotaAlert(QuotaWindow Window, bool Critical);
+/// <summary>Окно агента дошло до порога «важно» или «критично».</summary>
+internal sealed record QuotaAlert(string Provider, QuotaWindow Window, bool Critical);
 
 /// <summary>
 /// Тосты по сессии и неделе: «важно» и «критично» (по умолчанию 75% и 90%, меняются в настройках), каждый раз
@@ -125,11 +125,18 @@ internal sealed class QuotaAlarm
 			}
 
 			_fired[key] = high;
-			alerts.Add(new(window, high));
+			alerts.Add(new(provider, window, high));
 		}
 
 		return alerts;
 	}
+
+	/// <summary>Самая серьёзная из новых тревог всех агентов: выше порога у двух разом бывает разве что при
+	/// запуске — тост один, о главном. Пороги взводятся у всех, а не только у сказанного.</summary>
+	public QuotaAlert? Check(IEnumerable<(string Provider, IReadOnlyList<QuotaWindow> Windows)> agents, Thresholds levels) =>
+		agents
+			.SelectMany(agent => Check(agent.Provider, agent.Windows, levels))
+			.MaxBy(alert => (alert.Critical, alert.Window.Used));
 }
 
 internal static class Quota

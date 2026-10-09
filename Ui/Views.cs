@@ -110,49 +110,36 @@ internal sealed record Vitals(
 /// <summary>Собирает представления из данных опроса и сессий. Кисти — из палитры текущей темы.</summary>
 internal static class Views
 {
-	public static Vitals Build(Poller poller, IReadOnlyList<Session> sessions, DateTime now)
+	/// <param name="agents">Установленные агенты.</param>
+	/// <param name="status">Статус Anthropic; null — страница не ответила.</param>
+	/// <param name="hooks">Подключены ли hooks: без них список сессий пуст не потому, что их нет.</param>
+	/// <param name="sessions">Живые сессии Claude Code.</param>
+	/// <param name="now">Момент снимка: от него «обновлено N мин назад» и «сброс через».</param>
+	/// <param name="levels">Пороги из настроек.</param>
+	public static Vitals Build(IReadOnlyList<ProviderState> agents, ServiceStatus? status, HookLink hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels)
 	{
-		var available = poller.Installed.ToList();
-		var levels = Store.Current.Thresholds;
-		var health = poller.Health(now, levels);
+		var health = Poller.Health(agents, now, levels);
 
 		// Шапка говорит о самом узком окне: исчерпано оно — «исчерпано», как на его карточке.
-		var tightest = poller.Tightest(now);
+		var tightest = Poller.Tightest(agents, now);
 
 		var live = SessionWatcher.Overall(sessions);
 		var focus = sessions.FirstOrDefault(session => session.State == live);
 
-		var hint = Hooks(out _) != HookLink.On ? Localization.Get("langHooksHint")
+		var hint = hooks != HookLink.On ? Localization.Get("langHooksHint")
 			: sessions.Count == 0 ? Localization.Get("langNoSessions")
 			: "";
 
 		return new(
 			tightest is { } used ? Text.Badge(used, levels) : Text.HealthName(health),
 			Brush(Tone(health)),
-			[.. available.Select(state => Provider(state, now, levels))],
-			Text.Status(poller.Status),
-			Brush(poller.Status is { } status ? Tone(status.Health) : "Muted"),
+			[.. agents.Select(state => Provider(state, now, levels))],
+			Text.Status(status),
+			Brush(status is not null ? Tone(status.Health) : "Muted"),
 			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State))))],
 			hint,
 			focus is null ? "" : Text.Live(focus),
 			Brush(Dot(live)));
-	}
-
-	/// <summary>Подключены ли hooks; ошибка чтения settings.json — «нет» с текстом ошибки.</summary>
-	public static HookLink Hooks(out string? error)
-	{
-		error = null;
-
-		try
-		{
-			return HookInstaller.State(HookInstaller.SettingsPath, Environment.ProcessPath ?? "");
-		}
-		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException)
-		{
-			error = exception.Message;
-
-			return HookLink.Off;
-		}
 	}
 
 	internal static ProviderView Provider(ProviderState state, DateTime now, Thresholds levels)

@@ -116,4 +116,13 @@ public class QuotaAlarmTests
 
 		Assert.Single(_alarm.Check("Claude", [Session(91)], _default));
 	}
+
+	[Fact]
+	public void ToastIsAboutTheGravestOfAllAgents() // выше порога у двух разом бывает разве что при запуске — тост один, о главном
+	{
+		var alert = _alarm.Check([("Claude", [Session(80)]), ("Codex", [Session(92)])], _default);
+
+		Assert.Equal(("Codex", true), (alert?.Provider, alert?.Critical));
+		Assert.Null(_alarm.Check([("Claude", [Session(85)]), ("Codex", [Session(93)])], _default)); // о «важно» у Claude уже сказано
+	}
 }

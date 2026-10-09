@@ -43,6 +43,23 @@ public class ViewsTests
 		Assert.Equal(refresh, Popover.RefreshKey(key, modifiers));
 
 	[Fact]
+	public void HeaderNamesTheTightestWindow() // исчерпано окно — «исчерпано», как на его карточке
+	{
+		var now = DateTime.UtcNow;
+		var claude = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", null, [new(WindowKind.Session, null, 100, null, Limiting: true)], null) };
+
+		Assert.Equal("langHealthExhausted", Views.Build([claude], null, HookLink.On, [], now, _levels).HealthText);
+		Assert.Equal("langHealthUnknown", Views.Build([], null, HookLink.On, [], now, _levels).HealthText);
+	}
+
+	[Theory]
+	[InlineData(HookLink.Off, "langHooksHint")]
+	[InlineData(HookLink.Moved, "langHooksHint")] // программу перенесли — hooks смотрят на старый путь
+	[InlineData(HookLink.On, "langNoSessions")]
+	public void HintSaysWhySessionsAreEmpty(HookLink hooks, string hint) =>
+		Assert.Equal(hint, Views.Build([], null, hooks, [], DateTime.UtcNow, _levels).SessionsHint);
+
+	[Fact]
 	public void TabOpensItsAgentsUsagePage() =>
 		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Dashboard);
 

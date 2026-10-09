@@ -178,7 +178,7 @@ internal partial class SettingsPanel : UserControl
 
 	private void ShowHooks(string? error)
 	{
-		var state = Views.Hooks(out var readError);
+		var state = HookInstaller.Link(out var readError);
 		error ??= readError;
 
 		HooksState.Text = error is not null

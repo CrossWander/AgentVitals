@@ -48,10 +48,10 @@ internal static class Text
 		Math.Round(used) >= 100 ? Localization.Get("langHealthExhausted") : HealthName(Quota.Rate(used, levels));
 
 	/// <summary>Тост о пороге: заголовок — насколько серьёзно, текст — что, сколько осталось и когда сброс.</summary>
-	public static (string Title, string Message) QuotaToast(string provider, QuotaAlert alert, DateTime now)
+	public static (string Title, string Message) QuotaToast(QuotaAlert alert, DateTime now)
 	{
 		var left = Math.Max(0, 100 - Math.Round(alert.Window.Used));
-		var message = Localization.Format("langAlertLeft", provider, Title(alert.Window), left);
+		var message = Localization.Format("langAlertLeft", alert.Provider, Title(alert.Window), left);
 
 		if (Until(alert.Window.ResetsAt, now) is { Length: > 0 } resets)
 		{

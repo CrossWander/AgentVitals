@@ -33,21 +33,20 @@ internal sealed record Session(string Id, SessionState State, string? Tool, stri
 /// <summary>О чём сказать тостом: ход закончился или сессия ждёт разрешения.</summary>
 internal sealed record SessionAlert(Session Session, bool Waiting);
 
-/// <summary>Перемены в сессиях, о которых стоит сказать, пока человек в другом окне.</summary>
+/// <summary>Перемена в сессиях, о которой стоит сказать, пока человек в другом окне.</summary>
 internal static class SessionAlarm
 {
 	/// <param name="before">Прошлое чтение; сессии, которых в нём нет, молчат — неизвестно, что было до них.</param>
 	/// <param name="shortest">Ход короче этого не стоит тоста: на коротком человек и так смотрит в терминал.</param>
-	public static IReadOnlyList<SessionAlert> Check(IReadOnlyList<Session> before, IReadOnlyList<Session> after, TimeSpan shortest)
+	/// <returns>Одна, о главном: несколько разом бывает редко, а вопрос о разрешении держит Claude, пока не ответят.</returns>
+	public static SessionAlert? Check(IReadOnlyList<Session> before, IReadOnlyList<Session> after, TimeSpan shortest)
 	{
 		var was = before.ToDictionary(session => session.Id, session => session.State);
 
-		return
-		[
-			.. after
-				.Where(session => was.TryGetValue(session.Id, out var state) && state != session.State)
-				.Where(session => session.State == SessionState.Waiting || (session.State == SessionState.Idle && session.TurnDuration >= shortest))
-				.Select(session => new SessionAlert(session, session.State == SessionState.Waiting)),
-		];
+		return after
+			.Where(session => was.TryGetValue(session.Id, out var state) && state != session.State)
+			.Where(session => session.State == SessionState.Waiting || (session.State == SessionState.Idle && session.TurnDuration >= shortest))
+			.Select(session => new SessionAlert(session, session.State == SessionState.Waiting))
+			.MaxBy(alert => alert.Waiting);
 	}
 }

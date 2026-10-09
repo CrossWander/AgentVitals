@@ -118,11 +118,12 @@ internal sealed class Poller
 	/// <summary>Установленные агенты: только их показывают и спрашивают.</summary>
 	public IEnumerable<ProviderState> Installed => Providers.Where(state => state.Installed);
 
-	/// <summary>Самое узкое окно среди установленных агентов; null — ни у кого нет свежих данных.</summary>
-	public double? Tightest(DateTime now) => Installed.Max(state => state.Tightest(now));
+	/// <summary>Самое узкое окно среди агентов; null — ни у кого нет свежих данных.</summary>
+	public static double? Tightest(IEnumerable<ProviderState> agents, DateTime now) => agents.Max(state => state.Tightest(now));
 
 	/// <summary>Общее состояние квот — по самому узкому окну.</summary>
-	public Health Health(DateTime now, Thresholds levels) => Tightest(now) is { } used ? Quota.Rate(used, levels) : AgentVitals.Health.Unknown;
+	public static Health Health(IEnumerable<ProviderState> agents, DateTime now, Thresholds levels) =>
+		Tightest(agents, now) is { } used ? Quota.Rate(used, levels) : AgentVitals.Health.Unknown;
 
 	public ServiceStatus? Status { get; private set; }
 
