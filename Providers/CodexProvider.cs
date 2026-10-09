@@ -55,13 +55,13 @@ internal sealed class CodexProvider : IProvider
 	internal static Snapshot Parse(JsonNode usage)
 	{
 		List<QuotaWindow> windows = [];
-		Add(windows, usage["rate_limit"]?["primary_window"], "langWindowSession");
-		Add(windows, usage["rate_limit"]?["secondary_window"], "langWindowWeek");
+		Add(windows, usage["rate_limit"]?["primary_window"], WindowKind.Session);
+		Add(windows, usage["rate_limit"]?["secondary_window"], WindowKind.Week);
 
 		return new(Quota.PlanName((string?)usage["plan_type"]), null, windows, null);
 	}
 
-	private static void Add(List<QuotaWindow> windows, JsonNode? window, string key)
+	private static void Add(List<QuotaWindow> windows, JsonNode? window, WindowKind kind)
 	{
 		if (window is not JsonObject)
 		{
@@ -69,6 +69,6 @@ internal sealed class CodexProvider : IProvider
 		}
 
 		DateTimeOffset? resets = (long?)window["reset_at"] is { } at ? DateTimeOffset.FromUnixTimeSeconds(at) : null;
-		windows.Add(new(key, null, (double?)window["used_percent"] ?? 0, resets, Limiting: true));
+		windows.Add(new(kind, null,(double?)window["used_percent"] ?? 0, resets, Limiting: true));
 	}
 }

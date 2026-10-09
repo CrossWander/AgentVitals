@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -10,9 +10,9 @@ public class QuotaAlarmTests
 
 	private readonly QuotaAlarm _alarm = new();
 
-	private static QuotaWindow Session(double used) => new("langWindowSession", null, used, null, Limiting: true);
+	private static QuotaWindow Session(double used) => new(WindowKind.Session, null, used, null, Limiting: true);
 
-	private static QuotaWindow Week(double used) => new("langWindowWeek", null, used, null, Limiting: true);
+	private static QuotaWindow Week(double used) => new(WindowKind.Week, null, used, null, Limiting: true);
 
 	private List<(double Used, bool Critical)> Check(params QuotaWindow[] windows) =>
 		[.. _alarm.Check("Claude", windows, _default).Select(alert => (alert.Window.Used, alert.Critical))];
@@ -102,7 +102,7 @@ public class QuotaAlarmTests
 	[Fact]
 	public void IgnoresModelWindows() // недельный Opus/Sonnet не останавливает работу
 	{
-		var model = new QuotaWindow("langWindowWeekModel", "Opus", 50, null, Limiting: false);
+		var model = new QuotaWindow(WindowKind.WeekModel, "Opus", 50, null, Limiting: false);
 		Check(model);
 
 		Assert.Empty(Check(model with { Used = 99 }));

@@ -69,24 +69,24 @@ internal sealed class ClaudeProvider : IProvider
 			switch ((string?)limit["kind"])
 			{
 				case "session":
-					windows.Add(new("langWindowSession", null, used, resets, Limiting: true));
+					windows.Add(new(WindowKind.Session, null, used, resets, Limiting: true));
 					break;
 
 				case "weekly_all":
-					windows.Add(new("langWindowWeek", null, used, resets, Limiting: true));
+					windows.Add(new(WindowKind.Week, null, used, resets, Limiting: true));
 					break;
 
 				// Модельный лимит блокирует только свою модель; два лимита одной модели — первый.
 				case "weekly_scoped" when Model(limit) is { } model && windows.All(window => window.Label != model):
-					windows.Add(new("langWindowWeekModel", model, used, resets, Limiting: false));
+					windows.Add(new(WindowKind.WeekModel, model, used, resets, Limiting: false));
 					break;
 			}
 		}
 
 		if (windows.Count == 0)
 		{
-			Legacy(windows, usage["five_hour"], "langWindowSession");
-			Legacy(windows, usage["seven_day"], "langWindowWeek");
+			Legacy(windows, usage["five_hour"], WindowKind.Session);
+			Legacy(windows, usage["seven_day"], WindowKind.Week);
 		}
 
 		var extra = Extra(usage);
@@ -106,11 +106,11 @@ internal sealed class ClaudeProvider : IProvider
 			.Split(' ', StringSplitOptions.RemoveEmptyEntries)
 			.FirstOrDefault();
 
-	private static void Legacy(List<QuotaWindow> windows, JsonNode? window, string key)
+	private static void Legacy(List<QuotaWindow> windows, JsonNode? window, WindowKind kind)
 	{
 		if (window is JsonObject && (double?)window["utilization"] is { } used)
 		{
-			windows.Add(new(key, null, used, Api.Date(window["resets_at"]), Limiting: true));
+			windows.Add(new(kind, null, used, Api.Date(window["resets_at"]), Limiting: true));
 		}
 	}
 

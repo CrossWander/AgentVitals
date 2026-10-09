@@ -59,7 +59,7 @@ An agent whose credential file is missing is simply not shown.
 
 - **Cards.** Each quota window is a card with the percentage used, a bar and the time left until it
   resets. A window at 100% says *used up*. Extra usage is shown if it is enabled.
-- **Pace.** The session and week bars carry a mark where even spending would be by now, and the
+- **Pace.** The session and week bars (per-model weeks too) carry a mark where even spending would be by now, and the
   card says *ahead of pace*, *on pace* or *room to spare* (within 5 points is on pace). Hovering the
   card explains the mark with both numbers.
 - **Colours.** The pulse line in the tray takes the colour of the window that limits you most:

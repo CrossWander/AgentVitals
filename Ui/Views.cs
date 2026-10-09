@@ -293,15 +293,16 @@ internal static class Views
 	private static CardView Card(QuotaWindow window, DateTime now, Thresholds levels)
 	{
 		var health = Quota.Rate(window.Used, levels);
-		var (icon, tint) = window.Key switch
+		var (icon, tint) = window.Kind switch
 		{
-			"langWindowSession" => ("IconBolt", "IconSession"),
-			"langWindowWeek" => ("IconCalendar", "IconWeek"),
-			_ => ("IconSpark", "IconModel"),
+			WindowKind.Session => ("IconBolt", "IconSession"),
+			WindowKind.Week => ("IconCalendar", "IconWeek"),
+			WindowKind.WeekModel or WindowKind.Model => ("IconSpark", "IconModel"),
+			_ => throw new NotImplementedException("WindowKind switch error"),
 		};
 
 		var pace = Quota.Expected(window, now);
-		var word = pace is { } expected ? Quota.Pace(window.Used, expected) : null;
+		Pace? word = pace is { } expected ? Quota.Pace(window.Used, expected) : null;
 
 		return new(
 			Text.Title(window).ToUpper(Localization.Culture),
@@ -317,12 +318,13 @@ internal static class Views
 			Text.Until(window.ResetsAt, now),
 			window.Limiting,
 			pace,
-			word is null ? "" : Localization.Get(word),
+			word is null ? "" : Localization.Get($"langPace{word}"),
 			Brush(word switch
 			{
-				"langPaceAhead" => "Warn",
-				"langPaceSpare" => "Good",
-				_ => "TextDim",
+				Pace.Ahead => "Warn",
+				Pace.Spare => "Good",
+				Pace.Even or null => "TextDim",
+				_ => throw new NotImplementedException("Pace switch error"),
 			}),
 			pace is { } even ? Localization.Format("langPaceTip", Math.Round(even), Math.Round(window.Used)) : null);
 	}

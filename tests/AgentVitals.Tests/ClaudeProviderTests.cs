@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -54,14 +54,14 @@ public class ClaudeProviderTests
 			snapshot.Windows,
 			session =>
 			{
-				Assert.Equal("langWindowSession", session.Key);
+				Assert.Equal(WindowKind.Session, session.Kind);
 				Assert.Equal(12, session.Used);
 				Assert.True(session.Limiting);
 				Assert.Equal(DateTimeOffset.Parse("2026-10-07T16:00:00.355842+00:00"), session.ResetsAt);
 			},
 			week =>
 			{
-				Assert.Equal("langWindowWeek", week.Key);
+				Assert.Equal(WindowKind.Week, week.Kind);
 				Assert.Equal(17, week.Used);
 				Assert.True(week.Limiting);
 			});
@@ -75,7 +75,7 @@ public class ClaudeProviderTests
 		Assert.Equal(3, snapshot.Windows.Count);
 
 		var model = snapshot.Windows[2];
-		Assert.Equal("langWindowWeekModel", model.Key);
+		Assert.Equal(WindowKind.WeekModel, model.Kind);
 		Assert.Equal("Fable", model.Label);
 		Assert.Equal(17, model.Used);
 		Assert.False(model.Limiting);
@@ -106,7 +106,7 @@ public class ClaudeProviderTests
 			""")!;
 
 		var window = Assert.Single(ClaudeProvider.Parse(usage, "", null).Windows);
-		Assert.Equal("langWindowSession", window.Key);
+		Assert.Equal(WindowKind.Session, window.Kind);
 	}
 
 	[Fact]

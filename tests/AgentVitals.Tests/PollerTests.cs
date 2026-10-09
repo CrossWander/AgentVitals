@@ -51,7 +51,7 @@ public class PollerTests
 	[Fact]
 	public void IconAndHeaderSeeThePassedReset() // карточка показывала 0%, а значок и шапка — старые 95%
 	{
-		var reset = new QuotaWindow("langWindowSession", null, 95, _now.AddMinutes(-1), Limiting: true);
+		var reset = new QuotaWindow(WindowKind.Session, null, 95, _now.AddMinutes(-1), Limiting: true);
 		var state = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", null, [reset], null) };
 
 		Assert.Equal(0, state.Tightest(_now));
@@ -63,7 +63,7 @@ public class PollerTests
 	{
 		var state = new ProviderState(new ClaudeProvider())
 		{
-			Snapshot = new("Max", null, [new("langWindowSession", null, 40, null, Limiting: true)], null),
+			Snapshot = new("Max", null, [new(WindowKind.Session, null, 40, null, Limiting: true)], null),
 		};
 
 		Assert.Equal(40, state.Tightest(_now));

@@ -74,7 +74,7 @@ internal sealed class GeminiProvider : IProvider
 				Resets: Api.Date(bucket["resetTime"])))
 			.GroupBy(bucket => bucket.Tier)
 			.Select(group => group.MinBy(bucket => bucket.Left))
-			.Select(bucket => new QuotaWindow("langWindowModel", bucket.Tier, (1 - bucket.Left) * 100, bucket.Resets, Limiting: true))
+			.Select(bucket => new QuotaWindow(WindowKind.Model,bucket.Tier, (1 - bucket.Left) * 100, bucket.Resets, Limiting: true))
 			.OrderByDescending(window => window.Used)
 			.ToList();
 

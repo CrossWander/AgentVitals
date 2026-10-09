@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http.Headers;
 using Xunit;
@@ -8,7 +8,7 @@ namespace AgentVitals.Tests;
 public class QuotaTests
 {
 	private static QuotaWindow Window(double used, bool limiting = true) =>
-		new("langWindowSession", null, used, null, limiting);
+		new(WindowKind.Session, null, used, null, limiting);
 
 	[Theory]
 	[InlineData(0, Health.Good)]

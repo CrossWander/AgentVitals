@@ -53,15 +53,16 @@ public class ViewsTests
 		Assert.Equal(tip, new SessionView("POS20-13047-prepaid-internet-orders-report", branch, "", Avalonia.Media.Brushes.Gray).Tip);
 
 	[Theory]
-	[InlineData("langWindowSession", 2.5, 50d)] // половина пяти часов прошла — по ровному темпу половина и потрачена
-	[InlineData("langWindowWeek", 24 * 7, 0d)]
-	[InlineData("langWindowWeek", 24 * 3.5, 50d)]
-	[InlineData("langWindowModel", 24, null)] // длина окна модели неизвестна
-	[InlineData("langWindowSession", -0.1, null)] // сброс прошёл — сравнивать не с чем
-	public void ExpectedPaceIsTheElapsedShare(string key, double hoursLeft, double? expected)
+	[InlineData(WindowKind.Session, 2.5, 50d)] // половина пяти часов прошла — по ровному темпу половина и потрачена
+	[InlineData(WindowKind.Week, 24 * 7, 0d)]
+	[InlineData(WindowKind.Week, 24 * 3.5, 50d)]
+	[InlineData(WindowKind.WeekModel, 24 * 3.5, 50d)] // «Неделя · Opus» — те же семь дней
+	[InlineData(WindowKind.Model, 24, null)] // длина окна модели неизвестна
+	[InlineData(WindowKind.Session, -0.1, null)] // сброс прошёл — сравнивать не с чем
+	public void ExpectedPaceIsTheElapsedShare(WindowKind kind, double hoursLeft, double? expected)
 	{
 		var now = new DateTime(2026, 10, 8, 12, 0, 0, DateTimeKind.Utc);
-		var window = new QuotaWindow(key, null, 30, now.AddHours(hoursLeft), Limiting: true);
+		var window = new QuotaWindow(kind, null, 30, now.AddHours(hoursLeft), Limiting: true);
 
 		Assert.Equal(expected, Quota.Expected(window, now));
 	}
@@ -75,7 +76,7 @@ public class ViewsTests
 		var now = DateTime.UtcNow;
 		var state = new ProviderState(new ClaudeProvider())
 		{
-			Snapshot = new("Max", null, [new("langWindowSession", null, used, now.AddHours(2.5), Limiting: true)], null),
+			Snapshot = new("Max", null, [new(WindowKind.Session, null, used, now.AddHours(2.5), Limiting: true)], null),
 		};
 
 		var card = Assert.Single(Views.Provider(state, now, _levels).Cards);
@@ -91,7 +92,7 @@ public class ViewsTests
 	{
 		var state = new ProviderState(new ClaudeProvider())
 		{
-			Snapshot = new("Max", null, [new("langWindowModel", "Opus", 30, DateTime.UtcNow.AddDays(2), Limiting: false)], null),
+			Snapshot = new("Max", null, [new(WindowKind.Model, "Opus", 30, DateTime.UtcNow.AddDays(2), Limiting: false)], null),
 		};
 
 		Assert.Null(Assert.Single(Views.Provider(state, DateTime.UtcNow, _levels).Cards).PaceTip);
@@ -105,8 +106,8 @@ public class ViewsTests
 		{
 			Snapshot = new("Max", null,
 			[
-				new("langWindowSession", null, 91, now.AddMinutes(-5), Limiting: true),
-				new("langWindowWeek", null, 40, now.AddDays(2), Limiting: true),
+				new(WindowKind.Session, null, 91, now.AddMinutes(-5), Limiting: true),
+				new(WindowKind.Week, null, 40, now.AddDays(2), Limiting: true),
 			], null),
 		};
 

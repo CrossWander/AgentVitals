@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text.Json.Nodes;
 using Xunit;
@@ -20,7 +20,7 @@ public class OtherProvidersTests
 		var snapshot = CodexProvider.Parse(usage);
 
 		Assert.Equal("Plus", snapshot.Plan);
-		Assert.Equal(["langWindowSession", "langWindowWeek"], snapshot.Windows.Select(window => window.Key));
+		Assert.Equal([WindowKind.Session, WindowKind.Week], snapshot.Windows.Select(window => window.Kind));
 		Assert.Equal(25.5, snapshot.Windows[0].Used);
 		Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1705312800), snapshot.Windows[0].ResetsAt);
 		Assert.All(snapshot.Windows, window => Assert.True(window.Limiting));

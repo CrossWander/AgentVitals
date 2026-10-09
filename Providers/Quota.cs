@@ -5,10 +5,32 @@ using System.Linq;
 
 namespace AgentVitals;
 
-/// <summary>Окно квоты: сколько израсходовано и когда сброс. Key — ключ строки названия, Label — подстановка в неё.</summary>
-/// <remarks>Limiting — окно блокирует всю работу (сессия, неделя), а не одну модель. Used может быть больше 100.</remarks>
-internal sealed record QuotaWindow(string Key, string? Label, double Used, DateTimeOffset? ResetsAt, bool Limiting)
+/// <summary>Вид окна квоты: от него длина окна, название и значок.</summary>
+public enum WindowKind
 {
+	Session,
+	Week,
+
+	/// <summary>Недельный лимит одной модели (Label — её имя).</summary>
+	WeekModel,
+
+	/// <summary>Лимит модели неизвестной длины (Label — её имя).</summary>
+	Model,
+}
+
+/// <summary>Окно квоты: сколько израсходовано и когда сброс. Label — имя модели у модельных окон.</summary>
+/// <remarks>Limiting — окно блокирует всю работу (сессия, неделя), а не одну модель. Used может быть больше 100.</remarks>
+internal sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, DateTimeOffset? ResetsAt, bool Limiting)
+{
+	/// <summary>Длина окна; null — неизвестна.</summary>
+	public TimeSpan? Length => Kind switch
+	{
+		WindowKind.Session => TimeSpan.FromHours(5),
+		WindowKind.Week or WindowKind.WeekModel => TimeSpan.FromDays(7),
+		WindowKind.Model => null,
+		_ => throw new NotImplementedException("WindowKind switch error"),
+	};
+
 	/// <summary>Окно на этот момент. Сброс прошёл, а свежего снимка нет — после сна вход истёк или нет сети: окно точно обнулилось.</summary>
 	/// <remarks>ponytail: расход с других устройств после сброса не виден, пока не придёт новый снимок.</remarks>
 	public QuotaWindow At(DateTime now) => ResetsAt?.UtcDateTime <= now ? this with { Used = 0 } : this;
@@ -19,6 +41,14 @@ internal sealed record Spend(decimal Used, decimal? Limit, string Currency);
 
 /// <summary>Квоты одного провайдера на момент запроса.</summary>
 internal sealed record Snapshot(string Plan, string? Account, IReadOnlyList<QuotaWindow> Windows, Spend? Extra);
+
+/// <summary>Темп расхода против ровного: с запасом, ровно, с опережением.</summary>
+internal enum Pace
+{
+	Spare,
+	Even,
+	Ahead,
+}
 
 /// <summary>Состояние квот; порядок значений — от лучшего к худшему, поэтому худшее — это Max.</summary>
 public enum Health
@@ -77,7 +107,7 @@ internal sealed class QuotaAlarm
 
 		foreach (var window in windows.Where(window => window.Limiting))
 		{
-			var key = $"{provider}/{window.Key}/{window.Label}";
+			var key = $"{provider}/{window.Kind}/{window.Label}";
 
 			if (window.Used < levels.Important)
 			{
@@ -116,14 +146,7 @@ internal static class Quota
 	/// или сброс уже прошёл.</summary>
 	public static double? Expected(QuotaWindow window, DateTime now)
 	{
-		TimeSpan? length = window.Key switch
-		{
-			"langWindowSession" => TimeSpan.FromHours(5),
-			"langWindowWeek" => TimeSpan.FromDays(7),
-			_ => null,
-		};
-
-		if (length is not { } span || window.ResetsAt is not { } resets)
+		if (window.Length is not { } span || window.ResetsAt is not { } resets)
 		{
 			return null;
 		}
@@ -133,9 +156,9 @@ internal static class Quota
 		return left <= TimeSpan.Zero || left > span ? null : (1 - (left / span)) * 100;
 	}
 
-	/// <summary>Ключ слова о темпе: дальше пяти пунктов от ровного — уже не ровно.</summary>
-	public static string Pace(double used, double expected) =>
-		used > expected + 5 ? "langPaceAhead" : used < expected - 5 ? "langPaceSpare" : "langPaceEven";
+	/// <summary>Темп расхода: дальше пяти пунктов от ровного — уже не ровно.</summary>
+	public static Pace Pace(double used, double expected) =>
+		used > expected + 5 ? AgentVitals.Pace.Ahead : used < expected - 5 ? AgentVitals.Pace.Spare : AgentVitals.Pace.Even;
 
 	/// <summary>Тариф для показа: «claude_max» → «Max», «team» → «Team».</summary>
 	public static string PlanName(string? subscription) =>
