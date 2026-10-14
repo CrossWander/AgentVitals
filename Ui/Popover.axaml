@@ -216,8 +216,11 @@
                                   Stroke="{DynamicResource IconModel}" VerticalAlignment="Center"/>
                             <TextBlock Classes="label" Text="{DynamicResource langSessions}" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <!-- Шесть строк, дальше прокрутка: простаивающие сессии живут час, а окно не должно расти выше экрана -->
-                        <ScrollViewer MaxHeight="150" HorizontalScrollBarVisibility="Disabled">
+                        <!-- Высота постоянная — около четырёх строк, дальше прокрутка: простаивающие сессии живут час,
+                             а окно не должно прыгать по высоте с их числом. Подсказка — внутри той же высоты. -->
+                        <Grid Height="100" RowDefinitions="*,Auto">
+                        <!-- Ползунок — в правом отступе карточки: поверх состояния сессии он закрывал бы текст -->
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" Margin="0,0,-10,0" Padding="0,0,10,0">
                             <ItemsControl ItemsSource="{Binding Sessions}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="local:SessionView">
@@ -249,8 +252,9 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
-                        <TextBlock Classes="caption" Text="{Binding SessionsHint}" TextWrapping="Wrap"
+                        <TextBlock Grid.Row="1" Classes="caption" Text="{Binding SessionsHint}" TextWrapping="Wrap"
                                    IsVisible="{Binding SessionsHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
 

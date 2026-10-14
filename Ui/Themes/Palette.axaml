@@ -15,6 +15,9 @@
             <SolidColorBrush x:Key="Card" Color="#12FFFFFF"/>
             <SolidColorBrush x:Key="CardHover" Color="#24FFFFFF"/>
             <SolidColorBrush x:Key="CardLine" Color="#1FFFFFFF"/>
+            <!-- Ползунок прокрутки, как в macOS: полупрозрачный, под мышью плотнее -->
+            <SolidColorBrush x:Key="ScrollThumb" Color="#59FFFFFF"/>
+            <SolidColorBrush x:Key="ScrollThumbHover" Color="#99FFFFFF"/>
             <SolidColorBrush x:Key="PillFill" Color="#14FFFFFF"/>
             <SolidColorBrush x:Key="PillLine" Color="#2EFFFFFF"/>
             <SolidColorBrush x:Key="Track" Color="#26FFFFFF"/>
@@ -39,6 +42,8 @@
             <SolidColorBrush x:Key="Card" Color="#FFFFFF"/>
             <SolidColorBrush x:Key="CardHover" Color="#EEF4FA"/>
             <SolidColorBrush x:Key="CardLine" Color="#E0E8F0"/>
+            <SolidColorBrush x:Key="ScrollThumb" Color="#47000000"/>
+            <SolidColorBrush x:Key="ScrollThumbHover" Color="#80000000"/>
             <SolidColorBrush x:Key="PillFill" Color="#FFFFFF"/>
             <SolidColorBrush x:Key="PillLine" Color="#D5DFE9"/>
             <SolidColorBrush x:Key="Track" Color="#E2E9F0"/>

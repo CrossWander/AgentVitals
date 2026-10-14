@@ -111,10 +111,12 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
 - A running turn shows how long it has been going (*working · 3 min*). A toast says when Claude
   finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
   in settings.
-- The list shows six sessions and scrolls past that. A click on a session there, or on its toast,
-  brings up the window the session runs in — the terminal, VS Code or another IDE — so you can
-  answer right away. AgentVitals finds it from the Claude Code process up through
-  its parents; when one program holds several windows, such as VS Code, the one with the session's
+- The list keeps one height — about four sessions — and scrolls past that, with a thin scroll bar
+  that shows while the mouse is over it.
+- A click on a session there, or on its toast, brings up the window the session runs in — the
+  terminal, VS Code or another IDE — so you can answer right away. AgentVitals finds it from the
+  Claude Code process up through its parents; when one program holds several windows, such as
+  VS Code, the one with the session's
   folder in its title wins. It brings up the window, not the tab: with several tabs, pick the right
   one yourself. When no window is found, a toast click opens the AgentVitals window instead.
 - A turn stopped with Esc fires no hook. The session's transcript says so, and the session goes

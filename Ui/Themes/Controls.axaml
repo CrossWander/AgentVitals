@@ -229,4 +229,87 @@
             </ControlTemplate>
         </Setter>
     </ControlTheme>
+
+    <!-- Прокрутка как в macOS: тонкий скруглённый ползунок поверх содержимого, без стрелок и дорожки.
+         Виден, пока мышь над списком (стиль в Styles.axaml), над самим ползунком — шире. Тема без ключа —
+         для всех ScrollBar программы вместо Fluent. -->
+    <ControlTheme x:Key="OverlayThumb" TargetType="Thumb">
+        <Setter Property="Background" Value="{DynamicResource ScrollThumb}"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}"/>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ScrollThumbHover}"/>
+        </Style>
+        <Style Selector="^:pressed">
+            <Setter Property="Background" Value="{DynamicResource ScrollThumbHover}"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type ScrollBar}" TargetType="ScrollBar">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+            </Transitions>
+        </Setter>
+
+        <Style Selector="^:vertical">
+            <Setter Property="Width" Value="11"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Track Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                           Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}"
+                           Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True"
+                           DeferThumbDrag="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}">
+                        <Thumb Theme="{StaticResource OverlayThumb}" Width="6" CornerRadius="3" MinHeight="20"
+                               HorizontalAlignment="Right" Margin="0,2,2,2">
+                            <Thumb.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Width" Duration="0:0:0.15"/>
+                                </Transitions>
+                            </Thumb.Transitions>
+                        </Thumb>
+                    </Track>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="^:horizontal">
+            <Setter Property="Height" Value="11"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Track Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                           Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}"
+                           Orientation="{TemplateBinding Orientation}"
+                           DeferThumbDrag="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}">
+                        <Thumb Theme="{StaticResource OverlayThumb}" Height="6" CornerRadius="3" MinWidth="20"
+                               VerticalAlignment="Bottom" Margin="2,0,2,2">
+                            <Thumb.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Height" Duration="0:0:0.15"/>
+                                </Transitions>
+                            </Thumb.Transitions>
+                        </Thumb>
+                    </Track>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <!-- Мышь на ползунке или его тянут: виден и шире -->
+        <Style Selector="^[IsExpanded=true]">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="^:vertical[IsExpanded=true] /template/ Thumb">
+            <Setter Property="Width" Value="9"/>
+            <Setter Property="CornerRadius" Value="4.5"/>
+        </Style>
+        <Style Selector="^:horizontal[IsExpanded=true] /template/ Thumb">
+            <Setter Property="Height" Value="9"/>
+            <Setter Property="CornerRadius" Value="4.5"/>
+        </Style>
+    </ControlTheme>
 </ResourceDictionary>
