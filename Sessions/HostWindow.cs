@@ -19,6 +19,7 @@ internal static unsafe partial class HostWindow
 	/// <param name="pid">Процесс Claude Code этой сессии.</param>
 	/// <param name="path">Папка сессии: у VS Code все окна в одном процессе, различает их заголовок.</param>
 	/// <returns>false — окна не нашлось: процесса уже нет или система не Windows.</returns>
+	/// <remarks>Windows вправе не отдать окну передний план — тогда оно найдено, но не вышло; это пишется в журнал.</remarks>
 	public static bool Activate(int pid, string path)
 	{
 		if (!OperatingSystem.IsWindows() || Find(pid, path) is not { } window)
@@ -32,8 +33,14 @@ internal static unsafe partial class HostWindow
 			ShowWindow(window, _restore);
 		}
 
-		// Право выйти вперёд у программы есть: человек только что щёлкнул по её тосту.
-		return SetForegroundWindow(window);
+		// Право выйти вперёд у программы есть: человек только что щёлкнул по её тосту. Отказ Windows не бросает
+		// ошибку, а лишь мигает кнопкой на панели задач — о нём скажет только журнал.
+		if (!SetForegroundWindow(window) || GetForegroundWindow() != window)
+		{
+			Journal.Add($"toast: Windows kept the window of {path} in the background");
+		}
+
+		return true;
 	}
 
 	/// <summary>Окно, где идёт сессия; null — не нашлось.</summary>
@@ -157,4 +164,7 @@ internal static unsafe partial class HostWindow
 	[LibraryImport("user32.dll")]
 	[return: MarshalAs(UnmanagedType.Bool)]
 	private static partial bool SetForegroundWindow(nint window);
+
+	[LibraryImport("user32.dll")]
+	private static partial nint GetForegroundWindow();
 }
