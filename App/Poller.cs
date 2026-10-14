@@ -33,6 +33,9 @@ internal sealed class ProviderState(IProvider provider)
 	// Время записи файла входа, когда вход отклонили: пока файл тот же, спрашивать снова бесполезно.
 	private DateTime? _rejected;
 
+	// Отказов 429 подряд: по ним растёт пауза, если сервер просит подождать меньше.
+	private int _refusals;
+
 	private string? _usageError;
 
 	/// <summary>Спросить агента и запомнить исход. Ошибка не бросается: её показывают, и по ней решают, когда спросить снова.</summary>
@@ -45,7 +48,7 @@ internal sealed class ProviderState(IProvider provider)
 		try
 		{
 			Snapshot = await Provider.FetchAsync(http, CancellationToken.None);
-			Record(null, credentials);
+			Record(null, credentials, started);
 			Updated = DateTime.UtcNow;
 		}
 		catch (Exception exception)
@@ -56,7 +59,7 @@ internal sealed class ProviderState(IProvider provider)
 				Journal.Add($"{Provider.Name}: {exception.GetType().Name}: {exception.Message}");
 			}
 
-			Record(exception, credentials);
+			Record(exception, credentials, started);
 		}
 
 		Started = started;
@@ -65,9 +68,15 @@ internal sealed class ProviderState(IProvider provider)
 	/// <param name="error">Ошибка запроса или null — удача.</param>
 	/// <param name="credentials">Время записи файла входа до запроса: если CLI переписал его, пока шёл
 	/// запрос, отказ относился к старому входу и новый надо попробовать.</param>
-	private void Record(Exception? error, DateTime credentials)
+	/// <param name="started">Начало тика: от него растущая пауза после отказов подряд.</param>
+	private void Record(Exception? error, DateTime credentials, DateTime started)
 	{
-		Error = error;
+		// Сервер нередко отвечает «через ноль» или «через пять минут» и отказывает снова: тогда ждём дольше,
+		// но не меньше, чем он назвал.
+		_refusals = error is RateLimitedException ? _refusals + 1 : 0;
+		Error = error is RateLimitedException limited && started + Poller.Backoff(_refusals) is var longer && longer > limited.Until
+			? new RateLimitedException(longer)
+			: error;
 		_rejected = error is TokenExpiredException ? credentials : null;
 	}
 
@@ -214,6 +223,9 @@ internal sealed class Poller
 	/// <summary>Кто-то не дозвался до сервера: ни ответа, ни отказа.</summary>
 	internal static bool Offline(IEnumerable<ProviderState> states, ServiceStatus? status) =>
 		status is null || states.Any(state => state.Error is HttpRequestException or TaskCanceledException);
+
+	/// <summary>Пауза после стольких отказов 429 подряд: 5, 10, 20 минут, дальше — 30.</summary>
+	internal static TimeSpan Backoff(int refusals) => TimeSpan.FromMinutes(Math.Min(30, 5 << Math.Clamp(refusals - 1, 0, 3)));
 
 	/// <summary>Когда спрашивать снова после этого исхода.</summary>
 	internal static DateTime Schedule(Exception? error, int intervalSeconds, DateTime now) => error switch

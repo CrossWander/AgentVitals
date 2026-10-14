@@ -88,8 +88,9 @@ An agent whose credential file is missing is simply not shown.
   is open. A click on a session toast brings up the window the session runs in, and any other
   toast opens the AgentVitals window. Every toast is also written to `log.txt`.
 
-Quotas are checked every minute by default (2, 5 or 10 minutes in settings; more often the server
-answers 429), and `Retry-After` is respected. After a night's sleep the Claude Code token has
+Quotas are checked every 5 minutes by default (1, 2 or 10 minutes in settings; the more often, the
+sooner the server answers 429). After a 429 AgentVitals waits as long as `Retry-After` says, and
+when refusals come in a row, longer: 5, 10, 20, then 30 minutes. After a night's sleep the Claude Code token has
 usually expired: the card keeps the last numbers and waits, except a window whose reset time has
 passed, which shows 0% and *reset* (use from other devices since then is not visible until fresh
 data arrives). Claude Code renews the sign-in on its first request, and AgentVitals notices the

@@ -17,8 +17,9 @@ internal static class Store
 
 		public ThemeMode Theme { get; set; } = ThemeMode.Auto;
 
-		// Квоты сессии меняются за минуты: реже — и цифры в карточке отстают от того, что видно в claude.
-		public int IntervalSeconds { get; set; } = 60;
+		// Сервер квот отвечает 429 уже на опрос раз в 1–2 минуты; все живые трекеры спрашивают раз в 5–15.
+		// Последний ответ помнится между запусками, так что окно не пустует и при редком опросе.
+		public int IntervalSeconds { get; set; } = 300;
 
 		// Тосты о сессиях: ход закончился (не короче TurnMinutes, 0 — любой) или ждёт разрешения.
 		public bool SessionToasts { get; set; } = true;

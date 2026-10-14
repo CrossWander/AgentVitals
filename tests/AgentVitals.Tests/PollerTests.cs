@@ -26,6 +26,57 @@ public class PollerTests
 	public void RateLimitWaitsUntilAllowed() =>
 		Assert.Equal(_now.AddMinutes(42), Poller.Schedule(new RateLimitedException(_now.AddMinutes(42)), 60, _now));
 
+	[Theory]
+	[InlineData(1, 5)]
+	[InlineData(2, 10)]
+	[InlineData(3, 20)]
+	[InlineData(4, 30)]
+	[InlineData(9, 30)]
+	public void RefusalsInARowWaitLonger(int refusals, int minutes) => Assert.Equal(TimeSpan.FromMinutes(minutes), Poller.Backoff(refusals));
+
+	[Fact]
+	public async Task RepeatedRefusalWaitsLongerThanTheServerSays() // сервер всякий раз говорит «через ноль» — пауза растёт
+	{
+		using var http = new HttpClient();
+		var start = _now;
+		var state = new ProviderState(new Fake(() => throw new RateLimitedException(start.AddMinutes(5))));
+
+		await state.FetchAsync(http, start);
+		Assert.Equal(_now.AddMinutes(5), state.NextFetch(60));
+
+		start = _now.AddMinutes(5);
+		await state.FetchAsync(http, start);
+		Assert.Equal(_now.AddMinutes(15), state.NextFetch(60));
+	}
+
+	[Fact]
+	public async Task LongerServerWaitWins()
+	{
+		using var http = new HttpClient();
+		var state = new ProviderState(new Fake(() => throw new RateLimitedException(_now.AddHours(1))));
+
+		await state.FetchAsync(http, _now);
+
+		Assert.Equal(_now.AddHours(1), state.NextFetch(60));
+	}
+
+	[Fact]
+	public async Task AnswerEndsTheRefusals()
+	{
+		using var http = new HttpClient();
+		var refuse = true;
+		var state = new ProviderState(new Fake(() => refuse ? throw new RateLimitedException(_now.AddMinutes(5)) : _snapshot));
+
+		await state.FetchAsync(http, _now);
+		await state.FetchAsync(http, _now);
+		refuse = false;
+		await state.FetchAsync(http, _now);
+		refuse = true;
+		await state.FetchAsync(http, _now);
+
+		Assert.Equal(_now.AddMinutes(5), state.NextFetch(60));
+	}
+
 	[Fact]
 	public void BrokenCredentialsRetryInFiveMinutes() =>
 		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new JsonException("truncated"), 60, _now));
