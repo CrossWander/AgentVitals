@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace AgentVitals;
 
@@ -23,6 +24,7 @@ public enum WindowKind
 internal sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, DateTimeOffset? ResetsAt, bool Limiting)
 {
 	/// <summary>Длина окна; null — неизвестна.</summary>
+	[JsonIgnore]
 	public TimeSpan? Length => Kind switch
 	{
 		WindowKind.Session => TimeSpan.FromHours(5),

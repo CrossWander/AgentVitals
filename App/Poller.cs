@@ -103,6 +103,20 @@ internal sealed class ProviderState(IProvider provider)
 	public DateTime NextFetch(int intervalSeconds) =>
 		_rejected is { } rejected && rejected == Stamp() ? DateTime.MaxValue : Poller.Schedule(Error, intervalSeconds, Started);
 
+	/// <summary>Что помнить между запусками: последний ответ и до какого времени сервер велел ждать.</summary>
+	public RememberedQuota Remember() => new(Snapshot, Updated, Error is RateLimitedException limited ? limited.Until : null);
+
+	/// <summary>Вспомнить при запуске: окно сразу с последними цифрами, а сервер — не раньше, чем пора.</summary>
+	public void Recall(RememberedQuota memory, DateTime now)
+	{
+		Snapshot = memory.Snapshot;
+		Updated = memory.Updated;
+
+		// Интервал считается от прошлого ответа, а не от запуска: перезапуск не спрашивает раньше срока.
+		Started = memory.Updated is { } updated && updated <= now ? updated : DateTime.MinValue;
+		Error = memory.RetryAt > now ? new RateLimitedException(memory.RetryAt.Value) : null;
+	}
+
 	/// <summary>Окна последнего снимка на этот момент: у прошедших сброс — 0%. Одни и те же для карточек, значка и тостов.</summary>
 	public IReadOnlyList<QuotaWindow> Windows(DateTime now) => [.. Snapshot?.Windows.Select(window => window.At(now)) ?? []];
 
@@ -157,6 +171,16 @@ internal sealed class Poller
 
 	public void Start()
 	{
+		var memory = QuotaMemory.Load(QuotaMemory.Location);
+
+		foreach (var state in Providers)
+		{
+			if (memory.TryGetValue(state.Provider.Name, out var remembered))
+			{
+				state.Recall(remembered, DateTime.UtcNow);
+			}
+		}
+
 		_timer.Tick += async (_, _) => await TickAsync(force: false);
 		_timer.Start();
 		_ = TickAsync(force: false);
@@ -233,6 +257,11 @@ internal sealed class Poller
 			foreach (var state in due)
 			{
 				await state.FetchAsync(_http, now);
+			}
+
+			if (due.Count > 0)
+			{
+				QuotaMemory.Save(QuotaMemory.Location, Installed.ToDictionary(state => state.Provider.Name, state => state.Remember()));
 			}
 
 			if (force || now >= _nextStatus)

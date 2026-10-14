@@ -30,6 +30,17 @@ public class TextTests
 	[Fact]
 	public void MissingCostIsADash() => Assert.Equal("—", Text.Cost(null));
 
+	[Theory]
+	[InlineData(0.5, "langUpdatedNow")]
+	[InlineData(605, "langUpdatedAgo")] // вспомненный после ночи ответ: «10 ч 5 мин назад»
+	[InlineData(3000, "langUpdatedAt")] // после выходных: «обновлено пт 18:40», а не «50 ч назад»
+	public void AgeOfTheAnswerReadsAtAGlance(double minutes, string key)
+	{
+		var now = System.DateTime.UtcNow;
+
+		Assert.Equal(key, Text.Ago(now.AddMinutes(-minutes), now));
+	}
+
 	[Fact]
 	public void TurnShowsHowLongItRuns() // «работает · 3 мин»; первую минуту — без таймера
 	{

@@ -31,10 +31,12 @@ internal static class Text
 			? Localization.Format("langHoursMinutes", (int)span.TotalHours, span.Minutes)
 			: Localization.Format("langMinutes", Math.Max(least, span.Minutes));
 
+	/// <summary>«обновлено 10 ч 5 мин назад», а старше суток — «обновлено пт 18:40»: ответ после выходных помнится тоже.</summary>
 	public static string Ago(DateTime? at, DateTime now) =>
 		at is not { } time ? ""
 		: now - time < TimeSpan.FromMinutes(1) ? Localization.Get("langUpdatedNow")
-		: Localization.Format("langUpdatedAgo", (int)(now - time).TotalMinutes);
+		: now - time > TimeSpan.FromDays(1) ? Localization.Format("langUpdatedAt", time.ToLocalTime().ToString("ddd HH:mm", Localization.Culture))
+		: Localization.Format("langUpdatedAgo", Span(now - time));
 
 	public static string Error(Exception error) => error switch
 	{

@@ -25,7 +25,8 @@
     <x:String x:Key="langMinutes15">15 min</x:String>
     <x:String x:Key="langAnyTurn">any</x:String>
     <x:String x:Key="langUpdatedNow">Updated just now</x:String>
-    <x:String x:Key="langUpdatedAgo">Updated {0} min ago</x:String>
+    <x:String x:Key="langUpdatedAgo">Updated {0} ago</x:String>
+    <x:String x:Key="langUpdatedAt">Updated {0}</x:String>
     <x:String x:Key="langHealthGood">HEALTHY</x:String>
     <x:String x:Key="langHealthWarning">WARNING</x:String>
     <x:String x:Key="langHealthCritical">CRITICAL</x:String>

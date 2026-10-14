@@ -93,10 +93,11 @@ internal sealed class TrayApp
 			TrayIcon.SetIcons(Application.Current, new TrayIcons { icon });
 		}
 
+		// Опрос первым: он вспоминает последний ответ, и первая же отрисовка показывает его, а не пустое окно.
+		_poller.Start();
 		ReadSessions();
 		Render();
 		_sessionTimer.Start();
-		_poller.Start();
 	}
 
 	private void OnPolled()

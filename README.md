@@ -94,6 +94,11 @@ passed, which shows 0% and *reset* (use from other devices since then is not vis
 data arrives). Claude Code renews the sign-in on its first request, and AgentVitals notices the
 new file and asks at once.
 
+The last answer is kept in `quota.json`, so after a restart the card shows it at once with its age
+(*updated 3 h 10 min ago*, or *updated Fri 18:40* after a weekend). The server is asked again only once the interval since that answer has
+passed, and not before the time it named in its last 429: restarting AgentVitals no longer spends
+the rate limit and gets refused straight away.
+
 ## Live sessions
 
 Settings → *Live sessions* → **Connect** adds AgentVitals hooks to `~/.claude/settings.json`.
@@ -145,14 +150,17 @@ once — Claude Code writes the same answer several times while it streams.
   from your limits.
 - **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com, and
   Anthropic's pricing page once a day. Nothing else — no account of its own, no telemetry.
+- **The last answer stays on this machine.** `quota.json` holds the plan, the account email and
+  the percentages from the last check; the token is never written anywhere.
 - **Logs stay on this machine.** The statistics keep only token counts. To notice a turn stopped
   with Esc, the end of a live session's transcript is checked for Claude Code's interruption mark.
   Nothing from the logs leaves the computer.
 
 ## Files
 
-Everything lives next to the exe: `config.json` (settings), `log.txt` (two days of errors and
-changes), `sessions\` (session states), `prices.md` (Anthropic's price list). If that folder is
+Everything lives next to the exe: `config.json` (settings), `quota.json` (the last quota answer),
+`log.txt` (two days of errors and changes), `sessions\` (session states), `prices.md` (Anthropic's
+price list). If that folder is
 read-only (say, under `Program Files`), they go to `%LOCALAPPDATA%\AgentVitals` instead. Start with
 Windows is a value in `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
 

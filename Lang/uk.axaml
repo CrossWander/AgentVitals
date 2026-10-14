@@ -25,7 +25,8 @@
     <x:String x:Key="langMinutes15">15 хв</x:String>
     <x:String x:Key="langAnyTurn">будь-який</x:String>
     <x:String x:Key="langUpdatedNow">Оновлено щойно</x:String>
-    <x:String x:Key="langUpdatedAgo">Оновлено {0} хв тому</x:String>
+    <x:String x:Key="langUpdatedAgo">Оновлено {0} тому</x:String>
+    <x:String x:Key="langUpdatedAt">Оновлено {0}</x:String>
     <x:String x:Key="langHealthGood">НОРМА</x:String>
     <x:String x:Key="langHealthWarning">УВАГА</x:String>
     <x:String x:Key="langHealthCritical">КРИТИЧНО</x:String>
