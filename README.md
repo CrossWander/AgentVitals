@@ -82,9 +82,10 @@ An agent whose credential file is missing is simply not shown.
   between 50% and 95% in settings. Each toast comes once, and again only after that window resets;
   a window that is already past a level when AgentVitals starts gets its toast too.
 - **How a toast looks.** It slides up in the bottom-right corner above the clock and stays ten
-  seconds for a quota and four for anything else, for as long as the mouse is on it. It comes up
-  over the AgentVitals window if that is open, and a click opens the window. Every toast is also
-  written to `log.txt`.
+  seconds for a quota or a session and four for Anthropic's status, for as long as the mouse is on
+  it; the faint ✕ in its corner closes it at once. It comes up over the AgentVitals window if that
+  is open. A click on a session toast brings up the window the session runs in, and any other
+  toast opens the AgentVitals window. Every toast is also written to `log.txt`.
 
 Quotas are checked every minute by default (2, 5 or 10 minutes in settings; more often the server
 answers 429), and `Retry-After` is respected. After a night's sleep the Claude Code token has
@@ -103,6 +104,11 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
 - A running turn shows how long it has been going (*working · 3 min*). A toast says when Claude
   finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
   in settings.
+- A click on that toast brings up the window the session runs in — the terminal, VS Code or another
+  IDE — so you can answer right away. AgentVitals finds it from the Claude Code process up through
+  its parents; when one program holds several windows, such as VS Code, the one with the session's
+  folder in its title wins. It brings up the window, not the tab: with several tabs, pick the right
+  one yourself. When no window is found, the AgentVitals window opens instead.
 - A turn stopped with Esc fires no hook. The session's transcript says so, and the session goes
   idle at once instead of after 15 minutes.
 - A terminal closed without `/exit` fires no hook either. The hook records the Claude Code process,

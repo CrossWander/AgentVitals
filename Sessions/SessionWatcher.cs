@@ -86,7 +86,9 @@ internal static class SessionWatcher
 				state == SessionState.Idle ? null : turn,
 
 				// Длительность — только у хода, закрытого Stop: прерванный Esc или брошенный её не знает.
-				session.State == SessionState.Idle ? session.Time - turn : null));
+				session.State == SessionState.Idle ? session.Time - turn : null,
+				session.Pid,
+				session.Cwd));
 		}
 
 		return sessions;

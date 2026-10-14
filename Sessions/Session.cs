@@ -28,7 +28,8 @@ internal sealed record SessionRecord(SessionState State, string? Tool, string Cw
 
 /// <summary>Сессия для показа: состояние с поправкой на давность, папка и ветка.</summary>
 /// <remarks>TurnStarted — начало идущего хода; TurnDuration — сколько занял закончившийся (null — прерван или неизвестно).</remarks>
-internal sealed record Session(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? TurnStarted = null, TimeSpan? TurnDuration = null);
+/// <remarks>Pid и Cwd — процесс Claude Code и полный путь папки: по ним находится окно, где идёт сессия.</remarks>
+internal sealed record Session(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? TurnStarted = null, TimeSpan? TurnDuration = null, int? Pid = null, string? Cwd = null);
 
 /// <summary>О чём сказать тостом: ход закончился или сессия ждёт разрешения.</summary>
 internal sealed record SessionAlert(Session Session, bool Waiting);

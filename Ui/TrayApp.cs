@@ -59,7 +59,6 @@ internal sealed class TrayApp
 		_menu.RefreshRequested += Refresh;
 		_menu.SettingsRequested += () => OpenPopover(settings: true);
 		_menu.ExitRequested += Exit;
-		_toast.Clicked += () => OpenPopover(settings: false);
 		_hover.Tick += (_, _) => OnHoverTick();
 		_watch.Tick += (_, _) => OnWatchTick();
 		_sessionTimer.Tick += (_, _) => ReadSessions();
@@ -162,7 +161,7 @@ internal sealed class TrayApp
 		if (_alarm.Check(_poller.Installed.Select(state => (state.Provider.Name, state.Windows(now))), Store.Current.Thresholds) is { } alert)
 		{
 			var (title, message) = Text.QuotaToast(alert, now);
-			_toast.Say(message, Anchor(), title, Views.Brush(alert.Critical ? "Bad" : "Warn"), Toast.Long);
+			_toast.Say(message, Anchor(), title, Views.Brush(alert.Critical ? "Bad" : "Warn"), Toast.Long, () => OpenPopover(settings: false));
 
 			// Тост живёт секунды: по журналу видно, был ли он, если человек отошёл от экрана.
 			Journal.Add($"toast: {title}: {message}");
@@ -172,7 +171,7 @@ internal sealed class TrayApp
 		{
 			if (_lastIndicator is { } previous && previous != status.Indicator)
 			{
-				_toast.Say(Text.StatusToast(status), Anchor());
+				_toast.Say(Text.StatusToast(status), Anchor(), click: () => OpenPopover(settings: false));
 			}
 
 			_lastIndicator = status.Indicator;
@@ -190,9 +189,21 @@ internal sealed class TrayApp
 		if (SessionAlarm.Check(before, after, TimeSpan.FromMinutes(Store.Current.TurnMinutes)) is { } alert)
 		{
 			var (title, message) = Text.SessionToast(alert);
-			_toast.Say(message, Anchor(), title, Views.Brush(alert.Waiting ? "Blue" : "Good"));
+			_toast.Say(message, Anchor(), title, Views.Brush(alert.Waiting ? "Blue" : "Good"), Toast.Long, () => GoTo(alert.Session));
 			Journal.Add($"toast: {title}: {message}");
 		}
+	}
+
+	/// <summary>К окну, где идёт сессия, — ответить сразу; не нашлось — окно AgentVitals со списком сессий.</summary>
+	private void GoTo(Session session)
+	{
+		if (session is { Pid: { } pid, Cwd: { } cwd } && HostWindow.Activate(pid, cwd))
+		{
+			return;
+		}
+
+		Journal.Add($"toast: no window for {session.Folder}");
+		OpenPopover(settings: false);
 	}
 
 	private void ShowIcon()

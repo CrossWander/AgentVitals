@@ -7,6 +7,7 @@ using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -20,7 +21,8 @@ internal partial class Toast : TrayWindow
 	/// <summary>Сколько живёт обычный тост.</summary>
 	public static readonly TimeSpan Brief = TimeSpan.FromSeconds(4);
 
-	/// <summary>Сколько живёт тост о квоте: его нельзя пропустить, а за четыре секунды взгляд до угла не доходит.</summary>
+	/// <summary>Сколько живёт тост, по которому стоит действовать, — о квоте или о сессии: за четыре секунды взгляд
+	/// до угла не доходит, а рука до мыши — тем более.</summary>
 	public static readonly TimeSpan Long = TimeSpan.FromSeconds(10);
 
 	// Отступ окна от угла рабочей области; ещё полтора-два десятка точек внутри окна занимает поле под тень.
@@ -44,6 +46,8 @@ internal partial class Toast : TrayWindow
 	// Новое движение отменяет прежнее: иначе конец ухода спрятал бы тост, пришедший ему на смену.
 	private CancellationTokenSource _motion = new();
 
+	private Action? _click;
+
 	public Toast()
 	{
 		InitializeComponent();
@@ -57,16 +61,16 @@ internal partial class Toast : TrayWindow
 		Card.PointerExited += (_, _) => _life.Start();
 	}
 
-	public event Action? Clicked;
-
 	/// <summary>Показать уведомление. Повторный вызов заменяет текст и продлевает показ.</summary>
 	/// <param name="message">Текст.</param>
 	/// <param name="anchor">Где значок: тост встаёт в угол того же экрана.</param>
 	/// <param name="title">Заголовок; без него — имя программы.</param>
 	/// <param name="accent">Цвет заголовка: насколько серьёзно; без него — обычный текст.</param>
 	/// <param name="life">Сколько показывать; без него — <see cref="Brief"/>.</param>
-	public void Say(string message, PixelRect anchor, string? title = null, IBrush? accent = null, TimeSpan? life = null)
+	/// <param name="click">Что сделать по щелчку; без него щелчок только закрывает тост.</param>
+	public void Say(string message, PixelRect anchor, string? title = null, IBrush? accent = null, TimeSpan? life = null, Action? click = null)
 	{
+		_click = click;
 		_life.Interval = life ?? Brief;
 		Heading.Text = title ?? "AgentVitals";
 
@@ -151,8 +155,11 @@ internal partial class Toast : TrayWindow
 		_life.Stop();
 		_motion.Cancel();
 		Hide();
-		Clicked?.Invoke();
+		_click?.Invoke();
 	}
+
+	// Кнопка гасит щелчок сама: до OnClick карточки он не доходит, и тост просто уезжает.
+	private void OnDismiss(object? sender, RoutedEventArgs e) => Dismiss();
 
 	[LibraryImport("user32.dll")]
 	[return: MarshalAs(UnmanagedType.Bool)]

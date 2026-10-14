@@ -7,14 +7,32 @@
         WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
         ShowInTaskbar="False" Topmost="True" ShowActivated="False">
 
+    <Window.Resources>
+        <!-- ✕ не спорит с текстом: бледная и без подложки, ярче под мышью -->
+        <ControlTheme x:Key="Dismiss" TargetType="Button" BasedOn="{StaticResource Round}">
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="CornerRadius" Value="11"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFaint}"/>
+            <Style Selector="^:pointerover">
+                <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+            </Style>
+        </ControlTheme>
+    </Window.Resources>
+
     <!-- Прозрачный до первого въезда: анимация начинается со следующего кадра, а первый был бы виден целиком -->
     <Border Name="Card" Classes="window" Margin="16,12,16,20" Padding="14,12" Cursor="Hand" Opacity="0" PointerReleased="OnClick">
-        <Grid ColumnDefinitions="Auto,*">
+        <Grid ColumnDefinitions="Auto,*,Auto">
             <Image Source="avares://AgentVitals/app.png" Width="36" Height="36" VerticalAlignment="Top" RenderOptions.BitmapInterpolationMode="HighQuality"/>
             <StackPanel Grid.Column="1" Margin="12,0,0,0" Spacing="2">
                 <TextBlock Name="Heading" Text="AgentVitals" FontWeight="Bold"/>
                 <TextBlock Name="Message" Classes="caption" TextWrapping="Wrap"/>
             </StackPanel>
+            <Button Grid.Column="2" Theme="{StaticResource Dismiss}" Margin="6,-5,-7,0" VerticalAlignment="Top" Click="OnDismiss">
+                <Path Classes="icon" Width="9" Height="9" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}"/>
+            </Button>
         </Grid>
     </Border>
 </Window>

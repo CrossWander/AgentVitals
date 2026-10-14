@@ -50,6 +50,17 @@ public class SessionWatcherTests
 		Assert.False(File.Exists(temp.File("gone.json")));
 	}
 
+	[Fact]
+	public void SessionKnowsItsClaudeProcess() // по нему щелчок по тосту находит окно, где идёт сессия
+	{
+		using var temp = new TempDirectory();
+		var now = DateTime.UtcNow;
+		File.WriteAllText(temp.File("live.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Waiting, null, @"C:\x", now.Ticks, Pid: Environment.ProcessId), HookWriter.Json));
+
+		var session = Assert.Single(SessionWatcher.Read(temp.Path, now));
+		Assert.Equal((Environment.ProcessId, @"C:\x"), (session.Pid, session.Cwd));
+	}
+
 	private static int Exited()
 	{
 		using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", "/c exit") { CreateNoWindow = true })!;

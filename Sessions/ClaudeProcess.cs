@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace AgentVitals;
@@ -34,20 +35,18 @@ internal static unsafe partial class ClaudeProcess
 		}
 	}
 
-	internal static int? Ancestor(IReadOnlyDictionary<int, (int Parent, string Name)> processes, int child)
+	internal static int? Ancestor(IReadOnlyDictionary<int, (int Parent, string Name)> processes, int child) =>
+		Lineage(processes, child).Skip(1).Where(id => _names.Contains(processes[id].Name)).Cast<int?>().FirstOrDefault();
+
+	/// <summary>Процесс и его родители по порядку, пока они есть в снимке.</summary>
+	internal static IEnumerable<int> Lineage(IReadOnlyDictionary<int, (int Parent, string Name)> processes, int pid)
 	{
 		// Цепочка родителей может замкнуться: номер умершего родителя Windows отдаёт новому процессу.
-		for (var step = 0; step < 16 && processes.TryGetValue(child, out var process); step++)
+		for (var step = 0; step <= 16 && processes.TryGetValue(pid, out var process); step++)
 		{
-			child = process.Parent;
-
-			if (processes.TryGetValue(child, out var parent) && _names.Contains(parent.Name))
-			{
-				return child;
-			}
+			yield return pid;
+			pid = process.Parent;
 		}
-
-		return null;
 	}
 
 	/// <summary>Процесс работает и это тот самый: занявший номер позже запущен после записи hook.</summary>
@@ -71,7 +70,7 @@ internal static unsafe partial class ClaudeProcess
 		}
 	}
 
-	private static Dictionary<int, (int Parent, string Name)> Snapshot()
+	internal static Dictionary<int, (int Parent, string Name)> Snapshot()
 	{
 		var snapshot = CreateToolhelp32Snapshot(_snapProcess, 0);
 
