@@ -98,6 +98,21 @@
     <x:String x:Key="langHooksConnect">Подключить</x:String>
     <x:String x:Key="langHooksDisconnect">Отключить</x:String>
     <x:String x:Key="langHooksError">Не удалось изменить settings.json: {0}</x:String>
+    <x:String x:Key="langUpdates">ОБНОВЛЕНИЯ</x:String>
+    <x:String x:Key="langAutoUpdate">Проверять обновления при запуске и раз в сутки</x:String>
+    <x:String x:Key="langVersion">Версия {0}</x:String>
+    <x:String x:Key="langCheckUpdates">Проверить</x:String>
+    <x:String x:Key="langUpdateChecking">Спрашиваю GitHub…</x:String>
+    <x:String x:Key="langUpdateLatest">Установлена последняя версия, {0}</x:String>
+    <x:String x:Key="langUpdateAvailable">Доступна версия {0}</x:String>
+    <x:String x:Key="langUpdateFailed">Проверить не удалось: GitHub не ответил</x:String>
+    <x:String x:Key="langInstallUpdate">Обновить</x:String>
+    <x:String x:Key="langUpdateDownloading">Скачиваю…</x:String>
+    <x:String x:Key="langUpdateNoAsset">В релизе нет AgentVitals.exe — скачай его с GitHub</x:String>
+    <x:String x:Key="langUpdateBadDownload">Скачанный файл не совпал с контрольной суммой GitHub — попробуй позже</x:String>
+    <x:String x:Key="langUpdateDenied">Нет прав на запись в папку программы — перенеси её из Program Files</x:String>
+    <x:String x:Key="langUpdateFailedWith">Обновить не удалось: {0}</x:String>
+    <x:String x:Key="langUpdateOpen">Открыть GitHub</x:String>
     <x:String x:Key="langAlertImportant">Важно · запас на исходе</x:String>
     <x:String x:Key="langAlertCritical">Критично · лимит почти исчерпан</x:String>
     <x:String x:Key="langAlertLeft">{0} · {1}: осталось {2}%</x:String>
@@ -106,4 +121,8 @@
     <x:String x:Key="langToastDone">Claude закончил</x:String>
     <x:String x:Key="langToastDoneText">{0} · ход занял {1}</x:String>
     <x:String x:Key="langToastWaiting">Claude ждёт разрешения</x:String>
+    <x:String x:Key="langToastUpdate">Доступна AgentVitals {0}</x:String>
+    <x:String x:Key="langToastUpdateText">Обновить можно в настройках</x:String>
+    <x:String x:Key="langToastUpdated">AgentVitals обновлён до {0}</x:String>
+    <x:String x:Key="langToastUpdatedText">Щёлкни — что нового</x:String>
 </ResourceDictionary>

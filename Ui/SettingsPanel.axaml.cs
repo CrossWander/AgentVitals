@@ -16,6 +16,9 @@ internal partial class SettingsPanel : UserControl
 	// Пока переключатели выставляются по сохранённому, их события — не выбор человека.
 	private bool _loading;
 
+	// Последний ответ GitHub — от кнопки или автопроверки; null — ещё не спрашивали.
+	private Release? _release;
+
 	public SettingsPanel()
 	{
 		InitializeComponent();
@@ -46,8 +49,17 @@ internal partial class SettingsPanel : UserControl
 			AutostartToggle.IsChecked = Autostart.IsEnabled();
 		}
 
+		AutoUpdateToggle.IsChecked = Store.Current.AutoUpdate;
+		ShowRelease();
 		ShowHooks(null);
 		_loading = false;
+	}
+
+	/// <summary>Ответ автопроверки: открыв настройки из тоста, человек видит кнопку «Обновить».</summary>
+	public void Show(Release release)
+	{
+		_release = release;
+		ShowRelease();
 	}
 
 	// Значения живут только в Tag кнопок: новый язык или интервал — правка XAML и строк, не кода.
@@ -66,6 +78,7 @@ internal partial class SettingsPanel : UserControl
 			Store.Current.Language = Localization.Current;
 			Store.Save();
 			ShowHooks(null);
+			ShowRelease();
 			Changed?.Invoke();
 		}
 	}
@@ -149,6 +162,66 @@ internal partial class SettingsPanel : UserControl
 			AutostartToggle.IsChecked = Autostart.IsEnabled();
 			_loading = false;
 		}
+	}
+
+	private void OnAutoUpdate(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading)
+		{
+			Store.Current.AutoUpdate = AutoUpdateToggle.IsChecked == true;
+			Store.Save();
+		}
+	}
+
+	private async void OnCheckUpdates(object? sender, RoutedEventArgs e)
+	{
+		UpdateCheck.IsEnabled = false;
+		UpdateInstall.IsVisible = UpdateOpen.IsVisible = false;
+		UpdateLine.Text = Localization.Get("langUpdateChecking");
+
+		_release = await Updates.CheckAsync();
+		UpdateCheck.IsEnabled = true;
+		ShowRelease();
+	}
+
+	private async void OnInstallUpdate(object? sender, RoutedEventArgs e)
+	{
+		if (_release is not { } release)
+		{
+			return;
+		}
+
+		UpdateCheck.IsEnabled = UpdateInstall.IsEnabled = false;
+		UpdateLine.Text = Localization.Get("langUpdateDownloading");
+
+		// При удаче сюда не вернёмся: программа закрывается, сценарий поднимет новую.
+		var error = await Updates.InstallAsync(release, () => ExitRequested?.Invoke());
+
+		UpdateCheck.IsEnabled = UpdateInstall.IsEnabled = true;
+		ShowRelease(error);
+	}
+
+	private async void OnOpenReleases(object? sender, RoutedEventArgs e)
+	{
+		if (TopLevel.GetTopLevel(this) is { } top)
+		{
+			await top.Launcher.LaunchUriAsync(new Uri(Updates.Releases));
+		}
+	}
+
+	private void ShowRelease(string? error = null)
+	{
+		UpdateLine.Text = error ?? (_release is null ? Localization.Format("langVersion", Updates.Current) : _release.State switch
+		{
+			UpdateState.Latest => Localization.Format("langUpdateLatest", Updates.Current),
+			UpdateState.Newer => Localization.Format("langUpdateAvailable", _release.Version),
+			UpdateState.Failed => Localization.Get("langUpdateFailed"),
+		});
+
+		// Подменяет exe сценарий cmd — только на Windows; на других системах новую версию берут с GitHub.
+		var newer = error is null && _release?.State == UpdateState.Newer;
+		UpdateInstall.IsVisible = newer && OperatingSystem.IsWindows();
+		UpdateOpen.IsVisible = error is not null || (newer && !OperatingSystem.IsWindows());
 	}
 
 	private void OnConnect(object? sender, RoutedEventArgs e) =>

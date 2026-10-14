@@ -108,6 +108,23 @@
 
         <Border Classes="card">
             <StackPanel Spacing="8">
+                <TextBlock Classes="label" Text="{DynamicResource langUpdates}"/>
+                <CheckBox Name="AutoUpdateToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langAutoUpdate}"
+                          IsCheckedChanged="OnAutoUpdate"/>
+                <TextBlock Name="UpdateLine" Classes="caption" TextWrapping="Wrap"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Name="UpdateInstall" Theme="{StaticResource Brand}" Content="{DynamicResource langInstallUpdate}"
+                            Click="OnInstallUpdate"/>
+                    <Button Name="UpdateCheck" Theme="{StaticResource Pill}" Content="{DynamicResource langCheckUpdates}"
+                            Click="OnCheckUpdates"/>
+                    <Button Name="UpdateOpen" Theme="{StaticResource Pill}" Content="{DynamicResource langUpdateOpen}"
+                            Click="OnOpenReleases"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="card">
+            <StackPanel Spacing="8">
                 <TextBlock Classes="label" Text="{DynamicResource langHooks}"/>
                 <TextBlock Name="HooksState" Classes="caption" TextWrapping="Wrap"/>
                 <StackPanel Orientation="Horizontal" Spacing="8">

@@ -98,6 +98,21 @@
     <x:String x:Key="langHooksConnect">Connect</x:String>
     <x:String x:Key="langHooksDisconnect">Disconnect</x:String>
     <x:String x:Key="langHooksError">Could not change settings.json: {0}</x:String>
+    <x:String x:Key="langUpdates">UPDATES</x:String>
+    <x:String x:Key="langAutoUpdate">Check for updates at start and once a day</x:String>
+    <x:String x:Key="langVersion">Version {0}</x:String>
+    <x:String x:Key="langCheckUpdates">Check</x:String>
+    <x:String x:Key="langUpdateChecking">Asking GitHub…</x:String>
+    <x:String x:Key="langUpdateLatest">Version {0} is the latest</x:String>
+    <x:String x:Key="langUpdateAvailable">Version {0} is available</x:String>
+    <x:String x:Key="langUpdateFailed">Could not check: GitHub did not answer</x:String>
+    <x:String x:Key="langInstallUpdate">Update</x:String>
+    <x:String x:Key="langUpdateDownloading">Downloading…</x:String>
+    <x:String x:Key="langUpdateNoAsset">The release has no AgentVitals.exe — download it from GitHub</x:String>
+    <x:String x:Key="langUpdateBadDownload">The download does not match GitHub's checksum — try again later</x:String>
+    <x:String x:Key="langUpdateDenied">No write access to the program's folder — move it out of Program Files</x:String>
+    <x:String x:Key="langUpdateFailedWith">Could not update: {0}</x:String>
+    <x:String x:Key="langUpdateOpen">Open GitHub</x:String>
     <x:String x:Key="langAlertImportant">Important · running low</x:String>
     <x:String x:Key="langAlertCritical">Critical · almost used up</x:String>
     <x:String x:Key="langAlertLeft">{0} · {1}: {2}% left</x:String>
@@ -106,4 +121,8 @@
     <x:String x:Key="langToastDone">Claude is done</x:String>
     <x:String x:Key="langToastDoneText">{0} · took {1}</x:String>
     <x:String x:Key="langToastWaiting">Claude needs your permission</x:String>
+    <x:String x:Key="langToastUpdate">AgentVitals {0} is available</x:String>
+    <x:String x:Key="langToastUpdateText">Update it in settings</x:String>
+    <x:String x:Key="langToastUpdated">AgentVitals updated to {0}</x:String>
+    <x:String x:Key="langToastUpdatedText">Click to see what's new</x:String>
 </ResourceDictionary>

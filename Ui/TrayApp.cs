@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -39,6 +40,12 @@ internal sealed class TrayApp
 		Interval = TimeSpan.FromSeconds(1),
 	};
 
+	// Суточная проверка обновлений: таймер раз в час спрашивает Updates.Due, а не ждёт ровно сутки — после сна тоже.
+	private readonly DispatcherTimer _updates = new()
+	{
+		Interval = TimeSpan.FromHours(1),
+	};
+
 	private readonly DispatcherTimer _frames = new()
 	{
 		Interval = TimeSpan.FromMilliseconds(120),
@@ -62,6 +69,7 @@ internal sealed class TrayApp
 		_hover.Tick += (_, _) => OnHoverTick();
 		_watch.Tick += (_, _) => OnWatchTick();
 		_sessionTimer.Tick += (_, _) => ReadSessions();
+		_updates.Tick += (_, _) => CheckUpdatesIfDue();
 		_frames.Tick += (_, _) => NextFrame();
 		Application.Current!.ActualThemeVariantChanged += (_, _) => Render();
 
@@ -98,6 +106,63 @@ internal sealed class TrayApp
 		ReadSessions();
 		Render();
 		_sessionTimer.Start();
+
+		AnnounceUpgrade();
+		_updates.Start();
+
+		if (Store.Current.AutoUpdate)
+		{
+			_ = CheckUpdatesAsync();
+		}
+	}
+
+	private void CheckUpdatesIfDue()
+	{
+		if (Updates.Due(Store.Current.AutoUpdate, Store.Current.UpdateChecked, DateTime.UtcNow))
+		{
+			_ = CheckUpdatesAsync();
+		}
+	}
+
+	/// <summary>Автопроверка: новая версия — в настройки и тостом, один раз на версию; без сети — молча.</summary>
+	private async Task CheckUpdatesAsync()
+	{
+		var release = await Updates.CheckAsync();
+
+		if (release.State == UpdateState.Failed)
+		{
+			return;
+		}
+
+		_popover.Settings.Show(release);
+
+		if (release is { State: UpdateState.Newer, Version: { } version } && Store.Current.UpdateAnnounced != version.ToString())
+		{
+			Store.Current.UpdateAnnounced = version.ToString();
+			Store.Save();
+			_toast.Say(Localization.Get("langToastUpdateText"), Anchor(), Localization.Format("langToastUpdate", version), life: Toast.Long,
+				click: () => OpenPopover(settings: true));
+			Journal.Add($"toast: update {version} available");
+		}
+	}
+
+	/// <summary>Запустились новой версией — сказать об этом; щелчок открывает «что нового» этого релиза.</summary>
+	private void AnnounceUpgrade()
+	{
+		var current = Updates.Current.ToString();
+
+		if (Updates.Upgraded(Store.Current.LastVersion, Updates.Current))
+		{
+			_toast.Say(Localization.Get("langToastUpdatedText"), Anchor(), Localization.Format("langToastUpdated", current), life: Toast.Long,
+				click: () => _ = _toast.Launcher.LaunchUriAsync(new Uri($"{Updates.Releases}/tag/v{current}")));
+			Journal.Add($"updated to {current}");
+		}
+
+		if (Store.Current.LastVersion != current)
+		{
+			Store.Current.LastVersion = current;
+			Store.Save();
+		}
 	}
 
 	private void OnPolled()
