@@ -42,6 +42,7 @@ stays open while you work in other windows: close it with ✕, another click on 
 | Usage statistics | Today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
 | Anthropic status | The status.claude.com indicator, with a toast when it changes |
 | After sleep | Asks again as soon as the PC wakes; a window whose reset time has passed shows 0% instead of stale numbers |
+| Updates | Checks GitHub at start and once a day and toasts a new version once; **Update** in settings downloads it, checks its SHA-256 and swaps the exe in place → [more](#updates) |
 | Languages and themes | English, Ukrainian and Russian; light, dark or as in Windows |
 | Keyboard | Esc closes the window, F5 or Ctrl+R refreshes, Ctrl+1…3 switch the agent tabs |
 
@@ -95,9 +96,9 @@ data arrives). Claude Code renews the sign-in on its first request, and AgentVit
 new file and asks at once.
 
 The last answer is kept in `quota.json`, so after a restart the card shows it at once with its age
-(*updated 3 h 10 min ago*, or *updated Fri 18:40* after a weekend). The server is asked again only once the interval since that answer has
-passed, and not before the time it named in its last 429: restarting AgentVitals no longer spends
-the rate limit and gets refused straight away.
+(*updated 3 h 10 min ago*, or *updated Fri 18:40* after a weekend). The server is asked again only
+once the interval since that answer has passed, and not before the time it named in its last 429:
+restarting AgentVitals no longer spends the rate limit and gets refused straight away.
 
 ## Live sessions
 
@@ -142,14 +143,28 @@ once — Claude Code writes the same answer several times while it streams.
   over 30 days: what the cached tokens would have cost as plain input, minus what they did cost.
 - Codex and Gemini have no statistics yet: the slot is there (`IProvider.Usage`), the reader isn't.
 
+## Updates
+
+With *Check for updates daily* on (the default), AgentVitals asks GitHub for the latest release when
+it starts and then once a day, and toasts a new version once. Settings → *Updates* → **Check** asks
+right away. **Update** downloads `AgentVitals.exe` from the release, checks its SHA-256 against the
+one GitHub publishes and refuses a file that does not match. A short script then waits for the
+program to close, puts the new exe in place of the old one — the same path, so the Claude Code hooks
+keep working — and starts it; if the swap cannot finish in 40 seconds, the old version starts again.
+After the restart a toast names the version now running and opens its release notes. Pre-releases
+and drafts are never offered. If the exe sits where it cannot write (say, `Program Files`), the card
+says so and links to the release.
+
 ## Privacy
 
 - **The token is only ever read.** AgentVitals never refreshes it: Claude Code does that itself, and
   a refresh token spent by someone else would sign Claude Code out.
 - **No tokens are spent.** The quota endpoint is not a model call, so checking it costs nothing
   from your limits.
-- **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com, and
-  Anthropic's pricing page once a day. Nothing else — no account of its own, no telemetry.
+- **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com,
+  Anthropic's pricing page once a day, and GitHub: `api.github.com` for the release check (can be
+  turned off) and the release download, only when you press **Update**. Nothing else — no account
+  of its own, no telemetry.
 - **The last answer stays on this machine.** `quota.json` holds the plan, the account email and
   the percentages from the last check; the token is never written anywhere.
 - **Logs stay on this machine.** The statistics keep only token counts. To notice a turn stopped
@@ -160,9 +175,10 @@ once — Claude Code writes the same answer several times while it streams.
 
 Everything lives next to the exe: `config.json` (settings), `quota.json` (the last quota answer),
 `log.txt` (two days of errors and changes), `sessions\` (session states), `prices.md` (Anthropic's
-price list). If that folder is
-read-only (say, under `Program Files`), they go to `%LOCALAPPDATA%\AgentVitals` instead. Start with
-Windows is a value in `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
+price list). If that folder is read-only (say, under `Program Files`), they go to
+`%LOCALAPPDATA%\AgentVitals` instead. Start with Windows is a value in
+`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`. An update leaves `AgentVitals.exe.new` next to
+the exe and `agentvitals-update-<pid>.cmd` in `%TEMP%` only while it runs.
 
 ## Build
 

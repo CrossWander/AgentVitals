@@ -99,7 +99,7 @@
     <x:String x:Key="langHooksDisconnect">Відключити</x:String>
     <x:String x:Key="langHooksError">Не вдалося змінити settings.json: {0}</x:String>
     <x:String x:Key="langUpdates">ОНОВЛЕННЯ</x:String>
-    <x:String x:Key="langAutoUpdate">Перевіряти оновлення під час запуску й раз на добу</x:String>
+    <x:String x:Key="langAutoUpdate">Перевіряти оновлення щодня</x:String>
     <x:String x:Key="langVersion">Версія {0}</x:String>
     <x:String x:Key="langCheckUpdates">Перевірити</x:String>
     <x:String x:Key="langUpdateChecking">Питаю GitHub…</x:String>
