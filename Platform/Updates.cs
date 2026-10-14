@@ -25,7 +25,11 @@ internal enum UpdateState
 /// <summary>Что известно о последнем релизе.</summary>
 /// <param name="Download">Ссылка на AgentVitals.exe в релизе; null — файла нет, ставить нечего.</param>
 /// <param name="Digest">SHA-256 этого файла от GitHub, «sha256:…»; null — GitHub его не дал.</param>
-internal sealed record Release(UpdateState State, Version? Version = null, string? Download = null, string? Digest = null);
+internal sealed record Release(UpdateState State, Version? Version = null, string? Download = null, string? Digest = null)
+{
+	/// <summary>Релиз опубликован, а exe к нему GitHub Actions ещё собирает — минуты. Спросить снова, а не через сутки.</summary>
+	public bool Pending => State == UpdateState.Newer && Download is null;
+}
 
 /// <summary>
 /// Новые версии с GitHub: проверка, загрузка и подмена себя на том же месте — туда ведут хуки Claude Code.
@@ -41,10 +45,11 @@ internal static class Updates
 
 	private static readonly TimeSpan _period = TimeSpan.FromDays(1);
 	private static readonly TimeSpan _askTimeout = TimeSpan.FromSeconds(10);
+	private static readonly TimeSpan _downloadTimeout = TimeSpan.FromMinutes(5);
 
 	public static Version Current { get; } = Three(Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0));
 
-	// После Current: клиент подписывается версией. Загрузка — до пяти минут; GitHub отвечает 403 на запрос без User-Agent.
+	// После Current: клиент подписывается версией — GitHub отвечает 403 на запрос без User-Agent.
 	private static readonly HttpClient _http = Client();
 
 	/// <summary>Пора ли автопроверке: включена и с последней удачной прошли сутки.</summary>
@@ -84,6 +89,10 @@ internal static class Updates
 			{
 				Journal.Add($"update check: HTTP {(int)response.StatusCode}, no readable release");
 			}
+			else if (release.Pending)
+			{
+				Journal.Add($"update check: {release.Version} has no {_asset} yet");
+			}
 			else
 			{
 				Store.Current.UpdateChecked = DateTime.UtcNow;
@@ -92,7 +101,7 @@ internal static class Updates
 
 			return release;
 		}
-		catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException)
+		catch (Exception exception) when (exception is HttpRequestException or OperationCanceledException or JsonException)
 		{
 			Journal.Add($"update check: {exception.Message}");
 
@@ -143,11 +152,13 @@ internal static class Updates
 
 		try
 		{
-			// Сначала файл: нет прав на папку — понятно сразу, не дожидаясь загрузки.
+			// Сначала файл: нет прав на папку — понятно сразу, не дожидаясь загрузки. Предел — на всю загрузку,
+			// а не только до заголовков: оборванное посреди тела соединение иначе ждало бы вечно.
 			await using (var file = File.Create(fresh))
 			{
-				await using var download = await _http.GetStreamAsync(url);
-				await download.CopyToAsync(file);
+				using var timeout = new CancellationTokenSource(_downloadTimeout);
+				await using var download = await _http.GetStreamAsync(url, timeout.Token);
+				await download.CopyToAsync(file, timeout.Token);
 			}
 
 			bool matches;
@@ -168,7 +179,7 @@ internal static class Updates
 			var script = Path.Combine(Path.GetTempPath(), $"agentvitals-update-{Environment.ProcessId}.cmd");
 			File.WriteAllText(script, Script(self, fresh), new UTF8Encoding(false));
 
-			Process.Start(new ProcessStartInfo("cmd.exe", $"/c \"{script}\"")
+			Process.Start(new ProcessStartInfo("cmd.exe", Command(script))
 			{
 				CreateNoWindow = true,
 				UseShellExecute = false,
@@ -186,7 +197,7 @@ internal static class Updates
 
 			return Localization.Get("langUpdateDenied");
 		}
-		catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or IOException or Win32Exception)
+		catch (Exception exception) when (exception is HttpRequestException or OperationCanceledException or IOException or Win32Exception)
 		{
 			Forget(fresh);
 			Journal.Add($"update {release.Version}: {exception.Message}");
@@ -217,6 +228,9 @@ internal static class Updates
 
 		""".ReplaceLineEndings("\r\n");
 
+	/// <summary>Аргументы cmd: с /s он снимает ровно внешние кавычки, и «&» или скобки в пути TEMP не ломают запуск.</summary>
+	public static string Command(string script) => $"/s /c \"\"{script}\"\"";
+
 	private static Version Three(Version version) => new(version.Major, version.Minor, Math.Max(version.Build, 0));
 
 	private static string? Text(JsonElement item, string property) =>
@@ -226,7 +240,7 @@ internal static class Updates
 
 	private static HttpClient Client()
 	{
-		var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+		var client = new HttpClient { Timeout = _downloadTimeout };
 		client.DefaultRequestHeaders.UserAgent.ParseAdd($"AgentVitals/{Current}");
 
 		return client;

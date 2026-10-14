@@ -37,6 +37,18 @@ public class UpdatesTests
 		Assert.Equal((UpdateState.Newer, null, null), (release.State, release.Download, release.Digest));
 	}
 
+	[Fact]
+	public void ReleaseWaitsForItsExe() // релиз опубликован, а GitHub Actions ещё собирает exe — спросить снова, а не через сутки
+	{
+		Assert.True(Updates.Read(Json("""{"tag_name":"v0.3.0","assets":[]}"""), _current).Pending);
+		Assert.False(Updates.Read(Json($$"""{"tag_name":"v0.3.0","assets":[{{_exe}}]}"""), _current).Pending);
+		Assert.False(Updates.Read(Json("""{"tag_name":"v0.2.0","assets":[]}"""), _current).Pending);
+	}
+
+	[Fact]
+	public void ScriptRunsFromAnyTempFolder() // «&» или скобки в пути TEMP: без /s cmd снял бы кавычки и не нашёл сценарий
+		=> Assert.Equal(@"/s /c """"C:\Users\A&B (x)\Temp\u.cmd""""", Updates.Command(@"C:\Users\A&B (x)\Temp\u.cmd"));
+
 	[Theory]
 	[InlineData("""{"tag_name":"latest"}""")]
 	[InlineData("""{"tag_name":3}""")]

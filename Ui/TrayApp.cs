@@ -129,7 +129,8 @@ internal sealed class TrayApp
 	{
 		var release = await Updates.CheckAsync();
 
-		if (release.State == UpdateState.Failed)
+		// Без exe в релизе объявлять нечего: кнопка ответила бы «файла нет». Часовой таймер спросит снова.
+		if (release.State == UpdateState.Failed || release.Pending)
 		{
 			return;
 		}
