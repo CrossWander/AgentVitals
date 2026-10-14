@@ -30,6 +30,16 @@ internal static class Store
 
 		public int CriticalAt { get; set; } = 90;
 
+		// Обновления: спрашивать GitHub при запуске и раз в сутки; о какой версии уже был тост;
+		// какая версия работала в прошлый раз — по ней тост «обновлён до».
+		public bool AutoUpdate { get; set; } = true;
+
+		public DateTime? UpdateChecked { get; set; }
+
+		public string? UpdateAnnounced { get; set; }
+
+		public string? LastVersion { get; set; }
+
 		// В файле — два числа, как их правит человек; правилам — одной парой.
 		[JsonIgnore]
 		public Thresholds Thresholds
