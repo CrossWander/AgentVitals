@@ -4,9 +4,11 @@
     По умолчанию — один файл, которому нужен установленный .NET 10 Runtime
     (https://dotnet.microsoft.com/download/dotnet/10.0).
     -SelfContained — рантайм внутри, ставить ничего не нужно, но файл в несколько раз больше.
+    -Version — версия exe, например тег релиза v0.2.0; без него — из AgentVitals.csproj.
 #>
 param(
-    [switch]$SelfContained
+    [switch]$SelfContained,
+    [string]$Version
 )
 
 $ErrorActionPreference = 'Stop'
@@ -53,6 +55,10 @@ $arguments = @(
 
 if ($SelfContained) {
     $arguments += '-p:EnableCompressionInSingleFile=true'
+}
+
+if ($Version) {
+    $arguments += "-p:Version=$($Version.TrimStart('v'))"
 }
 
 & dotnet @arguments

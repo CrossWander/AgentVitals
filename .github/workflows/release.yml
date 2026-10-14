@@ -12,6 +12,9 @@ permissions:
 jobs:
   exe:
     runs-on: windows-latest
+    # Тег — через переменную, а не подстановкой в скрипт: так его текст не может стать командой.
+    env:
+      TAG: ${{ github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@v7
 
@@ -22,10 +25,11 @@ jobs:
       - name: Test
         run: dotnet test AgentVitals.slnx
 
+      # Версия exe — из тега релиза: номер не нужно менять ещё и в csproj.
       - name: Build
-        run: ./tools/publish.ps1
+        run: ./tools/publish.ps1 -Version $env:TAG
 
       - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" release/AgentVitals.exe --clobber
+        run: gh release upload $env:TAG release/AgentVitals.exe --clobber
