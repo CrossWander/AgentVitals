@@ -221,8 +221,19 @@
                             <ItemsControl ItemsSource="{Binding Sessions}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="local:SessionView">
-                                        <!-- Фон прозрачный, а не пустой: иначе подсказка ловится только над буквами -->
-                                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3" Background="Transparent" ToolTip.Tip="{Binding Tip}">
+                                        <!-- Щелчок поднимает окно сессии. Фон прозрачный, а не пустой: иначе подсказка и щелчок
+                                             ловятся только над буквами -->
+                                        <Border Classes="session" Margin="-5,0" Padding="5,3" CornerRadius="6" Cursor="Hand"
+                                                ToolTip.Tip="{Binding Tip}" PointerReleased="OnSession">
+                                        <Border.Styles>
+                                            <Style Selector="Border.session">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                            </Style>
+                                            <Style Selector="Border.session:pointerover">
+                                                <Setter Property="Background" Value="{DynamicResource CardHover}"/>
+                                            </Style>
+                                        </Border.Styles>
+                                        <Grid ColumnDefinitions="Auto,*,Auto">
                                             <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center"/>
                                             <!-- Одна строка, а не StackPanel: в горизонтальной панели ширина бесконечна, троеточия
                                                  не бывает, и длинное имя наезжает на состояние -->
@@ -233,6 +244,7 @@
                                             </TextBlock>
                                             <TextBlock Grid.Column="2" Classes="caption" Text="{Binding State}" VerticalAlignment="Center"/>
                                         </Grid>
+                                        </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

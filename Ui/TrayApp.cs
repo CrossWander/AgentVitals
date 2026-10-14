@@ -61,6 +61,13 @@ internal sealed class TrayApp
 	{
 		_poller.Changed += OnPolled;
 		_popover.RefreshRequested += Refresh;
+		_popover.SessionChosen += session =>
+		{
+			if (Raise(session))
+			{
+				_popover.Hide();
+			}
+		};
 		_popover.Settings.Changed += Render;
 		_popover.Settings.ExitRequested += Exit;
 		_menu.RefreshRequested += Refresh;
@@ -262,15 +269,26 @@ internal sealed class TrayApp
 	}
 
 	/// <summary>К окну, где идёт сессия, — ответить сразу; не нашлось — окно AgentVitals со списком сессий.</summary>
+	/// <summary>Щелчок по тосту сессии: её окно, а нет его — окно AgentVitals, чтобы щелчок не ушёл в пустоту.</summary>
 	private void GoTo(Session session)
+	{
+		if (!Raise(session))
+		{
+			OpenPopover(settings: false);
+		}
+	}
+
+	/// <summary>Поднять окно программы, где идёт сессия (VS Code, терминал…); false — такого окна нет.</summary>
+	private static bool Raise(Session session)
 	{
 		if (session is { Pid: { } pid, Cwd: { } cwd } && HostWindow.Activate(pid, cwd))
 		{
-			return;
+			return true;
 		}
 
-		Journal.Add($"toast: no window for {session.Folder}");
-		OpenPopover(settings: false);
+		Journal.Add($"session: no window for {session.Folder}");
+
+		return false;
 	}
 
 	private void ShowIcon()

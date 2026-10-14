@@ -49,7 +49,8 @@ internal sealed record ProviderView(string Name, string Info, string Updated, IR
 	public bool HasError => Error.Length > 0;
 }
 
-internal sealed record SessionView(string Folder, string Branch, string State, IBrush Dot)
+/// <param name="Session">Сама сессия: по щелчку на строке поднимается окно, где она идёт.</param>
+internal sealed record SessionView(string Folder, string Branch, string State, IBrush Dot, Session Session)
 {
 	/// <summary>Подсказка над строкой: длинные имя папки и ветка в строке обрезаны троеточием.</summary>
 	public string Tip => Branch.Length > 0 ? $"{Folder}\n{Branch}" : Folder;
@@ -141,7 +142,7 @@ internal static class Views
 			[.. agents.Select(state => Provider(state, now, levels))],
 			Text.Status(status),
 			Brush(Level(status?.Health ?? Health.Unknown)),
-			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State))))],
+			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State)), session))],
 			hint,
 			focus is null ? "" : Text.Live(focus),
 			Brush(Dot(live)));

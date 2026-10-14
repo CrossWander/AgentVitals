@@ -67,7 +67,15 @@ public class ViewsTests
 	[InlineData("feature/APP-1234", "APP-1234-retry-failed-payments-in-checkout\nfeature/APP-1234")]
 	[InlineData("", "APP-1234-retry-failed-payments-in-checkout")]
 	public void SessionTipShowsTheWholeName(string branch, string tip) => // в строке длинное имя обрезано троеточием
-		Assert.Equal(tip, new SessionView("APP-1234-retry-failed-payments-in-checkout", branch, "", Avalonia.Media.Brushes.Gray).Tip);
+		Assert.Equal(tip, new SessionView("APP-1234-retry-failed-payments-in-checkout", branch, "", Avalonia.Media.Brushes.Gray, new Session("s", SessionState.Idle, null, "repo", null)).Tip);
+
+	[Fact]
+	public void SessionRowKnowsItsSession() // щелчок по строке поднимает окно, где идёт эта сессия
+	{
+		var session = new Session("s", SessionState.Working, null, "repo", "main", Pid: 4242, Cwd: @"C:\Work\repo");
+
+		Assert.Same(session, Views.Build([], null, HookLink.On, [session], DateTime.UtcNow, _levels).Sessions[0].Session);
+	}
 
 	[Theory]
 	[InlineData(WindowKind.Session, 2.5, 50d)] // половина пяти часов прошла — по ровному темпу половина и потрачена

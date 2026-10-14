@@ -30,6 +30,9 @@ internal partial class Popover : TrayWindow
 
 	public event Action? RefreshRequested;
 
+	/// <summary>Щелчок по сессии в списке.</summary>
+	public event Action<Session>? SessionChosen;
+
 	public void Open(PixelRect anchor, bool settings)
 	{
 		ShowSettings(settings);
@@ -229,6 +232,14 @@ internal partial class Popover : TrayWindow
 	private void OnSettings(object? sender, RoutedEventArgs e) => ShowSettings(true);
 
 	private void OnClose(object? sender, RoutedEventArgs e) => Hide();
+
+	private void OnSession(object? sender, PointerReleasedEventArgs e)
+	{
+		if (e.InitialPressMouseButton == MouseButton.Left && sender is Control { DataContext: SessionView row })
+		{
+			SessionChosen?.Invoke(row.Session);
+		}
+	}
 
 	private async void OnDashboard(object? sender, RoutedEventArgs e)
 	{
