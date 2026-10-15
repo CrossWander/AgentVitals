@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Linq;
+using System.Text;
 using System.Text.Json.Nodes;
 using Xunit;
 
@@ -7,6 +9,23 @@ namespace AgentVitals.Tests;
 
 public class OtherProvidersTests
 {
+	[Fact]
+	public void CodexAccountIsTheEmailInItsIdToken()
+	{
+		var payload = Base64Url.EncodeToString(Encoding.UTF8.GetBytes("""{"email":"name@example.com","https://api.openai.com/auth":{"chatgpt_plan_type":"free"}}"""));
+
+		Assert.Equal("name@example.com", CodexProvider.Email($"eyJhbGciOiJSUzI1NiJ9.{payload}.signature"));
+	}
+
+	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	[InlineData("not-a-jwt")]
+	[InlineData("a.%%%.c")]
+	[InlineData("a.bm90IGpzb24.c")] // «not json»
+	[InlineData("a.WzFd.c")] // «[1]» — не объект
+	public void BrokenIdTokenIsNoEmail(string? token) => Assert.Null(CodexProvider.Email(token));
+
 	[Fact]
 	public void ReadsCodexWindows()
 	{

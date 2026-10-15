@@ -61,7 +61,7 @@ session toasts, start with Windows and the Claude Code hooks for live sessions.
 | Provider | Source | Status |
 |---|---|---|
 | Claude | `GET api.anthropic.com/api/oauth/usage` with the Claude Code token from `~/.claude/.credentials.json` | working |
-| Codex | `GET chatgpt.com/backend-api/wham/usage` with `~/.codex/auth.json` | not verified |
+| Codex | `GET chatgpt.com/backend-api/wham/usage` with `~/.codex/auth.json`; the account email from its `id_token` | working |
 | Gemini | `cloudcode-pa.googleapis.com` quota calls with `~/.gemini/oauth_creds.json` | not verified |
 
 An agent whose credential file is missing is simply not shown.

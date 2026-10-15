@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,7 +53,25 @@ internal sealed class CodexProvider : IProvider
 			request.Headers.Add("ChatGPT-Account-Id", account);
 		}
 
-		return Parse(await Api.SendAsync(http, request, Cli, cancellation));
+		return Parse(await Api.SendAsync(http, request, Cli, cancellation)) with { Account = Email((string?)tokens["id_token"]) };
+	}
+
+	/// <summary>Почта из id_token Codex CLI: средняя часть JWT в base64url. Не разобралась — null, квоты и без неё.</summary>
+	internal static string? Email(string? idToken)
+	{
+		if (idToken?.Split('.') is not [_, var payload, ..])
+		{
+			return null;
+		}
+
+		try
+		{
+			return JsonNode.Parse((ReadOnlySpan<byte>)Base64Url.DecodeFromChars(payload)) is JsonObject claims ? (string?)claims["email"] : null;
+		}
+		catch (Exception exception) when (exception is FormatException or JsonException or InvalidOperationException)
+		{
+			return null;
+		}
 	}
 
 	internal static Snapshot Parse(JsonNode usage)
