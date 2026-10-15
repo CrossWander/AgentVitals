@@ -87,24 +87,64 @@ public class PollerTests
 		using var http = new HttpClient();
 		Exception? answer = new HttpRequestException();
 		var state = new ProviderState(new Fake(() => answer is null ? _snapshot : throw answer));
-		var status = new ServiceStatus("none", "All Systems Operational", null);
 
 		await state.FetchAsync(http, _now);
-		Assert.True(Poller.Offline([state], status));
+		Assert.True(Poller.Offline([state]));
 
 		answer = new TaskCanceledException(); // таймаут HttpClient
 		await state.FetchAsync(http, _now);
-		Assert.True(Poller.Offline([state], status));
+		Assert.True(Poller.Offline([state]));
 
 		answer = new TokenExpiredException("fake"); // сервер ответил: сеть есть, повтор не поможет
 		await state.FetchAsync(http, _now);
-		Assert.False(Poller.Offline([state], status));
+		Assert.False(Poller.Offline([state]));
 
 		answer = null;
 		await state.FetchAsync(http, _now);
-		Assert.False(Poller.Offline([state], status));
-		Assert.True(Poller.Offline([state], null)); // статус-страница не ответила
+		Assert.False(Poller.Offline([state]));
 	}
+
+	[Fact]
+	public async Task SilentStatusPageCountsAsOffline() // после сна статус-страница молчит, пока нет сети
+	{
+		using var http = new HttpClient();
+		Exception? answer = new HttpRequestException();
+		var state = new ProviderState(new Fake(() => _snapshot, status: new Page(() => answer is null ? new("none", "", null, "Fake") : throw answer)));
+
+		await state.FetchAsync(http, _now);
+		await state.FetchStatusAsync(http, _now, force: true);
+		Assert.Null(state.Status);
+		Assert.True(Poller.Offline([state]));
+
+		answer = null;
+		await state.FetchStatusAsync(http, _now, force: true);
+		Assert.Equal("none", state.Status!.Indicator);
+		Assert.False(Poller.Offline([state]));
+	}
+
+	[Fact]
+	public async Task StatusIsAskedEveryFiveMinutes()
+	{
+		using var http = new HttpClient();
+		var asked = 0;
+		var state = new ProviderState(new Fake(() => _snapshot, status: new Page(() =>
+		{
+			asked++;
+
+			return new("none", "", null, "Fake");
+		})));
+
+		await state.FetchStatusAsync(http, _now, force: false);
+		await state.FetchStatusAsync(http, _now.AddMinutes(4), force: false);
+		Assert.Equal(1, asked);
+
+		await state.FetchStatusAsync(http, _now.AddMinutes(5), force: false);
+		await state.FetchStatusAsync(http, _now.AddMinutes(6), force: true); // «Обновить» не ждёт срока
+		Assert.Equal(3, asked);
+	}
+
+	[Fact]
+	public void AgentWithoutStatusPageIsNotOffline() => Assert.False(Poller.Offline([new ProviderState(new Fake(() => _snapshot))]));
 
 	[Fact]
 	public void IconAndHeaderSeeThePassedReset() // карточка показывала 0%, а значок и шапка — старые 95%
@@ -245,7 +285,7 @@ public class PollerTests
 		Assert.Equal(_now.AddSeconds(expected), Poller.Schedule(null, seconds, _now));
 
 	/// <summary>Агент, который отвечает тем, что вернёт или бросит answer.</summary>
-	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json") : IProvider
+	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json", IStatusPage? status = null) : IProvider
 	{
 		public string Name => "Fake";
 
@@ -256,6 +296,8 @@ public class PollerTests
 		public string? Dashboard => null;
 
 		public IUsageLog? Usage => null;
+
+		public IStatusPage? Status => status;
 
 		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => Task.FromResult(answer());
 	}
@@ -272,7 +314,19 @@ public class PollerTests
 
 		public IUsageLog? Usage => log;
 
+		public IStatusPage? Status => null;
+
 		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => throw new NotSupportedException();
+	}
+
+	/// <summary>Статус-страница, которая отвечает тем, что вернёт или бросит answer.</summary>
+	private sealed class Page(Func<ServiceStatus> answer) : IStatusPage
+	{
+		public string Name => "Fake";
+
+		public string Url => "https://status.example.com";
+
+		public Task<ServiceStatus> FetchAsync(HttpClient http, CancellationToken cancellation) => Task.FromResult(answer());
 	}
 
 	private sealed class Broken : IUsageLog

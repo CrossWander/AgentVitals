@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace AgentVitals;
 
-/// <summary>Состояние сервисов Anthropic со статус-страницы.</summary>
-internal sealed record ServiceStatus(string Indicator, string Description, string? Incident)
+/// <summary>Состояние сервисов со статус-страницы. Name — чьё: «Anthropic», «Codex» или «OpenAI».</summary>
+internal sealed record ServiceStatus(string Indicator, string Description, string? Incident, string Name = "")
 {
 	public Health Health => Indicator switch
 	{
@@ -18,16 +18,32 @@ internal sealed record ServiceStatus(string Indicator, string Description, strin
 	};
 }
 
-/// <summary>status.claude.com (Statuspage API); status.anthropic.com редиректит сюда.</summary>
-internal static class StatusPage
+/// <summary>Страница здоровья сервиса агента.</summary>
+internal interface IStatusPage
 {
-	public const string Url = "https://status.claude.com";
+	/// <summary>Чей статус — в подписях и тостах, в том числе когда страница не ответила.</summary>
+	string Name { get; }
 
-	public static async Task<ServiceStatus> FetchAsync(HttpClient http, CancellationToken cancellation) =>
-		Parse(JsonNode.Parse(await http.GetStringAsync(Url + "/api/v2/summary.json", cancellation)));
+	/// <summary>Что открыть по щелчку на строке статуса.</summary>
+	string Url { get; }
 
-	internal static ServiceStatus Parse(JsonNode? summary) => new(
+	/// <exception cref="HttpRequestException">Страница не ответила.</exception>
+	Task<ServiceStatus> FetchAsync(HttpClient http, CancellationToken cancellation);
+}
+
+/// <summary>Страница на Statuspage (API v2), как status.claude.com; status.anthropic.com редиректит туда.</summary>
+internal sealed class StatusPage(string name, string url) : IStatusPage
+{
+	public string Name => name;
+
+	public string Url => url;
+
+	public async Task<ServiceStatus> FetchAsync(HttpClient http, CancellationToken cancellation) =>
+		Parse(JsonNode.Parse(await http.GetStringAsync(url + "/api/v2/summary.json", cancellation)), name);
+
+	internal static ServiceStatus Parse(JsonNode? summary, string name) => new(
 		(string?)summary?["status"]?["indicator"] ?? "none",
 		(string?)summary?["status"]?["description"] ?? "",
-		(string?)(summary?["incidents"] as JsonArray)?.FirstOrDefault()?["name"]);
+		(string?)(summary?["incidents"] as JsonArray)?.FirstOrDefault()?["name"],
+		name);
 }

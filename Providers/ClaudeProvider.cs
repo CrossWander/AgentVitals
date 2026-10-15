@@ -30,6 +30,8 @@ internal sealed class ClaudeProvider : IProvider
 
 	public IUsageLog? Usage { get; } = new ClaudeLog();
 
+	public IStatusPage? Status { get; } = new StatusPage("Anthropic", "https://status.claude.com");
+
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{

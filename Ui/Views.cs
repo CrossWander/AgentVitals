@@ -41,7 +41,18 @@ internal sealed record CardView(
 	public string Display => Value + Unit;
 }
 
-internal sealed record ProviderView(string Name, string Info, string Updated, IReadOnlyList<CardView> Cards, string Error, string? Dashboard, UsageView? Usage)
+/// <param name="StatusUrl">Страница статуса агента; null — её нет, и строки статуса тоже.</param>
+internal sealed record ProviderView(
+	string Name,
+	string Info,
+	string Updated,
+	IReadOnlyList<CardView> Cards,
+	string Error,
+	string? Dashboard,
+	UsageView? Usage,
+	string StatusText,
+	IBrush StatusBrush,
+	string? StatusUrl)
 {
 	/// <summary>Для карточки по наведению — только окна, которые блокируют всю работу.</summary>
 	public IReadOnlyList<CardView> LimitingCards => [.. Cards.Where(card => card.Limiting)];
@@ -117,12 +128,11 @@ internal sealed record Vitals(
 internal static class Views
 {
 	/// <param name="agents">Установленные агенты.</param>
-	/// <param name="status">Статус Anthropic; null — страница не ответила.</param>
 	/// <param name="hooks">Подключены ли hooks: без них список сессий пуст не потому, что их нет.</param>
 	/// <param name="sessions">Живые сессии Claude Code.</param>
 	/// <param name="now">Момент снимка: от него «обновлено N мин назад» и «сброс через».</param>
 	/// <param name="levels">Пороги из настроек.</param>
-	public static Vitals Build(IReadOnlyList<ProviderState> agents, ServiceStatus? status, HookLink hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels)
+	public static Vitals Build(IReadOnlyList<ProviderState> agents, HookLink hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels)
 	{
 		var health = Poller.Health(agents, now, levels);
 
@@ -131,6 +141,7 @@ internal static class Views
 
 		var live = SessionWatcher.Overall(sessions);
 		var focus = sessions.FirstOrDefault(session => session.State == live);
+		var status = Overall(agents);
 
 		var hint = hooks != HookLink.On ? Localization.Get("langHooksHint")
 			: sessions.Count == 0 ? Localization.Get("langNoSessions")
@@ -140,13 +151,40 @@ internal static class Views
 			tightest is { } used ? Text.Badge(used, levels) : Text.HealthName(health),
 			Brush(Level(health)),
 			[.. agents.Select(state => Provider(state, now, levels))],
-			Text.Status(status),
-			Brush(Level(status?.Health ?? Health.Unknown)),
+			status.Text,
+			Brush(Level(status.Health)),
 			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State)), session))],
 			hint,
 			focus is null ? "" : Text.Live(focus),
 			Brush(Dot(live)));
 	}
+
+	/// <summary>Строка статуса в карточке наведения: худший статус среди агентов; все в порядке — «все сервисы работают».</summary>
+	internal static (string Text, Health Health) Overall(IReadOnlyList<ProviderState> agents)
+	{
+		var pages = agents.Where(state => state.Provider.Status is not null).ToList();
+
+		if (pages.Count == 0)
+		{
+			return ("", Health.Unknown);
+		}
+
+		var worst = pages.MaxBy(state => Rank(state.Status?.Health ?? Health.Unknown))!;
+		var health = worst.Status?.Health ?? Health.Unknown;
+
+		return pages.Count > 1 && health == Health.Good
+			? (Localization.Get("langStatusAllOk"), Health.Good)
+			: (Text.Status(worst.Status, worst.Provider.Status!.Name), health);
+	}
+
+	// Тревога важнее неизвестности, неизвестность — важнее «всё в порядке».
+	private static int Rank(Health health) => health switch
+	{
+		Health.Good => 0,
+		Health.Unknown => 1,
+		Health.Warning => 2,
+		Health.Critical => 3,
+	};
 
 	internal static ProviderView Provider(ProviderState state, DateTime now, Thresholds levels)
 	{
@@ -171,7 +209,10 @@ internal static class Views
 			cards,
 			state.Error is { } error ? Text.Error(error) : "",
 			state.Provider.Dashboard,
-			state.Provider.Usage is null ? null : Usage(state.Days));
+			state.Provider.Usage is null ? null : Usage(state.Days),
+			state.Provider.Status is { } page ? Text.Status(state.Status, page.Name) : "",
+			Brush(Level(state.Status?.Health ?? Health.Unknown)),
+			state.Provider.Status?.Url);
 	}
 
 	public const double ChartHeight = 90;

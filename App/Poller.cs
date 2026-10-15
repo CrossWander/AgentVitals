@@ -27,6 +27,9 @@ internal sealed class ProviderState(IProvider provider)
 	/// <summary>Расход по дням из логов агента; null — логов у агента нет или первое чтение ещё идёт.</summary>
 	public IReadOnlyList<UsageDay>? Days { get; private set; }
 
+	/// <summary>Статус сервиса агента; null — статус-страницы нет, её ещё не спрашивали или она не ответила.</summary>
+	public ServiceStatus? Status { get; set; }
+
 	/// <summary>Начало тика, в котором провайдера спрашивали последний раз.</summary>
 	public DateTime Started { get; private set; } = DateTime.MinValue;
 
@@ -37,6 +40,8 @@ internal sealed class ProviderState(IProvider provider)
 	private int _refusals;
 
 	private string? _usageError;
+
+	private DateTime _nextStatus = DateTime.MinValue;
 
 	/// <summary>Спросить агента и запомнить исход. Ошибка не бросается: её показывают, и по ней решают, когда спросить снова.</summary>
 	/// <param name="started">Начало тика: следующий запрос считается от него, а не от ответа, — иначе минутный тик
@@ -103,6 +108,26 @@ internal sealed class ProviderState(IProvider provider)
 		}
 	}
 
+	/// <summary>Спросить статус-страницу агента, если пора или просят «Обновить»; не ответила — «неизвестно».</summary>
+	public async Task FetchStatusAsync(HttpClient http, DateTime started, bool force)
+	{
+		if (Provider.Status is not { } page || (!force && started < _nextStatus))
+		{
+			return;
+		}
+
+		try
+		{
+			Status = await page.FetchAsync(http, CancellationToken.None);
+		}
+		catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException)
+		{
+			Status = null;
+		}
+
+		_nextStatus = started + Poller.StatusEvery;
+	}
+
 	/// <summary>Агента установили или удалили, пока программа работает.</summary>
 	public void CheckInstalled() => Installed = File.Exists(Provider.Credentials);
 
@@ -134,10 +159,10 @@ internal sealed class ProviderState(IProvider provider)
 	public double? Tightest(DateTime now) => Error is TokenExpiredException ? null : Quota.Bottleneck(Windows(now))?.Used;
 }
 
-/// <summary>Расписание запросов к провайдерам и статус-странице.</summary>
+/// <summary>Расписание запросов к провайдерам и их статус-страницам.</summary>
 internal sealed class Poller
 {
-	private static readonly TimeSpan _statusEvery = TimeSpan.FromMinutes(5);
+	internal static readonly TimeSpan StatusEvery = TimeSpan.FromMinutes(5);
 
 	private static readonly TimeSpan[] _afterWake = [TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(45)];
 
@@ -154,7 +179,6 @@ internal sealed class Poller
 
 	private readonly List<FileNotice> _notices = [];
 
-	private DateTime _nextStatus = DateTime.MinValue;
 	private bool _busy;
 
 	// Тик попросили, пока шёл другой: null — никто, true — «Обновить», который не ждёт срока.
@@ -172,8 +196,6 @@ internal sealed class Poller
 	/// <summary>Общее состояние квот — по самому узкому окну.</summary>
 	public static Health Health(IEnumerable<ProviderState> agents, DateTime now, Thresholds levels) =>
 		Tightest(agents, now) is { } used ? Quota.Rate(used, levels) : AgentVitals.Health.Unknown;
-
-	public ServiceStatus? Status { get; private set; }
 
 	/// <summary>Прошёл тик: что-то могло обновиться, а относительное время в подписях — сдвинуться.</summary>
 	public event Action? Changed;
@@ -213,16 +235,16 @@ internal sealed class Poller
 			await Task.Delay(delay);
 			await TickAsync(force: true);
 
-			if (!Offline(Installed, Status))
+			if (!Offline(Installed))
 			{
 				return;
 			}
 		}
 	}
 
-	/// <summary>Кто-то не дозвался до сервера: ни ответа, ни отказа.</summary>
-	internal static bool Offline(IEnumerable<ProviderState> states, ServiceStatus? status) =>
-		status is null || states.Any(state => state.Error is HttpRequestException or TaskCanceledException);
+	/// <summary>Кто-то не дозвался до сервера: ни ответа, ни отказа, — или статус-страница агента молчит.</summary>
+	internal static bool Offline(IEnumerable<ProviderState> states) =>
+		states.Any(state => state.Error is HttpRequestException or TaskCanceledException || (state.Provider.Status is not null && state.Status is null));
 
 	/// <summary>Пауза после стольких отказов 429 подряд: 5, 10, 20 минут, дальше — 30.</summary>
 	internal static TimeSpan Backoff(int refusals) => TimeSpan.FromMinutes(Math.Min(30, 5 << Math.Clamp(refusals - 1, 0, 3)));
@@ -276,9 +298,9 @@ internal sealed class Poller
 				QuotaMemory.Save(QuotaMemory.Location, Installed.ToDictionary(state => state.Provider.Name, state => state.Remember()));
 			}
 
-			if (force || now >= _nextStatus)
+			foreach (var state in Installed)
 			{
-				await FetchStatusAsync(now);
+				await state.FetchStatusAsync(_http, now, force);
 			}
 
 			// Статистика — после квот и статуса: первое чтение логов занимает секунды.
@@ -298,19 +320,5 @@ internal sealed class Poller
 			_again = null;
 			await TickAsync(again);
 		}
-	}
-
-	private async Task FetchStatusAsync(DateTime started)
-	{
-		try
-		{
-			Status = await StatusPage.FetchAsync(_http, CancellationToken.None);
-		}
-		catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException)
-		{
-			Status = null;
-		}
-
-		_nextStatus = started + _statusEvery;
 	}
 }

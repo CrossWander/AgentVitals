@@ -1,6 +1,6 @@
 # AgentVitals
 
-A tray companion for people who code with AI agents: how much of each agent's quota is left, whether Anthropic is healthy, what the live Claude Code sessions are doing, and what the work cost.
+A tray companion for people who code with AI agents: how much of each agent's quota is left, whether each agent's service is healthy, what the live Claude Code sessions are doing, and what the work cost.
 
 ## Language
 
@@ -51,7 +51,7 @@ The two used shares the person chooses, Important and Critical; they colour ever
 _Avoid_: limits
 
 **Health**:
-Good, Warning, Critical or Unknown: a used share measured against the thresholds, or the state of the Anthropic status page.
+Good, Warning, Critical or Unknown: a used share measured against the thresholds, or the state of an agent's status page.
 _Avoid_: tone, indicator
 
 **Pace**:
@@ -83,6 +83,13 @@ _Avoid_: run, request
 AgentVitals' entries in Claude Code's settings through which live sessions report their state; they are On, Off or Moved (pointing at an old copy of the program).
 
 ### Alerts
+
+**Status page**:
+The maker's public page of an agent's service health: status.claude.com for Claude, the Codex group on status.openai.com for Codex; Gemini has none.
+_Avoid_: status (alone), uptime
+
+**Status toast**:
+A toast when an agent's status page changes its indicator; told per agent.
 
 **Quota toast**:
 A toast when a limiting window crosses a threshold; told once per threshold per window cycle, and again only after the window drops below Important.

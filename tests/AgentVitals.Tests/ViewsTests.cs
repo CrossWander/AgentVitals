@@ -48,8 +48,8 @@ public class ViewsTests
 		var now = DateTime.UtcNow;
 		var claude = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", null, [new(WindowKind.Session, null, 100, null, Limiting: true)], null) };
 
-		Assert.Equal("langHealthExhausted", Views.Build([claude], null, HookLink.On, [], now, _levels).HealthText);
-		Assert.Equal("langHealthUnknown", Views.Build([], null, HookLink.On, [], now, _levels).HealthText);
+		Assert.Equal("langHealthExhausted", Views.Build([claude], HookLink.On, [], now, _levels).HealthText);
+		Assert.Equal("langHealthUnknown", Views.Build([], HookLink.On, [], now, _levels).HealthText);
 	}
 
 	[Theory]
@@ -57,7 +57,35 @@ public class ViewsTests
 	[InlineData(HookLink.Moved, "langHooksHint")] // программу перенесли — hooks смотрят на старый путь
 	[InlineData(HookLink.On, "langNoSessions")]
 	public void HintSaysWhySessionsAreEmpty(HookLink hooks, string hint) =>
-		Assert.Equal(hint, Views.Build([], null, hooks, [], DateTime.UtcNow, _levels).SessionsHint);
+		Assert.Equal(hint, Views.Build([], hooks, [], DateTime.UtcNow, _levels).SessionsHint);
+
+	[Fact]
+	public void EachTabShowsItsOwnStatus() // на вкладке Codex — статус Codex, а не Anthropic
+	{
+		var now = DateTime.UtcNow;
+		var claude = Views.Provider(new ProviderState(new ClaudeProvider()) { Status = new("none", "", null, "Anthropic") }, now, _levels);
+		var codex = Views.Provider(new ProviderState(new CodexProvider()), now, _levels);
+		var gemini = Views.Provider(new ProviderState(new GeminiProvider()), now, _levels);
+
+		Assert.Equal(("langStatusOk", "https://status.claude.com"), (claude.StatusText, claude.StatusUrl));
+		Assert.Equal(("langStatusUnknown", "https://status.openai.com"), (codex.StatusText, codex.StatusUrl)); // ещё не спрашивали
+		Assert.Null(gemini.StatusUrl); // у Gemini статус-страницы нет — и строки нет
+	}
+
+	[Fact]
+	public void HoverCardShowsTheWorstStatus()
+	{
+		var now = DateTime.UtcNow;
+		var claude = new ProviderState(new ClaudeProvider()) { Status = new("none", "", null, "Anthropic") };
+		var codex = new ProviderState(new CodexProvider()) { Status = new("minor", "Degraded Performance", "Codex is slow", "Codex") };
+
+		Assert.Equal("Codex is slow", Views.Build([claude, codex], HookLink.On, [], now, _levels).StatusText);
+
+		codex.Status = new("none", "", null, "Codex");
+		Assert.Equal("langStatusAllOk", Views.Build([claude, codex], HookLink.On, [], now, _levels).StatusText); // все в порядке — без имён
+		Assert.Equal("langStatusOk", Views.Build([claude], HookLink.On, [], now, _levels).StatusText); // один агент — его строка
+		Assert.Equal("", Views.Build([new ProviderState(new GeminiProvider())], HookLink.On, [], now, _levels).StatusText);
+	}
 
 	[Fact]
 	public void TabOpensItsAgentsUsagePage() =>
@@ -74,7 +102,7 @@ public class ViewsTests
 	{
 		var session = new Session("s", SessionState.Working, null, "repo", "main", Pid: 4242, Cwd: @"C:\Work\repo");
 
-		Assert.Same(session, Views.Build([], null, HookLink.On, [session], DateTime.UtcNow, _levels).Sessions[0].Session);
+		Assert.Same(session, Views.Build([], HookLink.On, [session], DateTime.UtcNow, _levels).Sessions[0].Session);
 	}
 
 	[Theory]

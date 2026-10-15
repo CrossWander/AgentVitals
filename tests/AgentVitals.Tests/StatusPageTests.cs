@@ -11,11 +11,12 @@ public class StatusPageTests
 		var status = StatusPage.Parse(JsonNode.Parse("""
 			{ "status": { "indicator": "minor", "description": "Partially Degraded Service" },
 			  "incidents": [ { "name": "Elevated errors on Claude Opus" } ] }
-			"""));
+			"""), "Anthropic");
 
 		Assert.Equal("minor", status.Indicator);
 		Assert.Equal(Health.Warning, status.Health);
 		Assert.Equal("Elevated errors on Claude Opus", status.Incident);
+		Assert.Equal("Anthropic", status.Name); // в подписях — «Все системы Anthropic работают»
 	}
 
 	[Theory]
@@ -30,7 +31,7 @@ public class StatusPageTests
 	[Fact]
 	public void MissingFieldsMeanOperational()
 	{
-		var status = StatusPage.Parse(JsonNode.Parse("{}"));
+		var status = StatusPage.Parse(JsonNode.Parse("{}"), "Anthropic");
 
 		Assert.Equal("none", status.Indicator);
 		Assert.Null(status.Incident);

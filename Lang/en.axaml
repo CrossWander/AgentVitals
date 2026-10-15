@@ -39,8 +39,9 @@
     <x:String x:Key="langErrorRateLimited">The server asks to check less often, retrying at {0}</x:String>
     <x:String x:Key="langErrorNetwork">No connection</x:String>
     <x:String x:Key="langErrorParse">Could not read the response</x:String>
-    <x:String x:Key="langStatusOk">All Anthropic systems operational</x:String>
-    <x:String x:Key="langStatusUnknown">Anthropic status unknown</x:String>
+    <x:String x:Key="langStatusOk">All {0} systems operational</x:String>
+    <x:String x:Key="langStatusUnknown">{0} status unknown</x:String>
+    <x:String x:Key="langStatusAllOk">All services operational</x:String>
     <x:String x:Key="langSessions">CLAUDE CODE SESSIONS</x:String>
     <x:String x:Key="langSessionIdle">idle</x:String>
     <x:String x:Key="langSessionWorking">working</x:String>
@@ -118,8 +119,8 @@
     <x:String x:Key="langAlertImportant">Important · running low</x:String>
     <x:String x:Key="langAlertCritical">Critical · almost used up</x:String>
     <x:String x:Key="langAlertLeft">{0} · {1}: {2}% left</x:String>
-    <x:String x:Key="langToastStatus">Anthropic: {0}</x:String>
-    <x:String x:Key="langToastStatusOk">Anthropic: all systems operational again</x:String>
+    <x:String x:Key="langToastStatus">{0}: {1}</x:String>
+    <x:String x:Key="langToastStatusOk">{0}: all systems operational again</x:String>
     <x:String x:Key="langToastDone">Claude is done</x:String>
     <x:String x:Key="langToastDoneText">{0} · took {1}</x:String>
     <x:String x:Key="langToastWaiting">Claude needs your permission</x:String>

@@ -117,15 +117,19 @@ internal partial class Popover : TrayWindow
 		}
 	}
 
+	private ProviderView? Selected => _vitals?.Providers.FirstOrDefault(provider => provider.Name == _selected);
+
 	private void ShowProvider()
 	{
-		var provider = _vitals?.Providers.FirstOrDefault(provider => provider.Name == _selected);
+		var provider = Selected;
 
 		Cards.ItemsSource = provider?.Cards;
 		InfoLine.Text = string.Join(" · ", new[] { provider?.Updated, provider?.Info }.Where(text => !string.IsNullOrEmpty(text)));
 		ErrorLine.Text = provider?.Error;
 		ErrorLine.IsVisible = provider?.HasError == true;
 		DashboardButton.IsVisible = provider?.Dashboard is not null;
+		StatusLine.DataContext = provider;
+		StatusLine.IsVisible = provider?.StatusUrl is not null;
 
 		var usage = provider?.Usage;
 		UsageBlock.IsVisible = usage is not null;
@@ -243,12 +247,17 @@ internal partial class Popover : TrayWindow
 
 	private async void OnDashboard(object? sender, RoutedEventArgs e)
 	{
-		if (_vitals?.Providers.FirstOrDefault(provider => provider.Name == _selected)?.Dashboard is { } dashboard)
+		if (Selected?.Dashboard is { } dashboard)
 		{
 			await Launcher.LaunchUriAsync(new Uri(dashboard));
 		}
 	}
 
-	private async void OnStatus(object? sender, PointerReleasedEventArgs e) =>
-		await Launcher.LaunchUriAsync(new Uri(StatusPage.Url));
+	private async void OnStatus(object? sender, PointerReleasedEventArgs e)
+	{
+		if (Selected?.StatusUrl is { } url)
+		{
+			await Launcher.LaunchUriAsync(new Uri(url));
+		}
+	}
 }

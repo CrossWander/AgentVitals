@@ -22,6 +22,9 @@ internal interface IProvider
 	/// <summary>Читатель локальных логов агента; null — статистики у агента пока нет.</summary>
 	IUsageLog? Usage { get; }
 
+	/// <summary>Страница здоровья сервиса агента; null — у агента её нет.</summary>
+	IStatusPage? Status { get; }
+
 	/// <summary>Получить текущие квоты агента.</summary>
 	/// <param name="http">Общий HTTP-клиент программы.</param>
 	/// <param name="cancellation">Отмена запроса.</param>

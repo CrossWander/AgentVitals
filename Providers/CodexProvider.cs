@@ -30,6 +30,8 @@ internal sealed class CodexProvider : IProvider
 	// Логи Codex лежат в ~/.codex/sessions — читатель будет, когда появится, кому им пользоваться.
 	public IUsageLog? Usage => null;
 
+	public IStatusPage? Status { get; } = new OpenAiStatus();
+
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{

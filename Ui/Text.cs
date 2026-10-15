@@ -99,15 +99,16 @@ internal static class Text
 		SessionState.Waiting => Localization.Format("langLiveWaiting", session.Folder),
 	};
 
-	public static string Status(ServiceStatus? status) =>
-		status is null ? Localization.Get("langStatusUnknown")
-		: status.Health == Health.Good ? Localization.Get("langStatusOk")
+	/// <param name="name">Чья страница: если она не ответила, имени в статусе нет.</param>
+	public static string Status(ServiceStatus? status, string name) =>
+		status is null ? Localization.Format("langStatusUnknown", name)
+		: status.Health == Health.Good ? Localization.Format("langStatusOk", status.Name)
 		: status.Incident ?? status.Description;
 
 	public static string StatusToast(ServiceStatus status) =>
 		status.Health == Health.Good
-			? Localization.Get("langToastStatusOk")
-			: Localization.Format("langToastStatus", status.Incident ?? status.Description);
+			? Localization.Format("langToastStatusOk", status.Name)
+			: Localization.Format("langToastStatus", status.Name, status.Incident ?? status.Description);
 
 	public static string Money(decimal amount, string currency)
 	{

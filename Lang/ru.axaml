@@ -39,8 +39,9 @@
     <x:String x:Key="langErrorRateLimited">Сервер просит спрашивать реже, повтор в {0}</x:String>
     <x:String x:Key="langErrorNetwork">Нет связи</x:String>
     <x:String x:Key="langErrorParse">Не удалось разобрать ответ</x:String>
-    <x:String x:Key="langStatusOk">Все системы Anthropic работают</x:String>
-    <x:String x:Key="langStatusUnknown">Статус Anthropic неизвестен</x:String>
+    <x:String x:Key="langStatusOk">Все системы {0} работают</x:String>
+    <x:String x:Key="langStatusUnknown">Статус {0} неизвестен</x:String>
+    <x:String x:Key="langStatusAllOk">Все сервисы работают</x:String>
     <x:String x:Key="langSessions">СЕССИИ CLAUDE CODE</x:String>
     <x:String x:Key="langSessionIdle">простой</x:String>
     <x:String x:Key="langSessionWorking">работает</x:String>
@@ -118,8 +119,8 @@
     <x:String x:Key="langAlertImportant">Важно · запас на исходе</x:String>
     <x:String x:Key="langAlertCritical">Критично · лимит почти исчерпан</x:String>
     <x:String x:Key="langAlertLeft">{0} · {1}: осталось {2}%</x:String>
-    <x:String x:Key="langToastStatus">Anthropic: {0}</x:String>
-    <x:String x:Key="langToastStatusOk">Anthropic: всё снова работает</x:String>
+    <x:String x:Key="langToastStatus">{0}: {1}</x:String>
+    <x:String x:Key="langToastStatusOk">{0}: всё снова работает</x:String>
     <x:String x:Key="langToastDone">Claude закончил</x:String>
     <x:String x:Key="langToastDoneText">{0} · ход занял {1}</x:String>
     <x:String x:Key="langToastWaiting">Claude ждёт разрешения</x:String>

@@ -34,8 +34,9 @@
 
                 <StackPanel Spacing="4">
                     <TextBlock Name="InfoLine" Classes="faint"/>
-                    <StackPanel Orientation="Horizontal" Spacing="6" Background="Transparent" Cursor="Hand"
-                                PointerReleased="OnStatus">
+                    <!-- Статус сервиса выбранного агента: у каждой вкладки свой -->
+                    <StackPanel Name="StatusLine" x:DataType="local:ProviderView" Orientation="Horizontal" Spacing="6"
+                                Background="Transparent" Cursor="Hand" PointerReleased="OnStatus">
                         <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" VerticalAlignment="Center"/>
                         <TextBlock Classes="faint" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>

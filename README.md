@@ -10,7 +10,7 @@
 
 A Windows tray app that shows how much of your Claude quota is left and when it resets, what each
 Claude Code session is doing right now, what today's work would cost at API prices, and whether
-Anthropic is up. A toast warns you before you run out, when Claude finishes a long turn and when it
+the agent's service is up. A toast warns you before you run out, when Claude finishes a long turn and when it
 asks for permission. Inspired by [ClaudeBar](https://github.com/tddworks/ClaudeBar) and
 [claude-status-bar](https://github.com/m1ckc3s/claude-status-bar), which do this on macOS.
 
@@ -37,10 +37,10 @@ stays open while you work in other windows: close it with ✕, another click on 
 |---|---|
 | Quotas | Session, week and per-model weekly limits with a reset countdown; a mark on the bar shows where even spending would be by now → [more](#quotas-and-alerts) |
 | Tray icon | A pulse line coloured by the limit closest to running out; it beats while Claude works, and a blue dot blinks while Claude waits for you |
-| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a long turn ends, when Claude asks for permission and when Anthropic's status changes |
+| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a long turn ends, when Claude asks for permission and when an agent's service status changes |
 | Live sessions | Every open Claude Code session with its folder, git branch, state and turn timer → [more](#live-sessions) |
 | Usage statistics | Today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
-| Anthropic status | The status.claude.com indicator, with a toast when it changes |
+| Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears); a toast when one changes |
 | After sleep | Asks again as soon as the PC wakes; a window whose reset time has passed shows 0% instead of stale numbers |
 | Updates | Checks GitHub at start and once a day and toasts a new version once; **Update** in settings downloads it, checks its SHA-256 and swaps the exe in place → [more](#updates) |
 | Languages and themes | English, Ukrainian and Russian; light, dark or as in Windows |
@@ -83,7 +83,7 @@ An agent whose credential file is missing is simply not shown.
   between 50% and 95% in settings. Each toast comes once, and again only after that window resets;
   a window that is already past a level when AgentVitals starts gets its toast too.
 - **How a toast looks.** It slides up in the bottom-right corner above the clock and stays ten
-  seconds for a quota or a session and four for Anthropic's status, for as long as the mouse is on
+  seconds for a quota or a session and four for a service status, for as long as the mouse is on
   it; the faint ✕ in its corner closes it at once. It comes up over the AgentVitals window if that
   is open. A click on a session toast brings up the window the session runs in, and any other
   toast opens the AgentVitals window. Every toast is also written to `log.txt`.
@@ -165,7 +165,7 @@ says so and links to the release.
   a refresh token spent by someone else would sign Claude Code out.
 - **No tokens are spent.** The quota endpoint is not a model call, so checking it costs nothing
   from your limits.
-- **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com,
+- **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com, status.openai.com,
   Anthropic's pricing page once a day, and GitHub: `api.github.com` for the release check (can be
   turned off) and the release download, only when you press **Update**. Nothing else — no account
   of its own, no telemetry.

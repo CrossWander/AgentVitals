@@ -55,7 +55,7 @@ internal sealed class TrayApp
 	private IReadOnlyList<Session> _sessions = [];
 	private bool _darkTaskbar = true;
 	private int _tick;
-	private string? _lastIndicator;
+	private readonly Dictionary<string, string> _indicators = [];
 
 	public void Start()
 	{
@@ -189,7 +189,7 @@ internal sealed class TrayApp
 
 	/// <summary>Свежий снимок: «обновлено N мин назад» и «сброс через» сдвигаются со временем.</summary>
 	private Vitals Gather() =>
-		Views.Build([.. _poller.Installed], _poller.Status, HookInstaller.Link(out _), _sessions, DateTime.UtcNow, Store.Current.Thresholds);
+		Views.Build([.. _poller.Installed], HookInstaller.Link(out _), _sessions, DateTime.UtcNow, Store.Current.Thresholds);
 
 	private void ReadSessions()
 	{
@@ -227,7 +227,7 @@ internal sealed class TrayApp
 		ShowIcon();
 	}
 
-	/// <summary>Тост, когда сессия или неделя дошли до 75% или 90% или сменился статус Anthropic.</summary>
+	/// <summary>Тост, когда сессия или неделя дошли до 75% или 90% или сменился статус сервиса агента.</summary>
 	private void Notify()
 	{
 		var now = DateTime.UtcNow;
@@ -241,14 +241,20 @@ internal sealed class TrayApp
 			Journal.Add($"toast: {title}: {message}");
 		}
 
-		if (_poller.Status is { } status)
+		// У каждого агента своя страница: тост — о той, что сменила индикатор.
+		foreach (var state in _poller.Installed)
 		{
-			if (_lastIndicator is { } previous && previous != status.Indicator)
+			if (state.Status is not { } status)
+			{
+				continue;
+			}
+
+			if (_indicators.TryGetValue(state.Provider.Name, out var previous) && previous != status.Indicator)
 			{
 				_toast.Say(Text.StatusToast(status), Anchor(), click: () => OpenPopover(settings: false));
 			}
 
-			_lastIndicator = status.Indicator;
+			_indicators[state.Provider.Name] = status.Indicator;
 		}
 	}
 
