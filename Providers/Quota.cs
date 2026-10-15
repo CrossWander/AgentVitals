@@ -12,6 +12,12 @@ public enum WindowKind
 	Session,
 	Week,
 
+	/// <summary>Суточное окно (Codex называет окна по длине: сутки бывают на некоторых планах).</summary>
+	Day,
+
+	/// <summary>Окно на 30 дней — например, единственный лимит бесплатного плана Codex.</summary>
+	Month,
+
 	/// <summary>Недельный лимит одной модели (Label — её имя).</summary>
 	WeekModel,
 
@@ -25,10 +31,15 @@ internal sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, 
 {
 	/// <summary>Длина окна; null — неизвестна.</summary>
 	[JsonIgnore]
-	public TimeSpan? Length => Kind switch
+	public TimeSpan? Length => LengthOf(Kind);
+
+	/// <summary>Длина окна этого вида; null — у вида её нет.</summary>
+	internal static TimeSpan? LengthOf(WindowKind kind) => kind switch
 	{
 		WindowKind.Session => TimeSpan.FromHours(5),
+		WindowKind.Day => TimeSpan.FromDays(1),
 		WindowKind.Week or WindowKind.WeekModel => TimeSpan.FromDays(7),
+		WindowKind.Month => TimeSpan.FromDays(30),
 		WindowKind.Model => null,
 	};
 

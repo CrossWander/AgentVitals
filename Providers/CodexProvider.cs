@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -9,8 +10,8 @@ using System.Threading.Tasks;
 namespace AgentVitals;
 
 /// <summary>
-/// Квоты Codex (ChatGPT) по токену Codex CLI. Не проверено на живом аккаунте: эндпоинт и поля —
-/// из ClaudeBar (codex.json). Пока файла авторизации нет, провайдер скрыт.
+/// Квоты Codex (ChatGPT) по токену Codex CLI: wham/usage, как у самого Codex (codex-rs/backend-client).
+/// Пока файла авторизации нет, провайдер скрыт.
 /// </summary>
 internal sealed class CodexProvider : IProvider
 {
@@ -59,7 +60,8 @@ internal sealed class CodexProvider : IProvider
 		return new(Quota.PlanName((string?)usage["plan_type"]), null, windows, null);
 	}
 
-	private static void Add(List<QuotaWindow> windows, JsonNode? window, WindowKind kind)
+	/// <param name="fallback">Вид окна, если сервер не сказал его длину: первое — сессия, второе — неделя.</param>
+	private static void Add(List<QuotaWindow> windows, JsonNode? window, WindowKind fallback)
 	{
 		if (window is not JsonObject)
 		{
@@ -67,6 +69,16 @@ internal sealed class CodexProvider : IProvider
 		}
 
 		DateTimeOffset? resets = (long?)window["reset_at"] is { } at ? DateTimeOffset.FromUnixTimeSeconds(at) : null;
-		windows.Add(new(kind, null, (double?)window["used_percent"] ?? 0, resets, Limiting: true));
+		windows.Add(new(Named(window["limit_window_seconds"]) ?? fallback, null, (double?)window["used_percent"] ?? 0, resets, Limiting: true));
 	}
+
+	/// <summary>Вид окна по его длине, с допуском ±5%, как в самом Codex: у бесплатного плана первое окно — 30 дней,
+	/// у Pro пятичасового нет вовсе, так что место окна в ответе ничего не говорит.</summary>
+	private static WindowKind? Named(JsonNode? seconds) =>
+		(double?)seconds is { } length
+			? new[] { WindowKind.Session, WindowKind.Day, WindowKind.Week, WindowKind.Month }
+				.Where(kind => QuotaWindow.LengthOf(kind) is { } known && Math.Abs(length - known.TotalSeconds) <= known.TotalSeconds * 0.05)
+				.Cast<WindowKind?>()
+				.FirstOrDefault()
+			: null;
 }

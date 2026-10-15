@@ -4,6 +4,8 @@
     <x:String x:Key="langUsed">использовано</x:String>
     <x:String x:Key="langWindowSession">Сессия</x:String>
     <x:String x:Key="langWindowWeek">Неделя</x:String>
+    <x:String x:Key="langWindowDay">День</x:String>
+    <x:String x:Key="langWindowMonth">Месяц</x:String>
     <x:String x:Key="langWindowWeekModel">Неделя · {0}</x:String>
     <x:String x:Key="langWindowModel">{0}</x:String>
     <x:String x:Key="langExtra">Доп. расход</x:String>

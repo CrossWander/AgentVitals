@@ -4,6 +4,8 @@
     <x:String x:Key="langUsed">used</x:String>
     <x:String x:Key="langWindowSession">Session</x:String>
     <x:String x:Key="langWindowWeek">Week</x:String>
+    <x:String x:Key="langWindowDay">Day</x:String>
+    <x:String x:Key="langWindowMonth">Month</x:String>
     <x:String x:Key="langWindowWeekModel">Week · {0}</x:String>
     <x:String x:Key="langWindowModel">{0}</x:String>
     <x:String x:Key="langExtra">Extra usage</x:String>

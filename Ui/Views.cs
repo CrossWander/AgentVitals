@@ -295,7 +295,7 @@ internal static class Views
 		var (icon, tint) = window.Kind switch
 		{
 			WindowKind.Session => ("IconBolt", "IconSession"),
-			WindowKind.Week => ("IconCalendar", "IconWeek"),
+			WindowKind.Week or WindowKind.Day or WindowKind.Month => ("IconCalendar", "IconWeek"),
 			WindowKind.WeekModel or WindowKind.Model => ("IconSpark", "IconModel"),
 		};
 

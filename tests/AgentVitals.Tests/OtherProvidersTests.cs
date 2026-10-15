@@ -26,6 +26,34 @@ public class OtherProvidersTests
 		Assert.All(snapshot.Windows, window => Assert.True(window.Limiting));
 	}
 
+	[Theory]
+	[InlineData(2_592_000, WindowKind.Month)] // бесплатный план: одно окно на 30 дней, а не «сессия»
+	[InlineData(604_800, WindowKind.Week)]
+	[InlineData(86_400, WindowKind.Day)]
+	[InlineData(18_000, WindowKind.Session)]
+	[InlineData(18_500, WindowKind.Session)] // Codex сам допускает ±5%
+	public void CodexWindowIsNamedByItsLength(int seconds, WindowKind kind)
+	{
+		var usage = JsonNode.Parse($$"""
+			{ "rate_limit": { "primary_window": { "used_percent": 3, "reset_at": 1794633889, "limit_window_seconds": {{seconds}} } },
+			  "plan_type": "free" }
+			""")!;
+
+		Assert.Equal(kind, Assert.Single(CodexProvider.Parse(usage).Windows).Kind);
+	}
+
+	[Fact]
+	public void CodexWeekComesFirstWhenTheServerSaysSo() // длина решает, а не место в ответе
+	{
+		var usage = JsonNode.Parse("""
+			{ "rate_limit": {
+			    "primary_window": { "used_percent": 10, "limit_window_seconds": 604800 },
+			    "secondary_window": { "used_percent": 20, "limit_window_seconds": 18000 } } }
+			""")!;
+
+		Assert.Equal([WindowKind.Week, WindowKind.Session], CodexProvider.Parse(usage).Windows.Select(window => window.Kind));
+	}
+
 	[Fact]
 	public void CodexWithoutWindowsIsEmpty() =>
 		Assert.Empty(CodexProvider.Parse(JsonNode.Parse("""{ "plan_type": "free" }""")!).Windows);
