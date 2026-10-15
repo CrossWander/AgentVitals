@@ -45,10 +45,11 @@
                 <TextBlock Classes="caption" Text="{DynamicResource langNoAgents}" TextWrapping="Wrap"
                            IsVisible="{Binding NoAgents}"/>
 
+                <!-- Одинокая карточка в последнем ряду — во всю ширину -->
                 <ItemsControl Name="Cards" Margin="-4,0">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <UniformGrid Columns="2"/>
+                            <local:CardGrid/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
