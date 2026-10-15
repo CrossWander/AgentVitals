@@ -2,9 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:AgentVitals"
              x:Class="AgentVitals.SettingsPanel"
-             x:ClassModifier="internal">
-    <!-- Заголовок на месте, остальное прокручивается: на малом экране окно не выше рабочей области -->
-    <Grid RowDefinitions="Auto,*">
+             x:ClassModifier="internal"
+             ClipToBounds="False">
+    <!-- Заголовок и низ (выход, автор) на месте, середина прокручивается: на малом экране окно не выше рабочей области -->
+    <Grid RowDefinitions="Auto,*,Auto">
         <Grid ColumnDefinitions="Auto,*">
             <Button Theme="{StaticResource Round}" Click="OnBack">
                 <Path Classes="icon" Data="{StaticResource IconBack}" Stroke="{Binding $parent[Button].Foreground}"/>
@@ -154,17 +155,19 @@
                         </ItemsControl>
                     </StackPanel>
                 </Border>
-
-                <Button Theme="{StaticResource Pill}" HorizontalAlignment="Left" Click="OnExit">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Path Classes="icon" Data="{StaticResource IconPower}" Stroke="{Binding $parent[Button].Foreground}"/>
-                        <TextBlock Text="{DynamicResource langExitApp}"/>
-                    </StackPanel>
-                </Button>
-
-                <!-- Подвал: авторство и версия -->
-                <TextBlock Name="Credits" Classes="faint" Margin="2,-4,0,0"/>
             </StackPanel>
         </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Margin="0,12,0,0" Spacing="12">
+            <Button Theme="{StaticResource Pill}" HorizontalAlignment="Left" Click="OnExit">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Path Classes="icon" Data="{StaticResource IconPower}" Stroke="{Binding $parent[Button].Foreground}"/>
+                    <TextBlock Text="{DynamicResource langExitApp}"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Подвал: авторство и версия -->
+            <TextBlock Name="Credits" Classes="faint" Margin="2,-4,0,0"/>
+        </StackPanel>
     </Grid>
 </UserControl>

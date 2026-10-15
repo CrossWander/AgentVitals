@@ -92,9 +92,4 @@
         <Setter Property="StrokeLineCap" Value="Round"/>
         <Setter Property="StrokeJoin" Value="Round"/>
     </Style>
-
-    <!-- Ползунок прокрутки показывается, пока мышь над списком, и гаснет, когда уходит (тема — в Controls.axaml) -->
-    <Style Selector="ScrollViewer:pointerover /template/ ScrollBar">
-        <Setter Property="Opacity" Value="1"/>
-    </Style>
 </Styles>

@@ -231,8 +231,8 @@
     </ControlTheme>
 
     <!-- Прокрутка как в macOS: тонкий скруглённый ползунок поверх содержимого, без стрелок и дорожки.
-         Виден, пока мышь над списком (стиль в Styles.axaml), над самим ползунком — шире. Тема без ключа —
-         для всех ScrollBar программы вместо Fluent. -->
+         Виден всегда, когда есть что прокручивать, — иначе не понять, что окно длиннее; над ползунком ярче.
+         Тема без ключа — для всех ScrollBar программы вместо Fluent. -->
     <ControlTheme x:Key="OverlayThumb" TargetType="Thumb">
         <Setter Property="Background" Value="{DynamicResource ScrollThumb}"/>
         <Setter Property="Template">
@@ -250,12 +250,6 @@
 
     <ControlTheme x:Key="{x:Type ScrollBar}" TargetType="ScrollBar">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Opacity" Value="0"/>
-        <Setter Property="Transitions">
-            <Transitions>
-                <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
-            </Transitions>
-        </Setter>
 
         <Style Selector="^:vertical">
             <Setter Property="Width" Value="11"/>
