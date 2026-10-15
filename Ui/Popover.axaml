@@ -291,7 +291,8 @@
                 </Grid>
             </Grid>
 
-            <local:SettingsPanel Name="Settings" IsVisible="False"/>
+            <!-- Настройки — поверх главного вида и его высоты: окно не прыгает при переходе, лишнее прокручивается -->
+            <local:SettingsPanel Name="Settings" IsVisible="False" Height="{Binding #MainView.Bounds.Height}"/>
         </Panel>
     </Border>
 </Window>

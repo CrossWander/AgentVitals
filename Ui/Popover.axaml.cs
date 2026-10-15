@@ -256,7 +256,10 @@ internal partial class Popover : TrayWindow
 
 	private void ShowSettings(bool settings)
 	{
-		MainView.IsVisible = !settings;
+		// Главный вид остаётся в раскладке и задаёт высоту окна — и когда настройки открыты прямо из меню;
+		// под настройками он не виден и не берёт ни щелчков, ни фокуса.
+		MainView.Opacity = settings ? 0 : 1;
+		MainView.IsEnabled = !settings;
 		Settings.IsVisible = settings;
 
 		if (settings)
