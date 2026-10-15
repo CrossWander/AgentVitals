@@ -254,13 +254,13 @@ internal static class Views
 		var ceiling = Ceiling(Top(days, mode));
 
 		// Без дней «$0.00 за месяц» было бы неправдой: дней просто ещё нет.
-		return new(Bars(days, mode, ceiling), AxisY(ceiling, mode), AxisX(days), Legend(mode), days.Count == 0 ? "" : Total(days, mode));
+		return new(Bars(days, mode, ceiling), AxisY(ceiling, mode), AxisX(days), Legend(mode, days), days.Count == 0 ? "" : Total(days, mode));
 	}
 
 	/// <summary>Столбики в выбранной мере: во всю высоту — верх шкалы, сегодняшний ярче.</summary>
 	private static IReadOnlyList<BarView> Bars(IReadOnlyList<UsageDay> days, ChartMode mode, double ceiling)
 	{
-		var layers = Layers(mode);
+		var layers = Layers(mode, days);
 		var scale = ceiling > 0 ? ChartHeight / ceiling : 0;
 
 		return [.. days.Select((day, index) => new BarView(
@@ -272,28 +272,35 @@ internal static class Views
 
 	/// <summary>Самый большой день в выбранной мере.</summary>
 	private static double Top(IReadOnlyList<UsageDay> days, ChartMode mode) =>
-		days.Select(day => Layers(mode).Sum(layer => layer.Value(day))).DefaultIfEmpty(0).Max();
+		days.Select(day => Layers(mode, days).Sum(layer => layer.Value(day))).DefaultIfEmpty(0).Max();
 
 	/// <summary>Легенда под графиком: по пункту на слой.</summary>
-	internal static IReadOnlyList<LegendItem> Legend(ChartMode mode) => [.. Layers(mode).Select(layer => new LegendItem(Brush(layer.Brush), layer.Name))];
+	internal static IReadOnlyList<LegendItem> Legend(ChartMode mode, IReadOnlyList<UsageDay> days) =>
+		[.. Layers(mode, days).Select(layer => new LegendItem(Brush(layer.Brush), layer.Name))];
 
 	// Слои меры снизу вверх: цвет, подпись в легенде и значение дня. По ним — и столбики, и легенда, и шкала.
-	private static IReadOnlyList<(string Brush, string Name, Func<UsageDay, double> Value)> Layers(ChartMode mode) => mode switch
+	// Семейства моделей — только те, что стоили денег за эти дни: у Claude нет Luna, у Codex — Opus.
+	private static IReadOnlyList<(string Brush, string Name, Func<UsageDay, double> Value)> Layers(ChartMode mode, IReadOnlyList<UsageDay> days) => mode switch
 	{
 		ChartMode.Cost => [("Blue", Localization.Get("langCostNote"), day => (double)(day.Cost ?? 0))],
 		ChartMode.Tokens => [("Blue", Localization.Get("langInput"), day => day.Input), ("Good", Localization.Get("langOutput"), day => day.Output)],
 		ChartMode.Cache => [("Blue", Localization.Get("langCacheWrite"), day => day.CacheWrite), ("Good", Localization.Get("langCacheRead"), day => day.CacheRead)],
-		ChartMode.Models => [.. Enum.GetValues<ModelFamily>().Select(family => (
-			family switch
-			{
-				ModelFamily.Opus => "Blue",
-				ModelFamily.Sonnet => "Good",
-				ModelFamily.Haiku => "Warn",
-				ModelFamily.Fable => "Bad",
-				_ => "TextFaint",
-			},
-			family == ModelFamily.Other ? Localization.Get("langOther") : family.ToString(),
-			(Func<UsageDay, double>)(day => (double)(day.Models?.All[(int)family] ?? 0))))],
+		ChartMode.Models => [.. Enum.GetValues<ModelFamily>()
+			.Where(family => days.Any(day => (day.Models?.All[(int)family] ?? 0) > 0))
+			.Select(family => (
+				Color(family),
+				family == ModelFamily.Other ? Localization.Get("langOther") : family.ToString(),
+				(Func<UsageDay, double>)(day => (double)(day.Models?.All[(int)family] ?? 0))))],
+	};
+
+	// Цвета по размеру модели: флагман, средняя, малая — у Claude и у Codex одни и те же.
+	private static string Color(ModelFamily family) => family switch
+	{
+		ModelFamily.Opus or ModelFamily.Astra => "Blue",
+		ModelFamily.Sonnet or ModelFamily.Sol => "Good",
+		ModelFamily.Haiku or ModelFamily.Luna => "Warn",
+		ModelFamily.Fable => "Bad",
+		ModelFamily.Other => "TextFaint",
 	};
 
 	/// <summary>Верх шкалы: две «круглые» ступени, как $0 / $80 / $160, не ниже самого большого дня.</summary>

@@ -14,7 +14,7 @@ namespace AgentVitals;
 
 /// <summary>
 /// Расход Claude Code по его логам в ~/.claude/projects, с субагентами. Из строк берутся только числа
-/// ответов модели — переписка не хранится. Цены — со страницы Anthropic, копия в папке данных.
+/// ответов модели — переписка не хранится. Цены — со страницы Anthropic (PriceSource), копия в папке данных.
 /// </summary>
 internal sealed class ClaudeLog(string projects, string pricesFile) : IUsageLog
 {
@@ -31,13 +31,12 @@ internal sealed class ClaudeLog(string projects, string pricesFile) : IUsageLog
 	};
 
 	private readonly LogTail _tail = new();
+	private readonly PriceSource _prices = new(PriceList.Url, pricesFile, PriceList.Parse);
 
 	// Пока идёт ответ, Claude Code пишет его несколько раз с одним id: последняя копия — полная.
 	// По этой же причине повторное чтение файла ничего не удваивает.
 	private readonly Dictionary<string, UsageRecord> _records = [];
 
-	private DateTime _nextPrices = DateTime.MinValue;
-	private bool _started;
 	private string? _lastError;
 
 	public ClaudeLog()
@@ -45,20 +44,12 @@ internal sealed class ClaudeLog(string projects, string pricesFile) : IUsageLog
 	{
 	}
 
-	internal PriceList? Prices { get; private set; }
-
 	internal IReadOnlyCollection<UsageRecord> Records => _records.Values;
 
 	/// <inheritdoc/>
 	public async Task<IReadOnlyList<UsageDay>> ReadAsync(HttpClient http, DateTime now, CancellationToken cancellation)
 	{
-		if (!_started)
-		{
-			_started = true;
-			LoadSaved();
-		}
-
-		await RefreshPricesAsync(http, now, cancellation);
+		var prices = await _prices.GetAsync(http, now, cancellation);
 
 		// ponytail: после запуска логи за месяц читаются заново (здесь ~390 МБ, секунды); кэш прошедших
 		// дней на диске — если первое чтение станет заметно долгим.
@@ -66,7 +57,7 @@ internal sealed class ClaudeLog(string projects, string pricesFile) : IUsageLog
 
 		var zone = TimeZoneInfo.Local;
 
-		return UsageDays.Build(_records.Values, Prices, DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now, zone)), zone);
+		return UsageDays.Build(_records.Values, prices, DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now, zone)), zone);
 	}
 
 	/// <summary>Дочитать изменившиеся логи за 31 день и выбросить записи старше.</summary>
@@ -102,50 +93,6 @@ internal sealed class ClaudeLog(string projects, string pricesFile) : IUsageLog
 		{
 			_records.Remove(old);
 		}
-	}
-
-	/// <summary>Копия страницы цен с прошлого раза; скачивать заново — через сутки после неё.</summary>
-	internal void LoadSaved()
-	{
-		try
-		{
-			if (File.Exists(pricesFile) && PriceList.Parse(File.ReadAllText(pricesFile)) is { Count: > 0 } prices)
-			{
-				Prices = prices;
-				_nextPrices = File.GetLastWriteTimeUtc(pricesFile) + TimeSpan.FromDays(1);
-			}
-		}
-		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-		{
-			Report(exception.GetType().Name, $"prices.md: {exception.Message}");
-		}
-	}
-
-	/// <summary>Скачанная страница цен: разобралась — в дело и в копию, нет — остаётся прежняя.</summary>
-	internal bool Accept(string page)
-	{
-		var prices = PriceList.Parse(page);
-
-		if (prices.Count == 0)
-		{
-			return false;
-		}
-
-		Prices = prices;
-
-		try
-		{
-			// Через временный файл, как config.json: оборванная запись не испортит прежнюю копию.
-			var temp = pricesFile + ".tmp";
-			File.WriteAllText(temp, page);
-			File.Move(temp, pricesFile, overwrite: true);
-		}
-		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-		{
-			Report(exception.GetType().Name, $"prices.md: {exception.Message}");
-		}
-
-		return true;
 	}
 
 	/// <summary>Ответ модели из строки лога; не ответ, без id, времени или токенов — null.</summary>
@@ -185,31 +132,6 @@ internal sealed class ClaudeLog(string projects, string pricesFile) : IUsageLog
 	}
 
 	private static long Count(JsonNode? node) => node is JsonValue value && value.TryGetValue<long>(out var count) ? count : 0;
-
-	private async Task RefreshPricesAsync(HttpClient http, DateTime now, CancellationToken cancellation)
-	{
-		if (now < _nextPrices)
-		{
-			return;
-		}
-
-		try
-		{
-			var accepted = Accept(await http.GetStringAsync(PriceList.Url, cancellation));
-
-			if (!accepted)
-			{
-				Report("prices", "no model table on the pricing page, keeping the saved copy");
-			}
-
-			_nextPrices = now + (accepted ? TimeSpan.FromDays(1) : TimeSpan.FromHours(1));
-		}
-		catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
-		{
-			// Нет сети или сайта — работаем по копии, спросим через час.
-			_nextPrices = now + TimeSpan.FromHours(1);
-		}
-	}
 
 	/// <summary>В журнал — при смене вида беды, а не каждую минуту одно и то же.</summary>
 	private void Report(string kind, string message)

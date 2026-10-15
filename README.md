@@ -138,8 +138,8 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
 
 ## Usage statistics
 
-Under the limits, the Claude tab adds today's numbers and a 30-day chart. They come from Claude
-Code's own logs in `~/.claude/projects` (subagents included), read on this machine only:
+Under the limits, the Claude and Codex tabs add today's numbers and a 30-day chart. For Claude they
+come from Claude Code's own logs in `~/.claude/projects` (subagents included), read on this machine only:
 AgentVitals takes the token counts of model answers and keeps nothing else. Each answer counts
 once — Claude Code writes the same answer several times while it streams.
 
@@ -149,9 +149,15 @@ once — Claude Code writes the same answer several times while it streams.
   page doesn't list yet gets no price rather than a guess. Fast mode is counted at standard prices.
 - **Working time** adds up stretches of activity; a pause longer than 30 minutes starts a new one.
 - **The chart** shows cost, tokens (input and output), cache (written and read) or cost by model
-  family (Opus, Sonnet, Haiku, Fable, other). In the cache view the corner says what the cache saved
+  family (Opus, Sonnet, Haiku, Fable; Astra, Sol, Luna for Codex; other) — only the families used in those 30 days. In the cache view the corner says what the cache saved
   over 30 days: what the cached tokens would have cost as plain input, minus what they did cost.
-- Codex and Gemini have no statistics yet: the slot is there (`IProvider.Usage`), the reader isn't.
+- **Codex** reads its session logs in `~/.codex/sessions` and `archived_sessions` (under
+  `$CODEX_HOME` if set): one record per model answer with its token counts, and the model of the
+  turn. Cost uses the Standard prices from
+  [OpenAI's pricing page](https://developers.openai.com/api/docs/pricing), kept in
+  `prices-openai.md`; a model without a cached-input or cache-write price pays the plain input price
+  for those tokens.
+- Gemini has no statistics yet: the slot is there (`IProvider.Usage`), the reader isn't.
 
 ## Updates
 
@@ -172,7 +178,7 @@ says so and links to the release.
 - **No tokens are spent.** The quota endpoint is not a model call, so checking it costs nothing
   from your limits.
 - **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com, status.openai.com,
-  Anthropic's pricing page once a day, and GitHub: `api.github.com` for the release check (can be
+  Anthropic's and OpenAI's pricing pages once a day, and GitHub: `api.github.com` for the release check (can be
   turned off) and the release download, only when you press **Update**. Nothing else — no account
   of its own, no telemetry.
 - **The last answer stays on this machine.** `quota.json` holds the plan, the account email and
@@ -184,8 +190,8 @@ says so and links to the release.
 ## Files
 
 Everything lives next to the exe: `config.json` (settings), `quota.json` (the last quota answer),
-`log.txt` (two days of errors and changes), `sessions\` (session states), `prices.md` (Anthropic's
-price list). If that folder is read-only (say, under `Program Files`), they go to
+`log.txt` (two days of errors and changes), `sessions\` (session states), `prices.md` and `prices-openai.md`
+(Anthropic's and OpenAI's price lists). If that folder is read-only (say, under `Program Files`), they go to
 `%LOCALAPPDATA%\AgentVitals` instead. Start with Windows is a value in
 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`. An update leaves `AgentVitals.exe.new` next to
 the exe and `agentvitals-update-<pid>.cmd` in `%TEMP%` only while it runs.

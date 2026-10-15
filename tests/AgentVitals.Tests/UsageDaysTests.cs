@@ -47,7 +47,7 @@ public class UsageDaysTests
 		var today = UsageDays.Build(records, prices, _today, _kyiv)[^1];
 
 		Assert.Equal(3.80m, today.Saved);
-		Assert.Equal(new ModelCosts(0.20m, 15m, 0, 0, 0), today.Models);
+		Assert.Equal(new ModelCosts(0.20m, 15m, 0, 0, 0, 0, 0, 0), today.Models);
 	}
 
 	[Theory]
@@ -56,6 +56,11 @@ public class UsageDaysTests
 	[InlineData("claude-haiku-4-5-20251001", ModelFamily.Haiku)]
 	[InlineData("fable", ModelFamily.Fable)]
 	[InlineData("<synthetic>", ModelFamily.Other)]
+	[InlineData("gpt-6-astra", ModelFamily.Astra)]
+	[InlineData("gpt-6.1-sol", ModelFamily.Sol)]
+	[InlineData("gpt-6-luna", ModelFamily.Luna)]
+	[InlineData("gpt-5.3-codex", ModelFamily.Other)]
+	[InlineData("console-solver", ModelFamily.Other)] // «sol» внутри слова — не Sol
 	public void ModelFamilyFromItsName(string model, ModelFamily family) => Assert.Equal(family, ModelCosts.Family(model));
 
 	[Fact]

@@ -133,31 +133,4 @@ public class ClaudeLogTests
 
 		Assert.Empty(log.Records);
 	}
-
-	[Fact]
-	public void BadPageKeepsTheSavedCopy() // Anthropic поменяла вёрстку страницы
-	{
-		using var temp = new TempDirectory();
-		var saved = temp.File("prices.md");
-		var log = new ClaudeLog(temp.Path, saved);
-
-		Assert.True(log.Accept(PriceListTests.Page));
-		Assert.False(log.Accept("<html>редизайн</html>"));
-
-		Assert.Equal(PriceListTests.Page, File.ReadAllText(saved));
-		Assert.Equal(6, log.Prices!.Count);
-	}
-
-	[Fact]
-	public void SavedPricesWorkOffline()
-	{
-		using var temp = new TempDirectory();
-		var saved = temp.File("prices.md");
-		File.WriteAllText(saved, PriceListTests.Page);
-		var log = new ClaudeLog(temp.Path, saved);
-
-		log.LoadSaved();
-
-		Assert.Equal(6, log.Prices!.Count);
-	}
 }

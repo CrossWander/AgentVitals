@@ -38,29 +38,36 @@ internal sealed record UsageDay(
 	public long Total => Input + Output + CacheWrite + CacheRead;
 }
 
-/// <summary>Семейство модели — слой столбика на графике «по моделям».</summary>
+/// <summary>Семейство модели — слой столбика на графике «по моделям»: у Claude — Opus…Fable, у Codex — Astra, Sol, Luna.</summary>
 public enum ModelFamily
 {
 	Opus,
 	Sonnet,
 	Haiku,
 	Fable,
+	Astra,
+	Sol,
+	Luna,
 	Other,
 }
 
 /// <summary>Стоимость дня по семействам моделей. Запись, а не словарь: дни сравниваются по значению.</summary>
-internal sealed record ModelCosts(decimal Opus, decimal Sonnet, decimal Haiku, decimal Fable, decimal Other)
+internal sealed record ModelCosts(decimal Opus, decimal Sonnet, decimal Haiku, decimal Fable, decimal Astra, decimal Sol, decimal Luna, decimal Other)
 {
-	public static readonly ModelCosts None = new(0, 0, 0, 0, 0);
+	public static readonly ModelCosts None = new(0, 0, 0, 0, 0, 0, 0, 0);
 
 	/// <summary>Слои в порядке ModelFamily.</summary>
-	public IReadOnlyList<decimal> All => [Opus, Sonnet, Haiku, Fable, Other];
+	public IReadOnlyList<decimal> All => [Opus, Sonnet, Haiku, Fable, Astra, Sol, Luna, Other];
 
-	/// <summary>Семейство по имени модели: «claude-opus-5-5[1m]» — Opus, «fable» — Fable.</summary>
-	public static ModelFamily Family(string model) =>
-		Enum.GetValues<ModelFamily>().FirstOrDefault(
-			family => family != ModelFamily.Other && model.Contains(family.ToString(), StringComparison.OrdinalIgnoreCase),
+	/// <summary>Семейство по слову в имени модели: «claude-opus-5-5[1m]» — Opus, «gpt-6-luna» — Luna, «fable» — Fable.</summary>
+	public static ModelFamily Family(string model)
+	{
+		var words = model.Split(['-', '.', '[', ']', '_', ' '], StringSplitOptions.RemoveEmptyEntries);
+
+		return Enum.GetValues<ModelFamily>().FirstOrDefault(
+			family => family != ModelFamily.Other && words.Contains(family.ToString(), StringComparer.OrdinalIgnoreCase),
 			ModelFamily.Other);
+	}
 
 	public ModelCosts Add(ModelFamily family, decimal cost) => family switch
 	{
@@ -68,6 +75,9 @@ internal sealed record ModelCosts(decimal Opus, decimal Sonnet, decimal Haiku, d
 		ModelFamily.Sonnet => this with { Sonnet = Sonnet + cost },
 		ModelFamily.Haiku => this with { Haiku = Haiku + cost },
 		ModelFamily.Fable => this with { Fable = Fable + cost },
+		ModelFamily.Astra => this with { Astra = Astra + cost },
+		ModelFamily.Sol => this with { Sol = Sol + cost },
+		ModelFamily.Luna => this with { Luna = Luna + cost },
 		_ => this with { Other = Other + cost },
 	};
 }

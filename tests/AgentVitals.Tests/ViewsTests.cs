@@ -189,8 +189,12 @@ public class ViewsTests
 		new(new DateOnly(2026, 10, day), input, output, 0, 0, cost, unpriced, TimeSpan.Zero);
 
 	[Fact]
-	public void CodexHasNoStatisticsBlock() =>
-		Assert.Null(Views.Provider(new ProviderState(new CodexProvider()), DateTime.UtcNow, _levels).Usage);
+	public void GeminiHasNoStatisticsBlock() =>
+		Assert.Null(Views.Provider(new ProviderState(new GeminiProvider()), DateTime.UtcNow, _levels).Usage);
+
+	[Fact]
+	public void CodexCountsUntilTheFirstRead() =>
+		Assert.Equal("langCounting", Views.Provider(new ProviderState(new CodexProvider()), DateTime.UtcNow, _levels).Usage!.CostNote);
 
 	[Fact]
 	public void ClaudeCountsUntilTheFirstRead() // первое чтение логов — секунды: не нули, а «считаю…»
@@ -236,11 +240,11 @@ public class ViewsTests
 	[Fact]
 	public void ModelsStackCostByFamily()
 	{
-		var today = Day(7, cost: 20) with { Models = new ModelCosts(15, 5, 0, 0, 0) };
+		var today = Day(7, cost: 20) with { Models = new ModelCosts(15, 5, 0, 0, 0, 0, 0, 0) };
 
 		var bar = Views.Chart([Day(6), today], ChartMode.Models).Bars[1];
 
-		Assert.Equal([67.5, 22.5, 0, 0, 0], bar.Parts.Select(part => part.Height)); // $20 — верх шкалы, снизу Opus
+		Assert.Equal([67.5, 22.5], bar.Parts.Select(part => part.Height)); // $20 — верх шкалы, снизу Opus; пустых семейств нет
 	}
 
 	[Fact]
@@ -253,9 +257,11 @@ public class ViewsTests
 	[Fact]
 	public void LegendNamesEachLayer()
 	{
-		Assert.Equal(["langCostNote"], Views.Legend(ChartMode.Cost).Select(item => item.Text));
-		Assert.Equal(["langInput", "langOutput"], Views.Legend(ChartMode.Tokens).Select(item => item.Text));
-		Assert.Equal(["Opus", "Sonnet", "Haiku", "Fable", "langOther"], Views.Legend(ChartMode.Models).Select(item => item.Text));
+		UsageDay[] days = [Day(7, cost: 3) with { Models = new ModelCosts(1, 0, 0, 0, 0, 0, 0, 2) }];
+
+		Assert.Equal(["langCostNote"], Views.Legend(ChartMode.Cost, days).Select(item => item.Text));
+		Assert.Equal(["langInput", "langOutput"], Views.Legend(ChartMode.Tokens, days).Select(item => item.Text));
+		Assert.Equal(["Opus", "langOther"], Views.Legend(ChartMode.Models, days).Select(item => item.Text)); // только семейства со стоимостью
 	}
 
 	[Fact]

@@ -9,10 +9,14 @@ namespace AgentVitals;
 /// <summary>Цена модели, $ за миллион токенов.</summary>
 internal sealed record Price(decimal Input, decimal CacheWrite, decimal CacheWrite1h, decimal CacheRead, decimal Output);
 
-/// <summary>Цены моделей Claude со страницы Anthropic: таблица раздела «Model pricing».</summary>
+/// <summary>Цены моделей по таблицам со страниц цен: Anthropic (<c>Parse</c>) и OpenAI (<c>ParseOpenAi</c>).</summary>
 internal sealed class PriceList(IReadOnlyDictionary<string, Price> prices)
 {
 	public const string Url = "https://platform.claude.com/docs/en/about-claude/pricing.md";
+
+	public const string OpenAiUrl = "https://developers.openai.com/api/docs/pricing.md";
+
+	private static readonly Regex _note = new(@"\s*\(.*\)\s*$");
 
 	private static readonly Regex _link = new(@"\s*\(\[[^\]]*\]\([^)]*\)\)");
 	private static readonly Regex _footnote = new("<sup>.*?</sup>");
@@ -80,12 +84,80 @@ internal sealed class PriceList(IReadOnlyDictionary<string, Price> prices)
 		return new(found);
 	}
 
+	/// <summary>
+	/// Цены OpenAI: таблицы под подписью «Standard» (не Batch, Flex, Fast…). Колонки ищутся по названию; у флагманов —
+	/// «короткий контекст»: окно Codex (258K) меньше порога длинного (272K). Нет цены кэша — он стоит как обычный вход;
+	/// нет цены выхода — это не модель для Codex (эмбеддинги, модерация). Модель есть в нескольких таблицах — первая цена.
+	/// </summary>
+	public static PriceList ParseOpenAi(string page)
+	{
+		Dictionary<string, Price> found = [];
+		string? label = null;
+		var standard = false;
+		List<string>? header = null;
+
+		foreach (var line in page.Split('\n').Select(line => line.Trim()))
+		{
+			if (line.StartsWith('#'))
+			{
+				standard = label == "Standard";
+				header = null;
+			}
+			else if (line.StartsWith('|'))
+			{
+				if (!standard)
+				{
+					continue;
+				}
+
+				var cells = Cells(line);
+
+				if (header is null)
+				{
+					header = cells;
+				}
+				else if (cells.Any(cell => cell.Trim('-', ':', ' ').Length > 0) && OpenAiRow(header, cells) is { } row)
+				{
+					found.TryAdd(row.Model, row.Price);
+				}
+			}
+			else if (line.Length > 0)
+			{
+				label = line;
+			}
+		}
+
+		return new(found);
+	}
+
+	private static (string Model, Price Price)? OpenAiRow(List<string> header, List<string> cells)
+	{
+		string? Cell(params string[] names) =>
+			header.FindIndex(cell => names.Any(name => cell.Equals(name, StringComparison.OrdinalIgnoreCase))) is var column && column >= 0 && column < cells.Count
+				? cells[column]
+				: null;
+
+		var model = Cell("Model");
+		var input = Money(Cell("Short context input", "Input"));
+		var output = Money(Cell("Short context output", "Output"));
+
+		if (string.IsNullOrEmpty(model) || input is not { } plain || output is not { } spoken)
+		{
+			return null;
+		}
+
+		var cached = Money(Cell("Short context cached input", "Cached input")) ?? plain;
+		var written = Money(Cell("Short context cache writes", "Cache writes")) ?? plain;
+
+		return (_note.Replace(model, "").ToLowerInvariant(), new Price(plain, written, written, cached, spoken));
+	}
+
 	/// <summary>«Claude Opus 5.5 ([ссылка](…))» → «claude-opus-5-5».</summary>
 	private static string Id(string name) =>
 		_footnote.Replace(_link.Replace(name, ""), "").Trim().ToLowerInvariant().Replace(' ', '-').Replace('.', '-');
 
-	private static decimal? Money(string cell) =>
-		_money.Match(_footnote.Replace(cell, "")) is { Success: true } match
+	private static decimal? Money(string? cell) =>
+		cell is not null && _money.Match(_footnote.Replace(cell, "")) is { Success: true } match
 			? decimal.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture)
 			: null;
 

@@ -104,7 +104,7 @@ A toast when an agent finishes a long turn or a live session waits for permissio
 One local day of an agent's work from its own logs: tokens, cost, cache savings and work time.
 
 **Cost**:
-What a day's tokens would cost at API prices; a subscription does not bill it, it shows what the plan is worth.
+What a day's tokens would cost at the maker's API prices; a subscription does not bill it, it shows what the plan is worth.
 _Avoid_: spend, price
 
 **Work time**:
@@ -112,5 +112,5 @@ How long a day's logs show the agent busy; pauses longer than half an hour are l
 _Avoid_: working, active time, uptime
 
 **Model family**:
-A group of models priced and counted together: Opus, Sonnet, Haiku, Fable; for Gemini, Pro, Flash and Flash Lite.
+A group of models priced and counted together: Opus, Sonnet, Haiku, Fable; for Codex, Astra, Sol and Luna by the word in the model's name; for Gemini, Pro, Flash and Flash Lite.
 _Avoid_: tier, model class

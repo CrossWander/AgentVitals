@@ -29,8 +29,7 @@ internal sealed class CodexProvider : IProvider
 
 	public string? Dashboard => "https://chatgpt.com/codex/settings/usage";
 
-	// Логи Codex лежат в ~/.codex/sessions — читатель будет, когда появится, кому им пользоваться.
-	public IUsageLog? Usage => null;
+	public IUsageLog? Usage { get; } = new CodexLog();
 
 	public IStatusPage? Status { get; } = new OpenAiStatus();
 
