@@ -39,7 +39,7 @@ _Avoid_: blocking window
 The moment a quota window empties; once it has passed, the window counts as empty even before fresh data arrives.
 
 **Bottleneck**:
-The limiting window with the most used, and so the one that ends the work first; the icon and the header speak for it.
+The limiting window with the most used, and so the one that ends the work first; the icon and the hover card speak for the one across all agents, the window header for the selected agent's.
 _Avoid_: worst window
 
 **Exhausted**:

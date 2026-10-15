@@ -3,7 +3,8 @@
              xmlns:local="using:AgentVitals"
              x:Class="AgentVitals.SettingsPanel"
              x:ClassModifier="internal">
-    <StackPanel Spacing="12">
+    <!-- Заголовок на месте, остальное прокручивается: на малом экране окно не выше рабочей области -->
+    <Grid RowDefinitions="Auto,*">
         <Grid ColumnDefinitions="Auto,*">
             <Button Theme="{StaticResource Round}" Click="OnBack">
                 <Path Classes="icon" Data="{StaticResource IconBack}" Stroke="{Binding $parent[Button].Foreground}"/>
@@ -12,154 +13,158 @@
                        Margin="10,0,0,0" VerticalAlignment="Center"/>
         </Grid>
 
-        <Border Classes="card">
+        <ScrollViewer Grid.Row="1" Margin="0,12,-14,0" Padding="0,0,14,0" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="12">
-                <StackPanel Spacing="6">
-                    <TextBlock Classes="label" Text="{DynamicResource langLanguage}"/>
-                    <Border Classes="track" HorizontalAlignment="Left">
-                        <StackPanel Name="Languages" Orientation="Horizontal">
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="en"
-                                         Content="English" IsCheckedChanged="OnLanguage"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="ru"
-                                         Content="Русский" IsCheckedChanged="OnLanguage"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="uk"
-                                         Content="Українська" IsCheckedChanged="OnLanguage"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <StackPanel Spacing="6">
-                    <TextBlock Classes="label" Text="{DynamicResource langTheme}"/>
-                    <Border Classes="track" HorizontalAlignment="Left">
-                        <StackPanel Name="Themes" Orientation="Horizontal">
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Auto"
-                                         Content="{DynamicResource langThemeAuto}" IsCheckedChanged="OnTheme"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Light"
-                                         Content="{DynamicResource langThemeLight}" IsCheckedChanged="OnTheme"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Dark"
-                                         Content="{DynamicResource langThemeDark}" IsCheckedChanged="OnTheme"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <StackPanel Spacing="6">
-                    <TextBlock Classes="label" Text="{DynamicResource langInterval}"/>
-                    <Border Classes="track" HorizontalAlignment="Left">
-                        <StackPanel Name="Intervals" Orientation="Horizontal">
-                            <!-- Tag — значение настройки: код языка, ThemeMode, интервал в секундах -->
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="60"
-                                         Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="120"
-                                         Content="{DynamicResource langMinutes2}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="300"
-                                         Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnInterval"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="600"
-                                         Content="{DynamicResource langMinutes10}" IsCheckedChanged="OnInterval"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <Border Classes="card">
-            <StackPanel Spacing="12">
-                <TextBlock Classes="label" Text="{DynamicResource langNotifications}"/>
-                <!-- Пороги тостов о квоте: Tag — какой порог и шаг; границы и порядок держит QuotaAlarm.Shift -->
-                <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto" RowSpacing="6">
-                    <TextBlock Text="{DynamicResource langLevelImportant}" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
-                            Tag="important:-5" Click="OnLevel"/>
-                    <TextBlock Grid.Column="2" Name="ImportantValue" Width="48" TextAlignment="Center"
-                               FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Button Grid.Column="3" Theme="{StaticResource Round}" Width="26" Height="26" Content="+"
-                            Tag="important:5" Click="OnLevel"/>
-                    <TextBlock Grid.Row="1" Text="{DynamicResource langLevelCritical}" VerticalAlignment="Center"/>
-                    <Button Grid.Row="1" Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
-                            Tag="critical:-5" Click="OnLevel"/>
-                    <TextBlock Grid.Row="1" Grid.Column="2" Name="CriticalValue" Width="48" TextAlignment="Center"
-                               FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Button Grid.Row="1" Grid.Column="3" Theme="{StaticResource Round}" Width="26" Height="26" Content="+"
-                            Tag="critical:5" Click="OnLevel"/>
-                </Grid>
-                <CheckBox Name="SessionToastsToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langSessionToasts}"
-                          IsCheckedChanged="OnSessionToasts"/>
-                <StackPanel Name="TurnPanel" Spacing="6">
-                    <TextBlock Classes="label" Text="{DynamicResource langTurnLonger}"/>
-                    <Border Classes="track" HorizontalAlignment="Left">
-                        <!-- Tag — минуты; 0 — о любом ходе -->
-                        <StackPanel Name="TurnMinutes" Orientation="Horizontal">
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="0"
-                                         Content="{DynamicResource langAnyTurn}" IsCheckedChanged="OnTurnMinutes"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="1"
-                                         Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnTurnMinutes"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="5"
-                                         Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnTurnMinutes"/>
-                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="15"
-                                         Content="{DynamicResource langMinutes15}" IsCheckedChanged="OnTurnMinutes"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <Border Name="AutostartCard" Classes="card">
-            <CheckBox Name="AutostartToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langAutostart}"
-                      IsCheckedChanged="OnAutostart"/>
-        </Border>
-
-        <Border Classes="card">
-            <StackPanel Spacing="8">
-                <TextBlock Classes="label" Text="{DynamicResource langUpdates}"/>
-                <CheckBox Name="AutoUpdateToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langAutoUpdate}"
-                          IsCheckedChanged="OnAutoUpdate"/>
-                <TextBlock Name="UpdateLine" Classes="caption" TextWrapping="Wrap"/>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Name="UpdateInstall" Theme="{StaticResource Brand}" Content="{DynamicResource langInstallUpdate}"
-                            Click="OnInstallUpdate"/>
-                    <Button Name="UpdateCheck" Theme="{StaticResource Pill}" Content="{DynamicResource langCheckUpdates}"
-                            Click="OnCheckUpdates"/>
-                    <Button Name="UpdateOpen" Theme="{StaticResource Pill}" Content="{DynamicResource langUpdateOpen}"
-                            Click="OnOpenReleases"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <Border Classes="card">
-            <StackPanel Spacing="8">
-                <TextBlock Classes="label" Text="{DynamicResource langHooks}"/>
-                <!-- Строка на агента с hooks: только установленные — у кого есть папка настроек -->
-                <ItemsControl Name="HookRows">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Spacing="12"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="local:HookRow">
-                            <StackPanel Spacing="6">
-                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
-                                <TextBlock Classes="caption" Text="{Binding State}" TextWrapping="Wrap"/>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Button Theme="{StaticResource Brand}" Content="{DynamicResource langHooksConnect}"
-                                            IsVisible="{Binding CanConnect}" Click="OnConnect"/>
-                                    <Button Theme="{StaticResource Pill}" Content="{DynamicResource langHooksDisconnect}"
-                                            IsVisible="{Binding CanDisconnect}" Click="OnDisconnect"/>
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="label" Text="{DynamicResource langLanguage}"/>
+                            <Border Classes="track" HorizontalAlignment="Left">
+                                <StackPanel Name="Languages" Orientation="Horizontal">
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="en"
+                                                 Content="English" IsCheckedChanged="OnLanguage"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="ru"
+                                                 Content="Русский" IsCheckedChanged="OnLanguage"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="uk"
+                                                 Content="Українська" IsCheckedChanged="OnLanguage"/>
                                 </StackPanel>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </Border>
+                            </Border>
+                        </StackPanel>
 
-        <Button Theme="{StaticResource Pill}" HorizontalAlignment="Left" Click="OnExit">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-                <Path Classes="icon" Data="{StaticResource IconPower}" Stroke="{Binding $parent[Button].Foreground}"/>
-                <TextBlock Text="{DynamicResource langExitApp}"/>
-            </StackPanel>
-        </Button>
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="label" Text="{DynamicResource langTheme}"/>
+                            <Border Classes="track" HorizontalAlignment="Left">
+                                <StackPanel Name="Themes" Orientation="Horizontal">
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Auto"
+                                                 Content="{DynamicResource langThemeAuto}" IsCheckedChanged="OnTheme"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Light"
+                                                 Content="{DynamicResource langThemeLight}" IsCheckedChanged="OnTheme"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Dark"
+                                                 Content="{DynamicResource langThemeDark}" IsCheckedChanged="OnTheme"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
 
-        <!-- Подвал: авторство и версия -->
-        <TextBlock Name="Credits" Classes="faint" Margin="2,-4,0,0"/>
-    </StackPanel>
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="label" Text="{DynamicResource langInterval}"/>
+                            <Border Classes="track" HorizontalAlignment="Left">
+                                <StackPanel Name="Intervals" Orientation="Horizontal">
+                                    <!-- Tag — значение настройки: код языка, ThemeMode, интервал в секундах -->
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="60"
+                                                 Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnInterval"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="120"
+                                                 Content="{DynamicResource langMinutes2}" IsCheckedChanged="OnInterval"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="300"
+                                                 Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnInterval"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="600"
+                                                 Content="{DynamicResource langMinutes10}" IsCheckedChanged="OnInterval"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Classes="label" Text="{DynamicResource langNotifications}"/>
+                        <!-- Пороги тостов о квоте: Tag — какой порог и шаг; границы и порядок держит QuotaAlarm.Shift -->
+                        <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto" RowSpacing="6">
+                            <TextBlock Text="{DynamicResource langLevelImportant}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
+                                    Tag="important:-5" Click="OnLevel"/>
+                            <TextBlock Grid.Column="2" Name="ImportantValue" Width="48" TextAlignment="Center"
+                                       FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <Button Grid.Column="3" Theme="{StaticResource Round}" Width="26" Height="26" Content="+"
+                                    Tag="important:5" Click="OnLevel"/>
+                            <TextBlock Grid.Row="1" Text="{DynamicResource langLevelCritical}" VerticalAlignment="Center"/>
+                            <Button Grid.Row="1" Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
+                                    Tag="critical:-5" Click="OnLevel"/>
+                            <TextBlock Grid.Row="1" Grid.Column="2" Name="CriticalValue" Width="48" TextAlignment="Center"
+                                       FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <Button Grid.Row="1" Grid.Column="3" Theme="{StaticResource Round}" Width="26" Height="26" Content="+"
+                                    Tag="critical:5" Click="OnLevel"/>
+                        </Grid>
+                        <CheckBox Name="SessionToastsToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langSessionToasts}"
+                                  IsCheckedChanged="OnSessionToasts"/>
+                        <StackPanel Name="TurnPanel" Spacing="6">
+                            <TextBlock Classes="label" Text="{DynamicResource langTurnLonger}"/>
+                            <Border Classes="track" HorizontalAlignment="Left">
+                                <!-- Tag — минуты; 0 — о любом ходе -->
+                                <StackPanel Name="TurnMinutes" Orientation="Horizontal">
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="0"
+                                                 Content="{DynamicResource langAnyTurn}" IsCheckedChanged="OnTurnMinutes"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="1"
+                                                 Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnTurnMinutes"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="5"
+                                                 Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnTurnMinutes"/>
+                                    <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="15"
+                                                 Content="{DynamicResource langMinutes15}" IsCheckedChanged="OnTurnMinutes"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Name="AutostartCard" Classes="card">
+                    <CheckBox Name="AutostartToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langAutostart}"
+                              IsCheckedChanged="OnAutostart"/>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="8">
+                        <TextBlock Classes="label" Text="{DynamicResource langUpdates}"/>
+                        <CheckBox Name="AutoUpdateToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langAutoUpdate}"
+                                  IsCheckedChanged="OnAutoUpdate"/>
+                        <TextBlock Name="UpdateLine" Classes="caption" TextWrapping="Wrap"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Name="UpdateInstall" Theme="{StaticResource Brand}" Content="{DynamicResource langInstallUpdate}"
+                                    Click="OnInstallUpdate"/>
+                            <Button Name="UpdateCheck" Theme="{StaticResource Pill}" Content="{DynamicResource langCheckUpdates}"
+                                    Click="OnCheckUpdates"/>
+                            <Button Name="UpdateOpen" Theme="{StaticResource Pill}" Content="{DynamicResource langUpdateOpen}"
+                                    Click="OnOpenReleases"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card">
+                    <StackPanel Spacing="8">
+                        <TextBlock Classes="label" Text="{DynamicResource langHooks}"/>
+                        <!-- Строка на агента с hooks: только установленные — у кого есть папка настроек -->
+                        <ItemsControl Name="HookRows">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="12"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="local:HookRow">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                                        <TextBlock Classes="caption" Text="{Binding State}" TextWrapping="Wrap"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Button Theme="{StaticResource Brand}" Content="{DynamicResource langHooksConnect}"
+                                                    IsVisible="{Binding CanConnect}" Click="OnConnect"/>
+                                            <Button Theme="{StaticResource Pill}" Content="{DynamicResource langHooksDisconnect}"
+                                                    IsVisible="{Binding CanDisconnect}" Click="OnDisconnect"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Button Theme="{StaticResource Pill}" HorizontalAlignment="Left" Click="OnExit">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Path Classes="icon" Data="{StaticResource IconPower}" Stroke="{Binding $parent[Button].Foreground}"/>
+                        <TextBlock Text="{DynamicResource langExitApp}"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Подвал: авторство и версия -->
+                <TextBlock Name="Credits" Classes="faint" Margin="2,-4,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

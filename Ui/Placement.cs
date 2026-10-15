@@ -48,6 +48,15 @@ internal static class Placement
 	public static PixelPoint Corner(PixelRect work, PixelSize window, int margin) =>
 		new(work.Right - window.Width - margin, work.Bottom - window.Height - margin);
 
+	/// <summary>Окно не выше рабочей области экрана со значком: что не влезло, прокручивается внутри окна.</summary>
+	public static void Fit(Window window, PixelRect icon)
+	{
+		if (Screen(window, icon) is { } screen)
+		{
+			window.MaxHeight = screen.WorkingArea.Height / screen.Scaling;
+		}
+	}
+
 	public static void Place(Window window, PixelRect icon)
 	{
 		if (Screen(window, icon) is { } screen)
@@ -88,6 +97,7 @@ internal class TrayWindow : Window
 	protected void ShowAt(PixelRect anchor)
 	{
 		_anchor = anchor;
+		Placement.Fit(this, anchor);
 		Show();
 		Place(anchor);
 	}

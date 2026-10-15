@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Styling;
 
 namespace AgentVitals;
@@ -90,7 +92,18 @@ internal partial class Popover : TrayWindow
 				var tab = new RadioButton
 				{
 					Theme = (ControlTheme)this.FindResource("Tab")!,
-					Content = name,
+
+					// Точка — у вкладки соседа, когда у него запас на исходе (ShowProvider).
+					Content = new StackPanel
+					{
+						Orientation = Orientation.Horizontal,
+						Spacing = 6,
+						Children =
+						{
+							new TextBlock { Text = name },
+							new Ellipse { Width = 7, Height = 7, VerticalAlignment = VerticalAlignment.Center, IsVisible = false },
+						},
+					},
 					GroupName = "providers",
 					IsChecked = name == _selected,
 					Tag = name,
@@ -123,6 +136,11 @@ internal partial class Popover : TrayWindow
 	{
 		var provider = Selected;
 
+		// Шапка — о выбранном агенте: Claude на 90% не делает «критично» вкладку Codex без трат.
+		HealthPill.DataContext = provider;
+		HealthPill.IsVisible = provider is not null;
+		ShowAlerts();
+
 		Cards.ItemsSource = provider?.Cards;
 		InfoLine.Text = string.Join(" · ", new[] { provider?.Updated, provider?.Info }.Where(text => !string.IsNullOrEmpty(text)));
 		ErrorLine.Text = provider?.Error;
@@ -140,6 +158,20 @@ internal partial class Popover : TrayWindow
 		if (usage is not null)
 		{
 			ShowUsage(usage);
+		}
+	}
+
+	/// <summary>Точка на вкладке другого агента, у которого запас на исходе; у выбранного об этом говорит шапка.</summary>
+	private void ShowAlerts()
+	{
+		foreach (var tab in Tabs.Children.OfType<RadioButton>())
+		{
+			if (tab.Content is StackPanel { Children: [_, Ellipse dot] })
+			{
+				var provider = _vitals?.Providers.FirstOrDefault(provider => provider.Name == tab.Tag as string);
+				dot.IsVisible = provider is { Alert: true } && provider.Name != _selected;
+				dot.Fill = provider?.HealthBrush;
+			}
 		}
 	}
 

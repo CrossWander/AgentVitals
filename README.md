@@ -30,6 +30,8 @@ asks for permission. Inspired by [ClaudeBar](https://github.com/tddworks/ClaudeB
 
 Hover the icon for a quick card, click it for the full window, right-click for the menu. The window
 stays open while you work in other windows: close it with ✕, another click on the icon or Esc.
+On a small screen it stays within the screen: the header and the buttons stay put and the middle
+scrolls.
 
 ## What it covers
 
@@ -76,8 +78,9 @@ An agent whose credential file is missing is simply not shown.
 - **Colours.** The pulse line in the tray takes the colour of the window that limits you most:
   green below the *important* level, amber from it, red from *critical*, grey when there is no
   data. These are the same levels the toasts use, so what turns red is what you were warned
-  about; cards, bars and the header follow them too. An exhausted week turns the icon red even
-  with an empty session.
+  about; cards, bars and the header follow them too. The window header speaks for the tab you are
+  on, and a tab whose agent runs low gets a dot of that colour. An exhausted week turns the icon red
+  even with an empty session.
 - **Toasts.** When the session or the week reaches 75% (*important*, a quarter left) and 90%
   (*critical*, almost used up), with the time until it resets. Both levels move in steps of 5
   between 50% and 95% in settings. Each toast comes once, and again only after that window resets;

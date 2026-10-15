@@ -43,6 +43,7 @@ internal sealed record CardView(
 
 /// <param name="StatusUrl">Страница статуса агента; null — её нет, и строки статуса тоже.</param>
 /// <param name="Sessions">Живые сессии агента; null — hooks у агента нет, и карточки тоже.</param>
+/// <param name="HealthText">Плашка в шапке, пока выбрана эта вкладка: по самому узкому окну этого агента.</param>
 internal sealed record ProviderView(
 	string Name,
 	string Info,
@@ -56,8 +57,14 @@ internal sealed record ProviderView(
 	string? StatusUrl,
 	string SessionsTitle,
 	IReadOnlyList<SessionView>? Sessions,
-	string SessionsHint)
+	string SessionsHint,
+	string HealthText,
+	IBrush HealthBrush,
+	Health Health)
 {
+	/// <summary>Точка на вкладке: у агента запас на исходе, даже когда смотришь на соседа.</summary>
+	public bool Alert => Health is Health.Warning or Health.Critical;
+
 	/// <summary>Для карточки по наведению — только окна, которые блокируют всю работу.</summary>
 	public IReadOnlyList<CardView> LimitingCards => [.. Cards.Where(card => card.Limiting)];
 
@@ -136,23 +143,28 @@ internal static class Views
 	/// <param name="levels">Пороги из настроек.</param>
 	public static Vitals Build(IReadOnlyList<ProviderState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels)
 	{
-		var health = Poller.Health(agents, now, levels);
-
-		// Шапка говорит о самом узком окне: исчерпано оно — «исчерпано», как на его карточке.
-		var tightest = Poller.Tightest(agents, now);
-
+		// Значок и карточка по наведению — по худшему агенту; шапка окна — по выбранной вкладке.
+		var badge = Badge(agents, now, levels);
 		var live = SessionWatcher.Overall(sessions);
 		var focus = sessions.FirstOrDefault(session => session.State == live);
 		var status = Overall(agents);
 
 		return new(
-			tightest is { } used ? Text.Badge(used, levels) : Text.HealthName(health),
-			Brush(Level(health)),
+			badge.Text,
+			badge.Brush,
 			[.. agents.Select(state => Provider(state, now, levels, hooks.TryGetValue(state.Provider.Name, out var link) ? link : null, sessions))],
 			status.Text,
 			Brush(Level(status.Health)),
 			focus is null ? "" : Text.Live(focus),
 			Brush(Dot(live)));
+	}
+
+	/// <summary>Плашка по самому узкому окну агентов: исчерпано оно — «исчерпано», как на его карточке.</summary>
+	private static (string Text, IBrush Brush, Health Health) Badge(IReadOnlyList<ProviderState> agents, DateTime now, Thresholds levels)
+	{
+		var health = Poller.Health(agents, now, levels);
+
+		return (Poller.Tightest(agents, now) is { } used ? Text.Badge(used, levels) : Text.HealthName(health), Brush(Level(health)), health);
 	}
 
 	/// <summary>Строка статуса в карточке наведения: худший статус среди агентов; все в порядке — «все сервисы работают».</summary>
@@ -199,6 +211,7 @@ internal static class Views
 
 		var info = string.Join(" · ", new[] { state.Snapshot?.Plan, state.Snapshot?.Account }.Where(text => !string.IsNullOrEmpty(text)));
 
+		var badge = Badge([state], now, levels);
 		var target = hooks is null ? null : HookTarget.All.FirstOrDefault(target => target.Agent == state.Provider.Name);
 		List<Session> own = [.. (sessions ?? []).Where(session => session.Agent == state.Provider.Name)];
 
@@ -218,7 +231,10 @@ internal static class Views
 			target is null ? ""
 				: hooks != HookLink.On ? Localization.Format("langHooksHint", target.Title)
 				: own.Count == 0 ? Localization.Get("langNoSessions")
-				: "");
+				: "",
+			badge.Text,
+			badge.Brush,
+			badge.Health);
 	}
 
 	public const double ChartHeight = 90;

@@ -52,6 +52,22 @@ public class ViewsTests
 		Assert.Equal("langHealthUnknown", Views.Build([], Hooks(), [], now, _levels).HealthText);
 	}
 
+	[Fact]
+	public void EachTabHasItsOwnBadge() // на вкладке Codex без трат — не «критично» из-за Claude
+	{
+		var now = DateTime.UtcNow;
+		var claude = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", null, [new(WindowKind.Session, null, 95, null, Limiting: true)], null) };
+		var codex = new ProviderState(new CodexProvider()) { Snapshot = new("Free", null, [new(WindowKind.Month, null, 0, null, Limiting: true)], null) };
+		var gemini = new ProviderState(new GeminiProvider());
+
+		var vitals = Views.Build([claude, codex, gemini], Hooks(), [], now, _levels);
+
+		Assert.Equal("langHealthCritical", vitals.HealthText); // значок и карточка по наведению — по худшему агенту
+		Assert.Equal(("langHealthCritical", true), (vitals.Providers[0].HealthText, vitals.Providers[0].Alert));
+		Assert.Equal(("langHealthGood", false), (vitals.Providers[1].HealthText, vitals.Providers[1].Alert));
+		Assert.Equal(("langHealthUnknown", false), (vitals.Providers[2].HealthText, vitals.Providers[2].Alert)); // без данных — не тревога
+	}
+
 	[Theory]
 	[InlineData(HookLink.Off, "langHooksHint")]
 	[InlineData(HookLink.Moved, "langHooksHint")] // программу перенесли — hooks смотрят на старый путь
