@@ -12,13 +12,16 @@ internal static class Program
 	[STAThread]
 	private static int Main(string[] args)
 	{
-		// Hook зовут на каждое событие Claude Code: без интерфейса и мьютекса — прочитать
+		// Hook зовут на каждое событие агента: без интерфейса и мьютекса — прочитать
 		// событие, записать состояние и выйти как можно быстрее.
 		if (args.FirstOrDefault() == "hook")
 		{
+			// «hook codex» — от Codex, просто «hook» — от Claude Code: так подключались до Codex, и эти hooks работают как были.
+			var agent = args.ElementAtOrDefault(1) == "codex" ? "Codex" : "Claude";
+
 			// Время запуска процесса, а не входа в Main: прогрев рантайма скачет на сотни миллисекунд
-			// и переставил бы события, которые Claude Code запустил одно за другим.
-			HookWriter.Run(Console.OpenStandardInput(), Paths.Sessions, Process.GetCurrentProcess().StartTime.ToUniversalTime().Ticks, ClaudeProcess.Find());
+			// и переставил бы события, которые агент запустил одно за другим.
+			HookWriter.Run(Console.OpenStandardInput(), Paths.Sessions, Process.GetCurrentProcess().StartTime.ToUniversalTime().Ticks, AgentProcess.Find(agent), agent);
 
 			return 0;
 		}

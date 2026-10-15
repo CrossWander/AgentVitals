@@ -48,8 +48,8 @@ public class ViewsTests
 		var now = DateTime.UtcNow;
 		var claude = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", null, [new(WindowKind.Session, null, 100, null, Limiting: true)], null) };
 
-		Assert.Equal("langHealthExhausted", Views.Build([claude], HookLink.On, [], now, _levels).HealthText);
-		Assert.Equal("langHealthUnknown", Views.Build([], HookLink.On, [], now, _levels).HealthText);
+		Assert.Equal("langHealthExhausted", Views.Build([claude], Hooks(), [], now, _levels).HealthText);
+		Assert.Equal("langHealthUnknown", Views.Build([], Hooks(), [], now, _levels).HealthText);
 	}
 
 	[Theory]
@@ -57,7 +57,22 @@ public class ViewsTests
 	[InlineData(HookLink.Moved, "langHooksHint")] // программу перенесли — hooks смотрят на старый путь
 	[InlineData(HookLink.On, "langNoSessions")]
 	public void HintSaysWhySessionsAreEmpty(HookLink hooks, string hint) =>
-		Assert.Equal(hint, Views.Build([], hooks, [], DateTime.UtcNow, _levels).SessionsHint);
+		Assert.Equal(hint, Views.Build([new ProviderState(new ClaudeProvider())], Hooks(claude: hooks), [], DateTime.UtcNow, _levels).Providers[0].SessionsHint);
+
+	private static Dictionary<string, HookLink> Hooks(HookLink claude = HookLink.On, HookLink codex = HookLink.On) =>
+		new() { ["Claude"] = claude, ["Codex"] = codex };
+
+	[Fact]
+	public void EachTabShowsItsOwnSessions()
+	{
+		Session[] sessions = [new("a", SessionState.Working, null, "api", null), new("b", SessionState.Waiting, null, "web", null, Agent: "Codex")];
+		var tabs = Views.Build([new(new ClaudeProvider()), new(new CodexProvider()), new(new GeminiProvider())], Hooks(), sessions, DateTime.UtcNow, _levels).Providers;
+
+		Assert.Equal(["api"], tabs[0].Sessions!.Select(row => row.Folder));
+		Assert.Equal(["web"], tabs[1].Sessions!.Select(row => row.Folder));
+		Assert.Equal("langSessions", tabs[1].SessionsTitle);
+		Assert.Null(tabs[2].Sessions); // у Gemini hooks нет — и карточки нет
+	}
 
 	[Fact]
 	public void EachTabShowsItsOwnStatus() // на вкладке Codex — статус Codex, а не Anthropic
@@ -79,12 +94,12 @@ public class ViewsTests
 		var claude = new ProviderState(new ClaudeProvider()) { Status = new("none", "", null, "Anthropic") };
 		var codex = new ProviderState(new CodexProvider()) { Status = new("minor", "Degraded Performance", "Codex is slow", "Codex") };
 
-		Assert.Equal("Codex is slow", Views.Build([claude, codex], HookLink.On, [], now, _levels).StatusText);
+		Assert.Equal("Codex is slow", Views.Build([claude, codex], Hooks(), [], now, _levels).StatusText);
 
 		codex.Status = new("none", "", null, "Codex");
-		Assert.Equal("langStatusAllOk", Views.Build([claude, codex], HookLink.On, [], now, _levels).StatusText); // все в порядке — без имён
-		Assert.Equal("langStatusOk", Views.Build([claude], HookLink.On, [], now, _levels).StatusText); // один агент — его строка
-		Assert.Equal("", Views.Build([new ProviderState(new GeminiProvider())], HookLink.On, [], now, _levels).StatusText);
+		Assert.Equal("langStatusAllOk", Views.Build([claude, codex], Hooks(), [], now, _levels).StatusText); // все в порядке — без имён
+		Assert.Equal("langStatusOk", Views.Build([claude], Hooks(), [], now, _levels).StatusText); // один агент — его строка
+		Assert.Equal("", Views.Build([new ProviderState(new GeminiProvider())], Hooks(), [], now, _levels).StatusText);
 	}
 
 	[Fact]
@@ -102,7 +117,7 @@ public class ViewsTests
 	{
 		var session = new Session("s", SessionState.Working, null, "repo", "main", Pid: 4242, Cwd: @"C:\Work\repo");
 
-		Assert.Same(session, Views.Build([], HookLink.On, [session], DateTime.UtcNow, _levels).Sessions[0].Session);
+		Assert.Same(session, Views.Build([new ProviderState(new ClaudeProvider())], Hooks(), [session], DateTime.UtcNow, _levels).Providers[0].Sessions![0].Session);
 	}
 
 	[Theory]

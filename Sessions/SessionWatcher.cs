@@ -54,7 +54,7 @@ internal static class SessionWatcher
 			}
 
 			// Терминал закрыли крестиком или Claude Code упал: SessionEnd не придёт, а ждать час незачем.
-			if (session.Pid is { } pid && !ClaudeProcess.Alive(pid, session.Time))
+			if (session.Pid is { } pid && !AgentProcess.Alive(pid, session.Time))
 			{
 				Forget(file);
 
@@ -88,7 +88,8 @@ internal static class SessionWatcher
 				// Длительность — только у хода, закрытого Stop: прерванный Esc или брошенный её не знает.
 				session.State == SessionState.Idle ? session.Time - turn : null,
 				session.Pid,
-				session.Cwd));
+				session.Cwd,
+				session.Agent ?? "Claude"));
 		}
 
 		return sessions;

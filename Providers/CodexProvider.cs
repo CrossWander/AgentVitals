@@ -21,9 +21,11 @@ internal sealed class CodexProvider : IProvider
 
 	public string Cli => "codex";
 
-	public string Credentials { get; } = Path.Combine(
-		Environment.GetEnvironmentVariable("CODEX_HOME") is { Length: > 0 } home ? home : Path.Combine(Paths.Home, ".codex"),
-		"auth.json");
+	/// <summary>Папка Codex: $CODEX_HOME, а без неё ~/.codex — как у самого Codex CLI.</summary>
+	internal static string Home { get; } =
+		Environment.GetEnvironmentVariable("CODEX_HOME") is { Length: > 0 } home ? home : Path.Combine(Paths.Home, ".codex");
+
+	public string Credentials { get; } = Path.Combine(Home, "auth.json");
 
 	public string? Dashboard => "https://chatgpt.com/codex/settings/usage";
 

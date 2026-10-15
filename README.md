@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
 A Windows tray app that shows how much of your Claude quota is left and when it resets, what each
-Claude Code session is doing right now, what today's work would cost at API prices, and whether
+Claude Code or Codex session is doing right now, what today's work would cost at API prices, and whether
 the agent's service is up. A toast warns you before you run out, when Claude finishes a long turn and when it
 asks for permission. Inspired by [ClaudeBar](https://github.com/tddworks/ClaudeBar) and
 [claude-status-bar](https://github.com/m1ckc3s/claude-status-bar), which do this on macOS.
@@ -38,7 +38,7 @@ stays open while you work in other windows: close it with ✕, another click on 
 | Quotas | Session, week and per-model weekly limits with a reset countdown; a mark on the bar shows where even spending would be by now → [more](#quotas-and-alerts) |
 | Tray icon | A pulse line coloured by the limit closest to running out; it beats while Claude works, and a blue dot blinks while Claude waits for you |
 | Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a long turn ends, when Claude asks for permission and when an agent's service status changes |
-| Live sessions | Every open Claude Code session with its folder, git branch, state and turn timer → [more](#live-sessions) |
+| Live sessions | Every open Claude Code and Codex session, on its agent's tab, with its folder, git branch, state and turn timer → [more](#live-sessions) |
 | Usage statistics | Today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
 | Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears); a toast when one changes |
 | After sleep | Asks again as soon as the PC wakes; a window whose reset time has passed shows 0% instead of stale numbers |
@@ -103,7 +103,8 @@ restarting AgentVitals no longer spends the rate limit and gets refused straight
 
 ## Live sessions
 
-Settings → *Live sessions* → **Connect** adds AgentVitals hooks to `~/.claude/settings.json`.
+Settings → *Live sessions* → **Connect** on the Claude Code row adds AgentVitals hooks to
+`~/.claude/settings.json`.
 Each hook runs `AgentVitals.exe hook` in the background, which writes one small state file per
 session into `sessions\` next to the exe. **Disconnect** removes only AgentVitals' entries.
 
@@ -129,6 +130,11 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
   change the file is copied to `settings.json.agentvitals.bak`, comments included.
 - If you move the exe, settings say so — reconnect. Before deleting the exe, press **Disconnect**:
   otherwise Claude Code keeps calling a program that is no longer there.
+- **Codex.** **Connect** on the Codex row writes `~/.codex/hooks.json` (or `hooks.json` under
+  `$CODEX_HOME`); each hook runs `"AgentVitals.exe" hook codex`. Codex runs a new or changed hook
+  only after you trust it: open `/hooks` in Codex once after connecting, and again after moving the
+  exe. Esc in Codex fires its own `Interrupt` hook, so the session goes idle at once. Codex sessions
+  show on the Codex tab, Claude Code sessions on the Claude tab.
 
 ## Usage statistics
 

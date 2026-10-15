@@ -20,6 +20,57 @@ public class HookInstallerTests
 		}
 		""";
 
+	private static HookTarget Claude(string file) => HookTarget.Claude with { File = file };
+
+	private static HookTarget Codex(string file) => HookTarget.Codex with { File = file };
+
+	[Fact]
+	public void CodexGetsAQuotedCommandLine() // Codex запускает строку через cmd.exe /C — путь в кавычках
+	{
+		using var temp = new TempDirectory();
+		var hooks = temp.File("hooks.json");
+
+		HookInstaller.Install(Codex(hooks), _exe);
+
+		var root = HookInstaller.Load(hooks);
+		var stop = root["hooks"]!["Stop"]![0]!["hooks"]![0]!;
+		Assert.Equal($"\"{_exe}\" hook codex", (string?)stop["command"]);
+		Assert.True((bool?)stop["async"]);
+
+		var interrupt = root["hooks"]!["Interrupt"]![0]!["hooks"]![0]!;
+		Assert.Null(interrupt["async"]);
+		Assert.Equal(3, (int?)interrupt["timeout"]);
+
+		Assert.Null(root["hooks"]!["SubagentStop"]); // у субагента session_id родителя
+		Assert.Equal(HookLink.On, HookInstaller.State(Codex(hooks), _exe)); // путь с пробелами и кириллицей узнаётся
+	}
+
+	[Fact]
+	public void CodexKeepsForeignHooksAndNoticesTheMove()
+	{
+		using var temp = new TempDirectory();
+		var hooks = temp.File("hooks.json");
+		File.WriteAllText(hooks, """{ "description": "мои", "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "python3 notify.py" } ] } ] } }""");
+		var original = HookInstaller.Load(hooks);
+
+		HookInstaller.Install(Codex(hooks), _exe);
+		Assert.Equal(HookLink.Moved, HookInstaller.State(Codex(hooks), @"D:\elsewhere\AgentVitals.exe"));
+
+		HookInstaller.Uninstall(Codex(hooks));
+		Assert.True(JsonNode.DeepEquals(original, HookInstaller.Load(hooks)));
+	}
+
+	[Fact]
+	public void ClaudeAndCodexEntriesAreToldApart() // одна программа, две формы записи
+	{
+		var claude = new JsonObject { ["type"] = "command", ["command"] = _exe, ["args"] = new JsonArray("hook") };
+		var codex = new JsonObject { ["type"] = "command", ["command"] = $"\"{_exe}\" hook codex" };
+
+		Assert.Null(HookTarget.Codex.Exe(claude));
+		Assert.Null(HookTarget.Claude.Exe(codex));
+		Assert.Equal(_exe, HookTarget.Codex.Exe(codex));
+	}
+
 	[Fact]
 	public void InstallKeepsForeignSettingsAndHooks()
 	{
@@ -27,7 +78,7 @@ public class HookInstallerTests
 		var settings = temp.File("settings.json");
 		File.WriteAllText(settings, _foreign);
 
-		HookInstaller.Install(settings, _exe);
+		HookInstaller.Install(Claude(settings), _exe);
 
 		var root = HookInstaller.Load(settings);
 		Assert.Equal("opus", (string?)root["model"]);
@@ -35,7 +86,7 @@ public class HookInstallerTests
 		var preToolUse = root["hooks"]!["PreToolUse"]!.AsArray();
 		Assert.Equal(2, preToolUse.Count);
 		Assert.Equal("lint.sh", (string?)preToolUse[0]!["hooks"]![0]!["command"]);
-		Assert.Equal(HookLink.On, HookInstaller.State(settings, _exe));
+		Assert.Equal(HookLink.On, HookInstaller.State(Claude(settings), _exe));
 		Assert.True(File.Exists(settings + ".agentvitals.bak"));
 	}
 
@@ -45,7 +96,7 @@ public class HookInstallerTests
 		using var temp = new TempDirectory();
 		var settings = temp.File("settings.json");
 
-		HookInstaller.Install(settings, _exe);
+		HookInstaller.Install(Claude(settings), _exe);
 
 		var root = HookInstaller.Load(settings);
 		var stop = root["hooks"]!["Stop"]![0]!["hooks"]![0]!;
@@ -66,7 +117,7 @@ public class HookInstallerTests
 		using var temp = new TempDirectory();
 		var settings = temp.File("settings.json");
 
-		HookInstaller.Install(settings, _exe);
+		HookInstaller.Install(Claude(settings), _exe);
 
 		Assert.Contains("Мои программы", File.ReadAllText(settings));
 	}
@@ -78,9 +129,9 @@ public class HookInstallerTests
 		var settings = temp.File("settings.json");
 		File.WriteAllText(settings, _foreign);
 
-		HookInstaller.Install(settings, _exe);
+		HookInstaller.Install(Claude(settings), _exe);
 		var once = File.ReadAllText(settings);
-		HookInstaller.Install(settings, _exe);
+		HookInstaller.Install(Claude(settings), _exe);
 
 		Assert.Equal(once, File.ReadAllText(settings));
 	}
@@ -93,11 +144,11 @@ public class HookInstallerTests
 		File.WriteAllText(settings, _foreign);
 		var original = HookInstaller.Load(settings);
 
-		HookInstaller.Install(settings, _exe);
-		HookInstaller.Uninstall(settings);
+		HookInstaller.Install(Claude(settings), _exe);
+		HookInstaller.Uninstall(Claude(settings));
 
 		Assert.True(JsonNode.DeepEquals(original, HookInstaller.Load(settings)));
-		Assert.Equal(HookLink.Off, HookInstaller.State(settings, _exe));
+		Assert.Equal(HookLink.Off, HookInstaller.State(Claude(settings), _exe));
 	}
 
 	[Fact]
@@ -108,8 +159,8 @@ public class HookInstallerTests
 		File.WriteAllText(settings, """{ "hooks": { "PreCompact": [] } }"""); // в PreCompact мы не пишем
 		var original = HookInstaller.Load(settings);
 
-		HookInstaller.Install(settings, _exe);
-		HookInstaller.Uninstall(settings);
+		HookInstaller.Install(Claude(settings), _exe);
+		HookInstaller.Uninstall(Claude(settings));
 
 		Assert.True(JsonNode.DeepEquals(original, HookInstaller.Load(settings)));
 	}
@@ -121,7 +172,7 @@ public class HookInstallerTests
 		var settings = temp.File("settings.json");
 		File.WriteAllText(settings, """{ "model": "opus", "hooks": {} }""");
 
-		HookInstaller.Uninstall(settings);
+		HookInstaller.Uninstall(Claude(settings));
 
 		Assert.NotNull(HookInstaller.Load(settings)["hooks"]);
 	}
@@ -132,11 +183,11 @@ public class HookInstallerTests
 		using var temp = new TempDirectory();
 		var settings = temp.File("settings.json");
 		File.WriteAllText(settings, _foreign);
-		HookInstaller.Install(settings, _exe);
+		HookInstaller.Install(Claude(settings), _exe);
 
 		var edited = File.ReadAllText(settings).Replace("\"opus\"", "\"sonnet\" /* поменял руками */");
 		File.WriteAllText(settings, edited);
-		HookInstaller.Uninstall(settings);
+		HookInstaller.Uninstall(Claude(settings));
 
 		Assert.Equal(edited, File.ReadAllText(settings + ".agentvitals.bak"));
 	}
@@ -147,9 +198,9 @@ public class HookInstallerTests
 		using var temp = new TempDirectory();
 		var settings = temp.File("settings.json");
 
-		HookInstaller.Install(settings, _exe);
+		HookInstaller.Install(Claude(settings), _exe);
 
-		Assert.Equal(HookLink.Moved, HookInstaller.State(settings, @"D:\elsewhere\AgentVitals.exe"));
+		Assert.Equal(HookLink.Moved, HookInstaller.State(Claude(settings), @"D:\elsewhere\AgentVitals.exe"));
 	}
 
 	[Fact]
@@ -159,7 +210,7 @@ public class HookInstallerTests
 		var settings = temp.File("settings.json");
 		File.WriteAllText(settings, "{ broken");
 
-		Assert.ThrowsAny<JsonException>(() => HookInstaller.Install(settings, _exe));
+		Assert.ThrowsAny<JsonException>(() => HookInstaller.Install(Claude(settings), _exe));
 		Assert.Equal("{ broken", File.ReadAllText(settings));
 	}
 
@@ -169,8 +220,8 @@ public class HookInstallerTests
 		using var temp = new TempDirectory();
 		var settings = temp.File("settings.json");
 
-		Assert.Equal(HookLink.Off, HookInstaller.State(settings, _exe));
-		HookInstaller.Uninstall(settings);
+		Assert.Equal(HookLink.Off, HookInstaller.State(Claude(settings), _exe));
+		HookInstaller.Uninstall(Claude(settings));
 		Assert.False(File.Exists(settings));
 	}
 }

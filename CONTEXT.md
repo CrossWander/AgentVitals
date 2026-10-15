@@ -1,6 +1,6 @@
 # AgentVitals
 
-A tray companion for people who code with AI agents: how much of each agent's quota is left, whether each agent's service is healthy, what the live Claude Code sessions are doing, and what the work cost.
+A tray companion for people who code with AI agents: how much of each agent's quota is left, whether each agent's service is healthy, what the live Claude Code and Codex sessions are doing, and what the work cost.
 
 ## Language
 
@@ -69,18 +69,18 @@ _Avoid_: logged out, unauthorized
 ### Live sessions
 
 **Live session**:
-A running Claude Code conversation in one folder, reported by the hooks.
+A running Claude Code or Codex conversation in one folder, reported by the hooks; it shows on its agent's tab.
 _Avoid_: chat, conversation
 
 **Session state**:
 Idle, Working or Waiting; Waiting means the session asks for permission and stands still until answered.
 
 **Turn**:
-One stretch of Claude working on a prompt, from the prompt to the stop.
+One stretch of the agent working on a prompt, from the prompt to the stop.
 _Avoid_: run, request
 
 **Hooks**:
-AgentVitals' entries in Claude Code's settings through which live sessions report their state; they are On, Off or Moved (pointing at an old copy of the program).
+AgentVitals' entries in an agent's own settings (Claude Code's settings.json, Codex's hooks.json) through which live sessions report their state; they are On, Off or Moved (pointing at an old copy of the program). Codex runs new hooks only after the person trusts them in /hooks.
 
 ### Alerts
 
@@ -96,7 +96,7 @@ A toast when a limiting window crosses a threshold; told once per threshold per 
 _Avoid_: quota notification
 
 **Session toast**:
-A toast when a long turn finishes or a live session waits for permission.
+A toast when an agent finishes a long turn or a live session waits for permission.
 
 ### Usage statistics
 

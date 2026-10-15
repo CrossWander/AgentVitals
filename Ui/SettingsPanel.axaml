@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:AgentVitals"
              x:Class="AgentVitals.SettingsPanel"
              x:ClassModifier="internal">
     <StackPanel Spacing="12">
@@ -126,13 +127,28 @@
         <Border Classes="card">
             <StackPanel Spacing="8">
                 <TextBlock Classes="label" Text="{DynamicResource langHooks}"/>
-                <TextBlock Name="HooksState" Classes="caption" TextWrapping="Wrap"/>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Name="HooksConnect" Theme="{StaticResource Brand}" Content="{DynamicResource langHooksConnect}"
-                            Click="OnConnect"/>
-                    <Button Name="HooksDisconnect" Theme="{StaticResource Pill}" Content="{DynamicResource langHooksDisconnect}"
-                            Click="OnDisconnect"/>
-                </StackPanel>
+                <!-- Строка на агента с hooks: только установленные — у кого есть папка настроек -->
+                <ItemsControl Name="HookRows">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="12"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:HookRow">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                                <TextBlock Classes="caption" Text="{Binding State}" TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Theme="{StaticResource Brand}" Content="{DynamicResource langHooksConnect}"
+                                            IsVisible="{Binding CanConnect}" Click="OnConnect"/>
+                                    <Button Theme="{StaticResource Pill}" Content="{DynamicResource langHooksDisconnect}"
+                                            IsVisible="{Binding CanDisconnect}" Click="OnDisconnect"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
         </Border>
 

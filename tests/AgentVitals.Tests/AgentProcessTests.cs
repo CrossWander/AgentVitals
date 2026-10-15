@@ -5,7 +5,7 @@ using Xunit;
 
 namespace AgentVitals.Tests;
 
-public class ClaudeProcessTests
+public class AgentProcessTests
 {
 	[Theory]
 	[InlineData("claude.exe")]
@@ -21,7 +21,7 @@ public class ClaudeProcessTests
 			[1] = (0, "explorer.exe"),
 		};
 
-		Assert.Equal(3, ClaudeProcess.Ancestor(processes, 10));
+		Assert.Equal(3, AgentProcess.Ancestor(processes, 10, "Claude"));
 	}
 
 	[Fact]
@@ -34,7 +34,7 @@ public class ClaudeProcessTests
 			[1] = (0, "explorer.exe"),
 		};
 
-		Assert.Null(ClaudeProcess.Ancestor(processes, 10));
+		Assert.Null(AgentProcess.Ancestor(processes, 10, "Claude"));
 	}
 
 	[Fact]
@@ -46,16 +46,31 @@ public class ClaudeProcessTests
 			[5] = (10, "cmd.exe"),
 		};
 
-		Assert.Null(ClaudeProcess.Ancestor(processes, 10));
+		Assert.Null(AgentProcess.Ancestor(processes, 10, "Claude"));
+	}
+
+	[Fact]
+	public void FindsCodexAboveCmd() // Codex запускает hook через cmd.exe /C; из npm — node запускает codex.exe
+	{
+		var processes = new Dictionary<int, (int Parent, string Name)>
+		{
+			[10] = (5, "AgentVitals.exe"),
+			[5] = (3, "cmd.exe"),
+			[3] = (2, "codex.exe"),
+			[2] = (1, "node.exe"),
+			[1] = (0, "WindowsTerminal.exe"),
+		};
+
+		Assert.Equal(3, AgentProcess.Ancestor(processes, 10, "Codex"));
 	}
 
 	[Fact]
 	public void RunningProcessIsAlive() =>
-		Assert.True(ClaudeProcess.Alive(Environment.ProcessId, DateTime.UtcNow));
+		Assert.True(AgentProcess.Alive(Environment.ProcessId, DateTime.UtcNow));
 
 	[Fact]
 	public void NumberTakenByALaterProcessIsDead() => // hook писал раньше, чем запустился процесс с этим номером
-		Assert.False(ClaudeProcess.Alive(Environment.ProcessId, DateTime.UtcNow.AddYears(-1)));
+		Assert.False(AgentProcess.Alive(Environment.ProcessId, DateTime.UtcNow.AddYears(-1)));
 
 	[Fact]
 	public void ExitedProcessIsDead()
@@ -68,6 +83,6 @@ public class ClaudeProcessTests
 			pid = process.Id;
 		}
 
-		Assert.False(ClaudeProcess.Alive(pid, DateTime.UtcNow));
+		Assert.False(AgentProcess.Alive(pid, DateTime.UtcNow));
 	}
 }

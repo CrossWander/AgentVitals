@@ -51,7 +51,7 @@ internal partial class SettingsPanel : UserControl
 
 		AutoUpdateToggle.IsChecked = Store.Current.AutoUpdate;
 		ShowRelease();
-		ShowHooks(null);
+		ShowHooks();
 		_loading = false;
 	}
 
@@ -77,7 +77,7 @@ internal partial class SettingsPanel : UserControl
 			Localization.Apply(code);
 			Store.Current.Language = Localization.Current;
 			Store.Save();
-			ShowHooks(null);
+			ShowHooks();
 			ShowRelease();
 			Changed?.Invoke();
 		}
@@ -224,46 +224,68 @@ internal partial class SettingsPanel : UserControl
 		UpdateOpen.IsVisible = error is not null || (newer && !OperatingSystem.IsWindows());
 	}
 
-	private void OnConnect(object? sender, RoutedEventArgs e) =>
-		ChangeHooks(() => HookInstaller.Install(HookInstaller.SettingsPath, Environment.ProcessPath!), "hooks connected");
+	private void OnConnect(object? sender, RoutedEventArgs e)
+	{
+		if (sender is Control { DataContext: HookRow row })
+		{
+			ChangeHooks(row.Target, () => HookInstaller.Install(row.Target, Environment.ProcessPath!), $"hooks connected to {row.Title}");
+		}
+	}
 
-	private void OnDisconnect(object? sender, RoutedEventArgs e) =>
-		ChangeHooks(() => HookInstaller.Uninstall(HookInstaller.SettingsPath), "hooks disconnected");
+	private void OnDisconnect(object? sender, RoutedEventArgs e)
+	{
+		if (sender is Control { DataContext: HookRow row })
+		{
+			ChangeHooks(row.Target, () => HookInstaller.Uninstall(row.Target), $"hooks disconnected from {row.Title}");
+		}
+	}
 
 	private void OnBack(object? sender, RoutedEventArgs e) => Back?.Invoke();
 
 	private void OnExit(object? sender, RoutedEventArgs e) => ExitRequested?.Invoke();
 
-	private void ChangeHooks(Action change, string journal)
+	private void ChangeHooks(HookTarget target, Action change, string journal)
 	{
 		try
 		{
 			change();
 			Journal.Add(journal);
-			ShowHooks(null);
+			ShowHooks();
 			Changed?.Invoke();
 		}
 		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException)
 		{
-			ShowHooks(exception.Message);
+			ShowHooks(target, exception.Message);
 		}
 	}
 
-	private void ShowHooks(string? error)
+	/// <param name="failed">Агент, которого не удалось подключить или отключить; error — почему.</param>
+	private void ShowHooks(HookTarget? failed = null, string? error = null) =>
+		HookRows.ItemsSource = HookTarget.All
+			.Where(target => Directory.Exists(Path.GetDirectoryName(target.File)))
+			.Select(target => Row(target, target == failed ? error : null))
+			.ToList();
+
+	private static HookRow Row(HookTarget target, string? error)
 	{
-		var state = HookInstaller.Link(out var readError);
+		var state = HookInstaller.Link(target, out var readError);
 		error ??= readError;
 
-		HooksState.Text = error is not null
-			? Localization.Format("langHooksError", error)
+		var text = error is not null
+			? Localization.Format("langHooksError", Path.GetFileName(target.File), error)
 			: Localization.Get(state switch
 			{
 				HookLink.Off => "langHooksOff",
 				HookLink.On => "langHooksOn",
 				HookLink.Moved => "langHooksMoved",
-			});
+			} + target.Agent);
 
-		HooksConnect.IsVisible = state != HookLink.On;
-		HooksDisconnect.IsVisible = state != HookLink.Off;
+		return new(target, text, state != HookLink.On, state != HookLink.Off);
 	}
+}
+
+/// <summary>Строка агента в карточке «Живые сессии».</summary>
+internal sealed record HookRow(HookTarget Target, string State, bool CanConnect, bool CanDisconnect)
+{
+	public string Title => Target.Title;
 }

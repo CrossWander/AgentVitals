@@ -9,7 +9,7 @@ using Avalonia.Styling;
 
 namespace AgentVitals;
 
-/// <summary>Окно по щелчку на значке: квоты выбранного агента, сессии и настройки.
+/// <summary>Окно по щелчку на значке: квоты, статус и сессии выбранного агента и настройки.
 /// Щелчок в другое окно его не закрывает — только ✕, повторный щелчок по значку или Esc.</summary>
 internal partial class Popover : TrayWindow
 {
@@ -130,6 +130,8 @@ internal partial class Popover : TrayWindow
 		DashboardButton.IsVisible = provider?.Dashboard is not null;
 		StatusLine.DataContext = provider;
 		StatusLine.IsVisible = provider?.StatusUrl is not null;
+		SessionsCard.DataContext = provider;
+		SessionsCard.IsVisible = provider?.Sessions is not null;
 
 		var usage = provider?.Usage;
 		UsageBlock.IsVisible = usage is not null;

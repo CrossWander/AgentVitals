@@ -85,18 +85,18 @@ internal static class Text
 		return session.TurnStarted is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
 	}
 
-	/// <summary>Тост о сессии: заголовок — что случилось, текст — где и сколько ход занял.</summary>
+	/// <summary>Тост о сессии: заголовок — кто и что, текст — где и сколько ход занял.</summary>
 	public static (string Title, string Message) SessionToast(SessionAlert alert) => alert.Waiting
-		? (Localization.Get("langToastWaiting"), alert.Session.Folder)
-		: (Localization.Get("langToastDone"), Localization.Format("langToastDoneText", alert.Session.Folder, Span(alert.Session.TurnDuration ?? TimeSpan.Zero)));
+		? (Localization.Format("langToastWaiting", alert.Session.Agent), alert.Session.Folder)
+		: (Localization.Format("langToastDone", alert.Session.Agent), Localization.Format("langToastDoneText", alert.Session.Folder, Span(alert.Session.TurnDuration ?? TimeSpan.Zero)));
 
 	public static string Live(Session session) => session.State switch
 	{
 		SessionState.Idle => "",
 		SessionState.Working => session.Tool is { } tool
-			? Localization.Format("langLiveTool", tool, session.Folder)
-			: Localization.Format("langLiveWorking", session.Folder),
-		SessionState.Waiting => Localization.Format("langLiveWaiting", session.Folder),
+			? Localization.Format("langLiveTool", session.Agent, tool, session.Folder)
+			: Localization.Format("langLiveWorking", session.Agent, session.Folder),
+		SessionState.Waiting => Localization.Format("langLiveWaiting", session.Agent, session.Folder),
 	};
 
 	/// <param name="name">Чья страница: если она не ответила, имени в статусе нет.</param>

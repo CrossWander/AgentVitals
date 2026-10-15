@@ -42,6 +42,7 @@ internal sealed record CardView(
 }
 
 /// <param name="StatusUrl">Страница статуса агента; null — её нет, и строки статуса тоже.</param>
+/// <param name="Sessions">Живые сессии агента; null — hooks у агента нет, и карточки тоже.</param>
 internal sealed record ProviderView(
 	string Name,
 	string Info,
@@ -52,7 +53,10 @@ internal sealed record ProviderView(
 	UsageView? Usage,
 	string StatusText,
 	IBrush StatusBrush,
-	string? StatusUrl)
+	string? StatusUrl,
+	string SessionsTitle,
+	IReadOnlyList<SessionView>? Sessions,
+	string SessionsHint)
 {
 	/// <summary>Для карточки по наведению — только окна, которые блокируют всю работу.</summary>
 	public IReadOnlyList<CardView> LimitingCards => [.. Cards.Where(card => card.Limiting)];
@@ -116,8 +120,6 @@ internal sealed record Vitals(
 	IReadOnlyList<ProviderView> Providers,
 	string StatusText,
 	IBrush StatusBrush,
-	IReadOnlyList<SessionView> Sessions,
-	string SessionsHint,
 	string LiveText,
 	IBrush LiveBrush)
 {
@@ -128,11 +130,11 @@ internal sealed record Vitals(
 internal static class Views
 {
 	/// <param name="agents">Установленные агенты.</param>
-	/// <param name="hooks">Подключены ли hooks: без них список сессий пуст не потому, что их нет.</param>
-	/// <param name="sessions">Живые сессии Claude Code.</param>
+	/// <param name="hooks">Подключены ли hooks — по агентам, у которых они есть.</param>
+	/// <param name="sessions">Живые сессии всех агентов.</param>
 	/// <param name="now">Момент снимка: от него «обновлено N мин назад» и «сброс через».</param>
 	/// <param name="levels">Пороги из настроек.</param>
-	public static Vitals Build(IReadOnlyList<ProviderState> agents, HookLink hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels)
+	public static Vitals Build(IReadOnlyList<ProviderState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels)
 	{
 		var health = Poller.Health(agents, now, levels);
 
@@ -143,18 +145,12 @@ internal static class Views
 		var focus = sessions.FirstOrDefault(session => session.State == live);
 		var status = Overall(agents);
 
-		var hint = hooks != HookLink.On ? Localization.Get("langHooksHint")
-			: sessions.Count == 0 ? Localization.Get("langNoSessions")
-			: "";
-
 		return new(
 			tightest is { } used ? Text.Badge(used, levels) : Text.HealthName(health),
 			Brush(Level(health)),
-			[.. agents.Select(state => Provider(state, now, levels))],
+			[.. agents.Select(state => Provider(state, now, levels, hooks.TryGetValue(state.Provider.Name, out var link) ? link : null, sessions))],
 			status.Text,
 			Brush(Level(status.Health)),
-			[.. sessions.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State)), session))],
-			hint,
 			focus is null ? "" : Text.Live(focus),
 			Brush(Dot(live)));
 	}
@@ -186,7 +182,8 @@ internal static class Views
 		Health.Critical => 3,
 	};
 
-	internal static ProviderView Provider(ProviderState state, DateTime now, Thresholds levels)
+	/// <param name="hooks">Подключены ли hooks агента; null — у агента их нет.</param>
+	internal static ProviderView Provider(ProviderState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null)
 	{
 		List<CardView> cards = [];
 
@@ -202,6 +199,9 @@ internal static class Views
 
 		var info = string.Join(" · ", new[] { state.Snapshot?.Plan, state.Snapshot?.Account }.Where(text => !string.IsNullOrEmpty(text)));
 
+		var target = hooks is null ? null : HookTarget.All.FirstOrDefault(target => target.Agent == state.Provider.Name);
+		List<Session> own = [.. (sessions ?? []).Where(session => session.Agent == state.Provider.Name)];
+
 		return new(
 			state.Provider.Name,
 			info,
@@ -212,7 +212,13 @@ internal static class Views
 			state.Provider.Usage is null ? null : Usage(state.Days),
 			state.Provider.Status is { } page ? Text.Status(state.Status, page.Name) : "",
 			Brush(Level(state.Status?.Health ?? Health.Unknown)),
-			state.Provider.Status?.Url);
+			state.Provider.Status?.Url,
+			target is null ? "" : Localization.Format("langSessions", target.Title.ToUpper(Localization.Culture)),
+			target is null ? null : [.. own.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State)), session))],
+			target is null ? ""
+				: hooks != HookLink.On ? Localization.Format("langHooksHint", target.Title)
+				: own.Count == 0 ? Localization.Get("langNoSessions")
+				: "");
 	}
 
 	public const double ChartHeight = 90;

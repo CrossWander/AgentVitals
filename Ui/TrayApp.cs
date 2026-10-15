@@ -189,7 +189,12 @@ internal sealed class TrayApp
 
 	/// <summary>Свежий снимок: «обновлено N мин назад» и «сброс через» сдвигаются со временем.</summary>
 	private Vitals Gather() =>
-		Views.Build([.. _poller.Installed], HookInstaller.Link(out _), _sessions, DateTime.UtcNow, Store.Current.Thresholds);
+		Views.Build(
+			[.. _poller.Installed],
+			HookTarget.All.ToDictionary(target => target.Agent, target => HookInstaller.Link(target, out _)),
+			_sessions,
+			DateTime.UtcNow,
+			Store.Current.Thresholds);
 
 	private void ReadSessions()
 	{
@@ -258,7 +263,7 @@ internal sealed class TrayApp
 		}
 	}
 
-	/// <summary>Тост, когда Claude закончил долгий ход или ждёт разрешения, — пока человек в другом окне.</summary>
+	/// <summary>Тост, когда агент закончил долгий ход или ждёт разрешения, — пока человек в другом окне.</summary>
 	private void NotifySessions(IReadOnlyList<Session> before, IReadOnlyList<Session> after)
 	{
 		if (!Store.Current.SessionToasts)

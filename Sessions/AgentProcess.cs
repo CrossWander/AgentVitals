@@ -7,16 +7,21 @@ using System.Runtime.InteropServices;
 
 namespace AgentVitals;
 
-/// <summary>Процесс Claude Code, запустивший hook, и проверка, что он ещё жив.</summary>
-internal static unsafe partial class ClaudeProcess
+/// <summary>Процесс агента (Claude Code, Codex), запустивший hook, и проверка, что он ещё жив.</summary>
+internal static unsafe partial class AgentProcess
 {
 	private const uint _snapProcess = 0x2;
 
-	// node.exe — Claude Code, поставленный через npm; родной установщик даёт claude.exe.
-	private static readonly HashSet<string> _names = new(["claude.exe", "node.exe"], StringComparer.OrdinalIgnoreCase);
+	// node.exe — Claude Code, поставленный через npm; родной установщик даёт claude.exe. Codex — codex.exe
+	// при любой установке: из npm node лишь запускает его.
+	private static readonly Dictionary<string, HashSet<string>> _names = new()
+	{
+		["Claude"] = new(["claude.exe", "node.exe"], StringComparer.OrdinalIgnoreCase),
+		["Codex"] = new(["codex.exe"], StringComparer.OrdinalIgnoreCase),
+	};
 
-	/// <summary>Ближайший предок-Claude процесса hook; null — hook запущен не им или Windows не дала снимок.</summary>
-	public static int? Find()
+	/// <summary>Ближайший предок-агент процесса hook; null — hook запущен не им или Windows не дала снимок.</summary>
+	public static int? Find(string agent)
 	{
 		// Снимок процессов — вызов Windows: в другой системе его нет, и hook упал бы, не записав состояние.
 		// ponytail: там сессия без PID уходит по прежним срокам; понадобится — родитель из /proc.
@@ -27,7 +32,7 @@ internal static unsafe partial class ClaudeProcess
 
 		try
 		{
-			return Ancestor(Snapshot(), Environment.ProcessId);
+			return Ancestor(Snapshot(), Environment.ProcessId, agent);
 		}
 		catch (Exception exception) when (exception is Win32Exception or ExternalException)
 		{
@@ -35,8 +40,8 @@ internal static unsafe partial class ClaudeProcess
 		}
 	}
 
-	internal static int? Ancestor(IReadOnlyDictionary<int, (int Parent, string Name)> processes, int child) =>
-		Lineage(processes, child).Skip(1).Where(id => _names.Contains(processes[id].Name)).Cast<int?>().FirstOrDefault();
+	internal static int? Ancestor(IReadOnlyDictionary<int, (int Parent, string Name)> processes, int child, string agent) =>
+		Lineage(processes, child).Skip(1).Where(id => _names[agent].Contains(processes[id].Name)).Cast<int?>().FirstOrDefault();
 
 	/// <summary>Процесс и его родители по порядку, пока они есть в снимке.</summary>
 	internal static IEnumerable<int> Lineage(IReadOnlyDictionary<int, (int Parent, string Name)> processes, int pid)

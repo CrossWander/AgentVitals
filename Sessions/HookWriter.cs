@@ -23,12 +23,13 @@ internal static class HookWriter
 	};
 
 	/// <summary>Прочитать событие и записать состояние; не бросает никогда.</summary>
-	public static void Run(Stream input, string directory, long at, int? pid = null)
+	/// <param name="agent">Чей hook: «Claude» или «Codex».</param>
+	public static void Run(Stream input, string directory, long at, int? pid = null, string agent = "Claude")
 	{
 		try
 		{
 			using var reader = new StreamReader(input, Encoding.UTF8);
-			Apply(JsonNode.Parse(reader.ReadToEnd()), directory, at, pid);
+			Apply(JsonNode.Parse(reader.ReadToEnd()), directory, at, pid, agent);
 		}
 		catch (Exception)
 		{
@@ -37,7 +38,7 @@ internal static class HookWriter
 		}
 	}
 
-	internal static void Apply(JsonNode? payload, string directory, long at, int? pid = null)
+	internal static void Apply(JsonNode? payload, string directory, long at, int? pid = null, string agent = "Claude")
 	{
 		if (payload is null
 			|| (string?)payload["session_id"] is not { Length: > 0 } id
@@ -70,15 +71,18 @@ internal static class HookWriter
 			// SessionEnd не удаляет файл, а оставляет отметку: async-событие, запущенное перед выходом
 			// и финишировавшее после, иначе воскресило бы сессию. Отметку через минуту убирает трей.
 			var session = hookEvent == "SessionEnd"
-				? new SessionRecord(SessionState.Idle, null, cwd, at, Ended: true)
+				? new SessionRecord(SessionState.Idle, null, cwd, at, Ended: true, Agent: agent)
 				: new SessionRecord(
 					state.Value,
 					state == SessionState.Working ? (string?)payload["tool_name"] : null,
 					cwd,
 					at,
-					Transcript: (string?)payload["transcript_path"],
+
+					// Журнал нужен, чтобы заметить Esc, о котором hooks Claude Code молчат; у Codex для него есть Interrupt.
+					Transcript: agent == "Claude" ? (string?)payload["transcript_path"] : null,
 					Turn: Turn(hookEvent, state.Value, recorded, at),
-					Pid: pid);
+					Pid: pid,
+					Agent: agent);
 
 			if (Stale(recorded, session))
 			{
@@ -153,19 +157,21 @@ internal static class HookWriter
 		}
 	}
 
-	/// <summary>Начало хода — запрос человека. События хода его наследуют, Stop тоже: по нему трей узнаёт длительность.</summary>
+	/// <summary>Начало хода — запрос человека. События хода его наследуют, Stop тоже: по нему трей узнаёт длительность.
+	/// Прерванный ход (Interrupt у Codex) длительности не имеет — как и Esc у Claude Code.</summary>
 	private static long? Turn(string? hookEvent, SessionState state, SessionRecord? recorded, long at) =>
 		hookEvent == "UserPromptSubmit" ? at
-		: hookEvent == "SessionStart" ? null
+		: hookEvent is "SessionStart" or "Interrupt" ? null
 		: state == SessionState.Idle ? recorded?.Turn
 
 		// Ход без запроса или сессия, начатая до подключения hooks, — отсчёт с первого события.
 		: recorded is { State: not SessionState.Idle, Turn: { } turn } ? turn
 		: at;
 
+	/// <summary>Событие Claude Code или Codex → состояние: имена у них общие, Interrupt — только у Codex.</summary>
 	internal static SessionState? Map(string? hookEvent, string? notificationType) => hookEvent switch
 	{
-		"SessionStart" or "Stop" or "StopFailure" => SessionState.Idle,
+		"SessionStart" or "Stop" or "StopFailure" or "Interrupt" => SessionState.Idle,
 		"UserPromptSubmit" or "PreToolUse" or "PostToolUse" or "PostToolUseFailure" or "PermissionDenied" => SessionState.Working,
 		"PermissionRequest" => SessionState.Waiting,
 		"Notification" when notificationType == "permission_prompt" => SessionState.Waiting,

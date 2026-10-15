@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace AgentVitals;
 
-/// <summary>Что делает сессия Claude Code; порядок — по важности для значка, главное — Max.</summary>
+/// <summary>Что делает сессия агента; порядок — по важности для значка, главное — Max.</summary>
 public enum SessionState
 {
 	Idle,
@@ -19,7 +19,8 @@ public enum SessionState
 /// <remarks>Transcript — журнал сессии: по нему видно прерывание клавишей Esc, о котором hooks молчат.</remarks>
 /// <remarks>Turn — тики UTC начала хода; после Stop остаётся, чтобы трей узнал, сколько ход занял.</remarks>
 /// <remarks>Pid — процесс Claude Code: умер он — сессия кончилась, даже если SessionEnd не пришёл.</remarks>
-internal sealed record SessionRecord(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false, string? Transcript = null, long? Turn = null, int? Pid = null)
+/// <remarks>Agent — чья сессия («Claude», «Codex»); в файлах до Codex поля нет — это Claude.</remarks>
+internal sealed record SessionRecord(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false, string? Transcript = null, long? Turn = null, int? Pid = null, string? Agent = null)
 {
 	// Только для чтения в коде: в файле время хранится одним полем utc.
 	[JsonIgnore]
@@ -29,7 +30,8 @@ internal sealed record SessionRecord(SessionState State, string? Tool, string Cw
 /// <summary>Сессия для показа: состояние с поправкой на давность, папка и ветка.</summary>
 /// <remarks>TurnStarted — начало идущего хода; TurnDuration — сколько занял закончившийся (null — прерван или неизвестно).</remarks>
 /// <remarks>Pid и Cwd — процесс Claude Code и полный путь папки: по ним находится окно, где идёт сессия.</remarks>
-internal sealed record Session(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? TurnStarted = null, TimeSpan? TurnDuration = null, int? Pid = null, string? Cwd = null);
+/// <remarks>Agent — имя провайдера: по нему сессия попадает на свою вкладку и в подпись тоста.</remarks>
+internal sealed record Session(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? TurnStarted = null, TimeSpan? TurnDuration = null, int? Pid = null, string? Cwd = null, string Agent = "Claude");
 
 /// <summary>О чём сказать тостом: ход закончился или сессия ждёт разрешения.</summary>
 internal sealed record SessionAlert(Session Session, bool Waiting);

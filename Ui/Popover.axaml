@@ -209,13 +209,13 @@
                     </Border>
                 </StackPanel>
 
-                <!-- Сессии Claude Code: карточка во всю ширину -->
-                <Border Classes="card">
+                <!-- Сессии агента выбранной вкладки: карточка во всю ширину -->
+                <Border Name="SessionsCard" Classes="card" x:DataType="local:ProviderView">
                     <StackPanel Spacing="8">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <Path Classes="icon" Width="11" Height="11" Data="{StaticResource IconTerminal}"
                                   Stroke="{DynamicResource IconModel}" VerticalAlignment="Center"/>
-                            <TextBlock Classes="label" Text="{DynamicResource langSessions}" VerticalAlignment="Center"/>
+                            <TextBlock Classes="label" Text="{Binding SessionsTitle}" VerticalAlignment="Center"/>
                         </StackPanel>
                         <!-- Высота постоянная — около четырёх строк, дальше прокрутка: простаивающие сессии живут час,
                              а окно не должно прыгать по высоте с их числом. Подсказка — внутри той же высоты. -->

@@ -48,11 +48,11 @@ internal static unsafe partial class HostWindow
 	{
 		try
 		{
-			var processes = ClaudeProcess.Snapshot();
+			var processes = AgentProcess.Snapshot();
 			var windows = Windows();
 
 			return Pick(
-				ClaudeProcess.Lineage(processes, pid).Select(id => (processes[id].Name, windows.TryGetValue(id, out var own) ? own : (IReadOnlyList<(nint, string)>)[])),
+				AgentProcess.Lineage(processes, pid).Select(id => (processes[id].Name, windows.TryGetValue(id, out var own) ? own : (IReadOnlyList<(nint, string)>)[])),
 				path);
 		}
 		catch (Exception exception) when (exception is Win32Exception or ExternalException)
