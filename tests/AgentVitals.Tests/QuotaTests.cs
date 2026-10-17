@@ -27,6 +27,23 @@ public class QuotaTests
 		Assert.Equal(Health.Critical, Quota.Rate(60, new Thresholds(50, 60)));
 	}
 
+	[Theory]
+	[InlineData(WindowKind.Session, 60, 2.5, 100.0)] // за 2,5 ч ушло 60%: оставшихся 40% хватит на 1 ч 40 мин
+	[InlineData(WindowKind.Week, 80, 84, 21 * 60.0)] // за 3,5 дня 80% — ещё на 21 ч, а сброс через 84
+	[InlineData(WindowKind.Session, 52, 2.5, null)] // ровный темп — хватит до сброса
+	[InlineData(WindowKind.Session, 100, 2.5, null)] // уже исчерпано — прогнозировать нечего
+	[InlineData(WindowKind.Model, 90, 2.5, null)] // длина окна неизвестна
+	public void RunoutFollowsThePaceSoFar(WindowKind kind, double used, double hoursLeft, double? minutes)
+	{
+		var now = new DateTime(2026, 10, 17, 12, 0, 0, DateTimeKind.Utc);
+		var runout = Quota.Runout(new QuotaWindow(kind, null, used, now.AddHours(hoursLeft), Limiting: true), now);
+
+		Assert.Equal(minutes, (runout - now)?.TotalMinutes is { } value ? Math.Round(value, 6) : null);
+	}
+
+	[Fact]
+	public void NoRunoutWithoutReset() => Assert.Null(Quota.Runout(Window(95), DateTime.UtcNow));
+
 	[Fact]
 	public void ExhaustedWeekBeatsEmptySession() => Assert.Equal(100, Quota.Bottleneck([Window(0), Window(100)])!.Used);
 

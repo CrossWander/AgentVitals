@@ -372,6 +372,9 @@ internal static class Views
 		var pace = Quota.Expected(window, now);
 		Pace? word = pace is { } expected ? Quota.Pace(window.Used, expected) : null;
 
+		// С опережением — сразу когда кончится: это и есть то, что нужно знать.
+		var runout = Quota.Runout(window, now);
+
 		return new(
 			Text.Title(window).ToUpper(Localization.Culture),
 			Shape(icon),
@@ -386,7 +389,7 @@ internal static class Views
 			Text.Until(window.ResetsAt, now),
 			window.Limiting,
 			pace,
-			word is null ? "" : Localization.Get($"langPace{word}"),
+			runout is { } at ? Text.Runout(at, now) : word is null ? "" : Localization.Get($"langPace{word}"),
 			Brush(word switch
 			{
 				Pace.Ahead => "Warn",

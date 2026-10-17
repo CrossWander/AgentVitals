@@ -86,12 +86,25 @@ internal sealed class RateLimitedException(DateTime until) : Exception($"rate li
 /// <summary>Пороги «важно» и «критично», %: с них и тосты, и жёлтый с красным — что красное, о том и тост.</summary>
 internal sealed record Thresholds(int Important, int Critical);
 
-/// <summary>Окно агента дошло до порога «важно» или «критично».</summary>
-internal sealed record QuotaAlert(string Provider, QuotaWindow Window, bool Critical);
+/// <summary>О чём тост квоты, по возрастанию важности: окно сбросилось, при таком темпе не хватит до сброса, пороги.</summary>
+internal enum QuotaLevel
+{
+	Reset,
+	Pace,
+	Important,
+	Critical,
+}
+
+/// <summary>Окно агента дошло до порога, обгоняет темп или сбросилось.</summary>
+internal sealed record QuotaAlert(string Provider, QuotaWindow Window, QuotaLevel Level)
+{
+	public bool Critical => Level == QuotaLevel.Critical;
+}
 
 /// <summary>
 /// Тосты по сессии и неделе: «важно» и «критично» (по умолчанию 75% и 90%, меняются в настройках), каждый раз
-/// за цикл окна. Ниже порога «важно» — после сброса — пороги взводятся снова.
+/// за цикл окна. Ниже порога «важно» — после сброса — пороги взводятся снова. Ещё до «важно» — один тост, если
+/// при таком темпе окна не хватит до сброса; после «критично» — тост, когда окно сбросилось.
 /// </summary>
 internal sealed class QuotaAlarm
 {
@@ -101,6 +114,9 @@ internal sealed class QuotaAlarm
 
 	// Окно → уже сказали «критично» (true) или только «важно» (false).
 	private readonly Dictionary<string, bool> _fired = [];
+
+	// Окна, о темпе которых в этом цикле уже сказали.
+	private readonly HashSet<string> _paced = [];
 
 	/// <summary>Сдвинуть порог на шаг: от 50 до 95, «важно» всегда хотя бы на шаг ниже «критично».</summary>
 	public static Thresholds Shift(Thresholds levels, bool moveCritical, int delta) => moveCritical
@@ -112,8 +128,9 @@ internal sealed class QuotaAlarm
 	/// <param name="provider">Имя агента: у каждого свои окна.</param>
 	/// <param name="windows">Окна из свежего снимка.</param>
 	/// <param name="levels">Пороги из настроек.</param>
+	/// <param name="now">От него темп: сколько окна уже прошло.</param>
 	/// <returns>По тревоге на окно, только о самом высоком из пройденных порогов.</returns>
-	public IReadOnlyList<QuotaAlert> Check(string provider, IReadOnlyList<QuotaWindow> windows, Thresholds levels)
+	public IReadOnlyList<QuotaAlert> Check(string provider, IReadOnlyList<QuotaWindow> windows, Thresholds levels, DateTime now)
 	{
 		var alerts = new List<QuotaAlert>();
 
@@ -123,7 +140,21 @@ internal sealed class QuotaAlarm
 
 			if (window.Used < levels.Important)
 			{
-				_fired.Remove(key);
+				// Расход внутри окна только растёт: ниже 50% после «критично» опускает лишь сброс, а не поднятый порог.
+				if (_fired.Remove(key, out var critical) && critical && window.Used < _lowest)
+				{
+					alerts.Add(new(provider, window, QuotaLevel.Reset));
+				}
+
+				// Темп — с половины окна: в начале он скачет, а 30% за первые полчаса — ещё не повод.
+				if (window.Used < _lowest)
+				{
+					_paced.Remove(key);
+				}
+				else if (Quota.Runout(window, now) is not null && _paced.Add(key))
+				{
+					alerts.Add(new(provider, window, QuotaLevel.Pace));
+				}
 
 				continue;
 			}
@@ -137,7 +168,7 @@ internal sealed class QuotaAlarm
 			}
 
 			_fired[key] = high;
-			alerts.Add(new(provider, window, high));
+			alerts.Add(new(provider, window, high ? QuotaLevel.Critical : QuotaLevel.Important));
 		}
 
 		return alerts;
@@ -145,10 +176,10 @@ internal sealed class QuotaAlarm
 
 	/// <summary>Самая серьёзная из новых тревог всех агентов: выше порога у двух разом бывает разве что при
 	/// запуске — тост один, о главном. Пороги взводятся у всех, а не только у сказанного.</summary>
-	public QuotaAlert? Check(IEnumerable<(string Provider, IReadOnlyList<QuotaWindow> Windows)> agents, Thresholds levels) =>
+	public QuotaAlert? Check(IEnumerable<(string Provider, IReadOnlyList<QuotaWindow> Windows)> agents, Thresholds levels, DateTime now) =>
 		agents
-			.SelectMany(agent => Check(agent.Provider, agent.Windows, levels))
-			.MaxBy(alert => (alert.Critical, alert.Window.Used));
+			.SelectMany(agent => Check(agent.Provider, agent.Windows, levels, now))
+			.MaxBy(alert => (alert.Level, alert.Window.Used));
 }
 
 internal static class Quota
@@ -173,6 +204,21 @@ internal static class Quota
 		var left = resets.UtcDateTime - now;
 
 		return left <= TimeSpan.Zero || left > span ? null : (1 - (left / span)) * 100;
+	}
+
+	/// <summary>Когда окно кончится, если тратить, как до сих пор; null — темп не опережает ровный (тогда хватит до
+	/// сброса), окно уже исчерпано или длина и сброс не известны.</summary>
+	/// <remarks>ponytail: средний темп с начала окна; рывок в последние минуты виден не сразу.</remarks>
+	public static DateTime? Runout(QuotaWindow window, DateTime now)
+	{
+		if (Expected(window, now) is not { } expected || Pace(window.Used, expected) != AgentVitals.Pace.Ahead || window.Used >= 100)
+		{
+			return null;
+		}
+
+		var elapsed = window.Length!.Value - (window.ResetsAt!.Value.UtcDateTime - now);
+
+		return elapsed <= TimeSpan.Zero ? null : now + (elapsed * ((100 - window.Used) / window.Used));
 	}
 
 	/// <summary>Темп расхода: дальше пяти пунктов от ровного — уже не ровно.</summary>

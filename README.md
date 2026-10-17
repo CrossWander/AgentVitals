@@ -39,7 +39,7 @@ scrolls.
 |---|---|
 | Quotas | Session, week and per-model weekly limits with a reset countdown; a mark on the bar shows where even spending would be by now → [more](#quotas-and-alerts) |
 | Tray icon | A pulse line coloured by the limit closest to running out; it beats while Claude works, and a blue dot blinks while Claude waits for you |
-| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a long turn ends, when Claude asks for permission and when an agent's service status changes |
+| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a limit won't last until its reset at this pace, when a critical limit resets, when a long turn ends, when Claude asks for permission and when an agent's service status changes |
 | Live sessions | Every open Claude Code and Codex session, on its agent's tab, with its folder, git branch, state and turn timer → [more](#live-sessions) |
 | Usage statistics | Today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
 | Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears); a toast when one changes |
@@ -73,8 +73,9 @@ An agent whose credential file is missing is simply not shown.
 - **Cards.** Each quota window is a card with the percentage used, a bar and the time left until it
   resets. A window at 100% says *used up*. Extra usage is shown if it is enabled.
 - **Pace.** The session and week bars (per-model weeks too) carry a mark where even spending would be by now, and the
-  card says *ahead of pace*, *on pace* or *room to spare* (within 5 points is on pace). Hovering the
-  card explains the mark with both numbers.
+  card says *on pace* or *room to spare* (within 5 points is on pace). Ahead of pace it says when
+  the window runs out if you keep going as fast as so far: *lasts until 15:40*, or *lasts until
+  Thu 14:00* for a week. Hovering the card explains the mark with both numbers.
 - **Colours.** The pulse line in the tray takes the colour of the window that limits you most:
   green below the *important* level, amber from it, red from *critical*, grey when there is no
   data. These are the same levels the toasts use, so what turns red is what you were warned
@@ -84,7 +85,12 @@ An agent whose credential file is missing is simply not shown.
 - **Toasts.** When the session or the week reaches 75% (*important*, a quarter left) and 90%
   (*critical*, almost used up), with the time until it resets. Both levels move in steps of 5
   between 50% and 95% in settings. Each toast comes once, and again only after that window resets;
-  a window that is already past a level when AgentVitals starts gets its toast too.
+  a window that is already past a level when AgentVitals starts gets its toast too. The toast also
+  says until when the rest lasts at this pace, if that comes before the reset.
+- **Early and reset toasts.** From half used and below *important*, one toast per window when at
+  this pace it won't last until the reset (*won't last until the reset*). After a *critical* toast,
+  one more when the window resets (*available again*) — within a minute of the reset time, without
+  waiting for the next check.
 - **How a toast looks.** It slides up in the bottom-right corner above the clock and stays ten
   seconds for a quota or a session and four for a service status, for as long as the mouse is on
   it; the faint ✕ in its corner closes it at once. It comes up over the AgentVitals window if that

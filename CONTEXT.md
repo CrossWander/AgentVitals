@@ -58,6 +58,10 @@ _Avoid_: tone, indicator
 Whether a window is used faster than time runs: Spare, Even or Ahead of the elapsed share of the window.
 _Avoid_: rate, speed
 
+**Runout**:
+The moment a quota window would be exhausted if used as fast as so far; told only when it comes before the reset, that is when the pace is Ahead.
+_Avoid_: burn rate, forecast
+
 **Extra usage**:
 Paid use past the plan, with its spent amount and monthly limit.
 _Avoid_: spend, overage
@@ -94,6 +98,12 @@ A toast when an agent's status page changes its indicator; told per agent.
 **Quota toast**:
 A toast when a limiting window crosses a threshold; told once per threshold per window cycle, and again only after the window drops below Important.
 _Avoid_: quota notification
+
+**Pace toast**:
+A toast once per window cycle when a limiting window, at least half used and below Important, has its runout before the reset.
+
+**Reset toast**:
+A toast when a limiting window that had a Critical quota toast resets.
 
 **Session toast**:
 A toast when an agent finishes a long turn or a live session waits for permission.

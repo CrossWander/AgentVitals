@@ -50,18 +50,41 @@ internal static class Text
 	public static string Badge(double used, Thresholds levels) =>
 		Math.Round(used) >= 100 ? Localization.Get("langHealthExhausted") : HealthName(Quota.Rate(used, levels));
 
-	/// <summary>Тост о пороге: заголовок — насколько серьёзно, текст — что, сколько осталось и когда сброс.</summary>
+	/// <summary>Тост о квоте: заголовок — насколько серьёзно, текст — что, сколько осталось, на сколько хватит и когда сброс.</summary>
 	public static (string Title, string Message) QuotaToast(QuotaAlert alert, DateTime now)
 	{
+		if (alert.Level == QuotaLevel.Reset)
+		{
+			return (Localization.Get("langAlertReset"), Localization.Format("langAlertResetText", alert.Provider, Title(alert.Window)));
+		}
+
 		var left = Math.Max(0, 100 - Math.Round(alert.Window.Used));
 		var message = Localization.Format("langAlertLeft", alert.Provider, Title(alert.Window), left);
+
+		if (Quota.Runout(alert.Window, now) is { } runout)
+		{
+			message += ", " + Runout(runout, now);
+		}
 
 		if (Until(alert.Window.ResetsAt, now) is { Length: > 0 } resets)
 		{
 			message += ", " + resets;
 		}
 
-		return (Localization.Get(alert.Critical ? "langAlertCritical" : "langAlertImportant"), message);
+		return (Localization.Get(alert.Level switch
+		{
+			QuotaLevel.Pace => "langAlertPace",
+			QuotaLevel.Critical => "langAlertCritical",
+			QuotaLevel.Important or QuotaLevel.Reset => "langAlertImportant",
+		}), message);
+	}
+
+	/// <summary>«хватит до 13:40», а не сегодня — «хватит до чт 13:40».</summary>
+	public static string Runout(DateTime at, DateTime now)
+	{
+		var local = at.ToLocalTime();
+
+		return Localization.Format("langPaceRunout", local.ToString(local.Date == now.ToLocalTime().Date ? "HH:mm" : "ddd HH:mm", Localization.Culture));
 	}
 
 	public static string HealthName(Health health) => Localization.Get(health switch

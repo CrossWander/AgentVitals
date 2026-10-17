@@ -232,15 +232,23 @@ internal sealed class TrayApp
 		ShowIcon();
 	}
 
-	/// <summary>Тост, когда сессия или неделя дошли до 75% или 90% или сменился статус сервиса агента.</summary>
+	/// <summary>Тост, когда сессия или неделя дошли до порога, обгоняют темп или сбросились, или сменился статус сервиса агента.</summary>
+	/// <remarks>Опрос тикает раз в минуту даже без запроса к серверу: о сбросе тост — не позже чем через минуту.</remarks>
 	private void Notify()
 	{
 		var now = DateTime.UtcNow;
 
-		if (_alarm.Check(_poller.Installed.Select(state => (state.Provider.Name, state.Windows(now))), Store.Current.Thresholds) is { } alert)
+		if (_alarm.Check(_poller.Installed.Select(state => (state.Provider.Name, state.Windows(now))), Store.Current.Thresholds, now) is { } alert)
 		{
 			var (title, message) = Text.QuotaToast(alert, now);
-			_toast.Say(message, Anchor(), title, Views.Brush(alert.Critical ? "Bad" : "Warn"), Toast.Long, () => OpenPopover(settings: false));
+			var brush = alert.Level switch
+			{
+				QuotaLevel.Reset => "Good",
+				QuotaLevel.Pace or QuotaLevel.Important => "Warn",
+				QuotaLevel.Critical => "Bad",
+			};
+
+			_toast.Say(message, Anchor(), title, Views.Brush(brush), Toast.Long, () => OpenPopover(settings: false));
 
 			// Тост живёт секунды: по журналу видно, был ли он, если человек отошёл от экрана.
 			Journal.Add($"toast: {title}: {message}");

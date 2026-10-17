@@ -52,6 +52,21 @@ public class TextTests
 	}
 
 	[Fact]
+	public void QuotaToastTellsWhenItRunsOut() // «осталось 40%, хватит до 13:40, сброс через 2 ч 30 мин»
+	{
+		var now = System.DateTime.UtcNow;
+		var window = new QuotaWindow(WindowKind.Session, null, 60, now.AddHours(2.5), Limiting: true);
+
+		Assert.Equal(("langAlertPace", "langAlertLeft, langPaceRunout, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window, QuotaLevel.Pace), now));
+		Assert.Equal(("langAlertImportant", "langAlertLeft, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window with { Used = 76, ResetsAt = now.AddHours(0.5) }, QuotaLevel.Important), now));
+	}
+
+	[Fact]
+	public void ResetToastSaysTheWindowIsBack() =>
+		Assert.Equal(("langAlertReset", "langAlertResetText"),
+			Text.QuotaToast(new QuotaAlert("Claude", new QuotaWindow(WindowKind.Session, null, 0, null, Limiting: true), QuotaLevel.Reset), System.DateTime.UtcNow));
+
+	[Fact]
 	public void SessionToastSaysWhatHappened()
 	{
 		var session = new Session("s", SessionState.Waiting, null, "repo", null);

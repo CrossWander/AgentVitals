@@ -152,7 +152,7 @@ public class ViewsTests
 	}
 
 	[Theory]
-	[InlineData(76, "langPaceAhead")]
+	[InlineData(76, "langPaceRunout")] // с опережением — когда кончится: «хватит до 13:40»
 	[InlineData(54, "langPaceEven")] // ±5 пунктов — ещё ровно
 	[InlineData(20, "langPaceSpare")]
 	public void CardTellsThePace(double used, string word)
@@ -169,6 +169,18 @@ public class ViewsTests
 		Assert.EndsWith(" · " + word, card.Footer); // в карточке наведения — после сброса
 		Assert.Equal(50, card.Pace!.Value, 3);
 		Assert.Equal("langPaceTip", card.PaceTip); // что за белая метка — подсказкой над карточкой
+	}
+
+	[Fact]
+	public void UsedUpWindowIsJustAhead() // исчерпано — «хватит до» уже некуда
+	{
+		var now = DateTime.UtcNow;
+		var state = new ProviderState(new ClaudeProvider())
+		{
+			Snapshot = new("Max", null, [new(WindowKind.Session, null, 100, now.AddHours(2.5), Limiting: true)], null),
+		};
+
+		Assert.Equal("langPaceAhead", Assert.Single(Views.Provider(state, now, _levels).Cards).Caption);
 	}
 
 	[Fact]

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -8,6 +9,8 @@ public class QuotaAlarmTests
 {
 	private static readonly Thresholds _default = new(75, 90);
 
+	private static readonly DateTime Now = new(2026, 10, 17, 12, 0, 0, DateTimeKind.Utc);
+
 	private readonly QuotaAlarm _alarm = new();
 
 	private static QuotaWindow Session(double used) => new(WindowKind.Session, null, used, null, Limiting: true);
@@ -15,14 +18,20 @@ public class QuotaAlarmTests
 	private static QuotaWindow Week(double used) => new(WindowKind.Week, null, used, null, Limiting: true);
 
 	private List<(double Used, bool Critical)> Check(params QuotaWindow[] windows) =>
-		[.. _alarm.Check("Claude", windows, _default).Select(alert => (alert.Window.Used, alert.Critical))];
+		[.. _alarm.Check("Claude", windows, _default, Now).Select(alert => (alert.Window.Used, alert.Critical))];
+
+	private List<(double Used, QuotaLevel Level)> Levels(params QuotaWindow[] windows) =>
+		[.. _alarm.Check("Claude", windows, _default, Now).Select(alert => (alert.Window.Used, alert.Level))];
+
+	// Сессия, у которой прошла половина: ровный темп — 50%.
+	private static QuotaWindow Halfway(double used) => new(WindowKind.Session, null, used, Now.AddHours(2.5), Limiting: true);
 
 	[Fact]
 	public void LevelsComeFromSettings() // пороги 60 и 80 вместо 75 и 90
 	{
-		Assert.Empty(_alarm.Check("Claude", [Session(55)], new Thresholds(60, 80)));
-		Assert.Equal([(61, false)], _alarm.Check("Claude", [Session(61)], new Thresholds(60, 80)).Select(alert => (alert.Window.Used, alert.Critical)));
-		Assert.Equal([(80, true)], _alarm.Check("Claude", [Session(80)], new Thresholds(60, 80)).Select(alert => (alert.Window.Used, alert.Critical)));
+		Assert.Empty(_alarm.Check("Claude", [Session(55)], new Thresholds(60, 80), Now));
+		Assert.Equal([(61, false)], _alarm.Check("Claude", [Session(61)], new Thresholds(60, 80), Now).Select(alert => (alert.Window.Used, alert.Critical)));
+		Assert.Equal([(80, true)], _alarm.Check("Claude", [Session(80)], new Thresholds(60, 80), Now).Select(alert => (alert.Window.Used, alert.Critical)));
 	}
 
 	[Theory]
@@ -91,6 +100,60 @@ public class QuotaAlarmTests
 	}
 
 	[Fact]
+	public void SaysWhenACriticalWindowResets() // ждал сброса на 90% — можно работать дальше
+	{
+		Check(Session(70));
+		Check(Session(93));
+
+		Assert.Equal([(0, QuotaLevel.Reset)], Levels(Session(0)));
+		Assert.Empty(Levels(Session(3)));
+	}
+
+	[Fact]
+	public void ResetAfterOnlyImportantIsQuiet() // на 80% работа не стояла — и сброс не новость
+	{
+		Check(Session(80));
+
+		Assert.Empty(Levels(Session(0)));
+	}
+
+	[Fact]
+	public void RaisedThresholdIsNotAReset() // «критично» с 55% подняли до 90% — окно не сбрасывалось
+	{
+		_alarm.Check("Claude", [Session(56)], new Thresholds(50, 55), Now);
+
+		Assert.Empty(_alarm.Check("Claude", [Session(57)], _default, Now));
+	}
+
+	[Fact]
+	public void WarnsOnceWhenThePaceRunsOutBeforeTheReset() // половина окна прошла, а потрачено 60%
+	{
+		Assert.Equal([(60, QuotaLevel.Pace)], Levels(Halfway(60)));
+		Assert.Empty(Levels(Halfway(63)));
+		Assert.Equal([(76, QuotaLevel.Important)], Levels(Halfway(76))); // а «важно» — своим чередом
+	}
+
+	[Theory]
+	[InlineData(52)] // ±5 пунктов от ровного — хватит до сброса
+	[InlineData(30)]
+	public void NoPaceWarningOnPace(double used) => Assert.Empty(Levels(Halfway(used)));
+
+	[Fact]
+	public void NoPaceWarningBelowHalf() // в начале окна темп скачет: 30% за первые полчаса — ещё не повод
+	{
+		Assert.Empty(Levels(new QuotaWindow(WindowKind.Session, null, 30, Now.AddHours(4.5), Limiting: true)));
+	}
+
+	[Fact]
+	public void PaceWarnsAgainAfterReset()
+	{
+		Levels(Halfway(60));
+		Levels(Halfway(0));
+
+		Assert.Equal([(61, QuotaLevel.Pace)], Levels(Halfway(61)));
+	}
+
+	[Fact]
 	public void SessionAndWeekWarnSeparately()
 	{
 		Check(Session(50), Week(70));
@@ -111,18 +174,18 @@ public class QuotaAlarmTests
 	[Fact]
 	public void ProvidersAreIndependent()
 	{
-		_alarm.Check("Claude", [Session(50)], _default);
-		_alarm.Check("Codex", [Session(95)], _default);
+		_alarm.Check("Claude", [Session(50)], _default, Now);
+		_alarm.Check("Codex", [Session(95)], _default, Now);
 
-		Assert.Single(_alarm.Check("Claude", [Session(91)], _default));
+		Assert.Single(_alarm.Check("Claude", [Session(91)], _default, Now));
 	}
 
 	[Fact]
 	public void ToastIsAboutTheGravestOfAllAgents() // выше порога у двух разом бывает разве что при запуске — тост один, о главном
 	{
-		var alert = _alarm.Check([("Claude", [Session(80)]), ("Codex", [Session(92)])], _default);
+		var alert = _alarm.Check([("Claude", [Session(80)]), ("Codex", [Session(92)])], _default, Now);
 
 		Assert.Equal(("Codex", true), (alert?.Provider, alert?.Critical));
-		Assert.Null(_alarm.Check([("Claude", [Session(85)]), ("Codex", [Session(93)])], _default)); // о «важно» у Claude уже сказано
+		Assert.Null(_alarm.Check([("Claude", [Session(85)]), ("Codex", [Session(93)])], _default, Now)); // о «важно» у Claude уже сказано
 	}
 }

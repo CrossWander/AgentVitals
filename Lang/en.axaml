@@ -17,6 +17,7 @@
     <x:String x:Key="langPaceAhead">ahead of pace</x:String>
     <x:String x:Key="langPaceEven">on pace</x:String>
     <x:String x:Key="langPaceSpare">room to spare</x:String>
+    <x:String x:Key="langPaceRunout">lasts until {0}</x:String>
     <x:String x:Key="langPaceTip">The white mark is even pace: spending evenly until the reset, you would be at {0}% by now. You are at {1}%.</x:String>
     <x:String x:Key="langHoursMinutes">{0} h {1} min</x:String>
     <x:String x:Key="langMinutes">{0} min</x:String>
@@ -121,6 +122,9 @@
     <x:String x:Key="langUpdateOpen">Open GitHub</x:String>
     <x:String x:Key="langAlertImportant">Important · running low</x:String>
     <x:String x:Key="langAlertCritical">Critical · almost used up</x:String>
+    <x:String x:Key="langAlertPace">Won't last until the reset</x:String>
+    <x:String x:Key="langAlertReset">Available again</x:String>
+    <x:String x:Key="langAlertResetText">{0} · {1}: the quota has reset</x:String>
     <x:String x:Key="langAlertLeft">{0} · {1}: {2}% left</x:String>
     <x:String x:Key="langToastStatus">{0}: {1}</x:String>
     <x:String x:Key="langToastStatusOk">{0}: all systems operational again</x:String>

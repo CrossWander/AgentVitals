@@ -17,6 +17,7 @@
     <x:String x:Key="langPaceAhead">з випередженням</x:String>
     <x:String x:Key="langPaceEven">у нормі</x:String>
     <x:String x:Key="langPaceSpare">із запасом</x:String>
+    <x:String x:Key="langPaceRunout">вистачить до {0}</x:String>
     <x:String x:Key="langPaceTip">Біла позначка — рівний темп: якщо витрачати рівномірно до скидання, зараз було б витрачено {0}%. У вас {1}%.</x:String>
     <x:String x:Key="langHoursMinutes">{0} год {1} хв</x:String>
     <x:String x:Key="langMinutes">{0} хв</x:String>
@@ -121,6 +122,9 @@
     <x:String x:Key="langUpdateOpen">Відкрити GitHub</x:String>
     <x:String x:Key="langAlertImportant">Важливо · запас закінчується</x:String>
     <x:String x:Key="langAlertCritical">Критично · ліміт майже вичерпано</x:String>
+    <x:String x:Key="langAlertPace">Не вистачить до скидання</x:String>
+    <x:String x:Key="langAlertReset">Знову доступно</x:String>
+    <x:String x:Key="langAlertResetText">{0} · {1}: квоту оновлено</x:String>
     <x:String x:Key="langAlertLeft">{0} · {1}: залишилось {2}%</x:String>
     <x:String x:Key="langToastStatus">{0}: {1}</x:String>
     <x:String x:Key="langToastStatusOk">{0}: усе знову працює</x:String>
