@@ -38,7 +38,7 @@
     <x:String x:Key="langHealthCritical">CRITICAL</x:String>
     <x:String x:Key="langHealthUnknown">NO DATA</x:String>
     <x:String x:Key="langHealthExhausted">USED UP</x:String>
-    <x:String x:Key="langNoAgents">No agents found. Install Claude Code, Codex or Gemini CLI.</x:String>
+    <x:String x:Key="langNoAgents">No agents found. Install Claude Code, Codex, Gemini CLI or Cursor; for Copilot, sign in to GitHub through git.</x:String>
     <x:String x:Key="langErrorExpired">Sign-in expired. The data comes back after your first request in {0}</x:String>
     <x:String x:Key="langErrorGitHub">No GitHub sign-in. Sign in through git — for example, git fetch in any GitHub repository — and the data will appear</x:String>
     <x:String x:Key="langErrorNoCopilot">This GitHub account has no Copilot</x:String>

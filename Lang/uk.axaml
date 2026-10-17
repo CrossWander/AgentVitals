@@ -38,7 +38,7 @@
     <x:String x:Key="langHealthCritical">КРИТИЧНО</x:String>
     <x:String x:Key="langHealthUnknown">НЕМАЄ ДАНИХ</x:String>
     <x:String x:Key="langHealthExhausted">ВИЧЕРПАНО</x:String>
-    <x:String x:Key="langNoAgents">Агентів не знайдено. Встанови Claude Code, Codex або Gemini CLI.</x:String>
+    <x:String x:Key="langNoAgents">Агентів не знайдено. Встанови Claude Code, Codex, Gemini CLI або Cursor; для Copilot увійди в GitHub через git.</x:String>
     <x:String x:Key="langErrorExpired">Вхід минув. Дані повернуться після першого запиту в {0}</x:String>
     <x:String x:Key="langErrorGitHub">Немає входу GitHub. Увійдіть через git — наприклад, git fetch у будь-якому репозиторії з GitHub — і дані з'являться</x:String>
     <x:String x:Key="langErrorNoCopilot">У цього акаунта GitHub немає Copilot</x:String>
