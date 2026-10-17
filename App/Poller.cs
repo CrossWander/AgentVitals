@@ -15,8 +15,12 @@ internal sealed class ProviderState(IProvider provider)
 {
 	public IProvider Provider { get; } = provider;
 
-	/// <summary>Агент установлен: его файл входа на месте. Проверяется раз в тик опроса, а не каждым читателем.</summary>
-	public bool Installed { get; private set; } = File.Exists(provider.Credentials);
+	/// <summary>Агент установлен — его спрашивают. Проверяется раз в тик опроса, а не каждым читателем.</summary>
+	public bool Installed { get; private set; } = provider.Installed;
+
+	/// <summary>У агента есть вкладка: он установлен, а кому нужно подтверждение — уже ответил хотя бы раз
+	/// (в этом запуске или в quota.json). Подтверждённый не пропадает и после отказа: ошибка видна на вкладке.</summary>
+	public bool Visible => Installed && (!Provider.ConfirmFirst || Snapshot is not null);
 
 	public Snapshot? Snapshot { get; set; }
 
@@ -33,7 +37,7 @@ internal sealed class ProviderState(IProvider provider)
 	/// <summary>Начало тика, в котором провайдера спрашивали последний раз.</summary>
 	public DateTime Started { get; private set; } = DateTime.MinValue;
 
-	// Время записи файла входа, когда вход отклонили: пока файл тот же, спрашивать снова бесполезно.
+	// Когда переписали вход, на момент отказа: пока он тот же, спрашивать снова бесполезно.
 	private DateTime? _rejected;
 
 	// Отказов 429 подряд: по ним растёт пауза, если сервер просит подождать меньше.
@@ -129,9 +133,9 @@ internal sealed class ProviderState(IProvider provider)
 	}
 
 	/// <summary>Агента установили или удалили, пока программа работает.</summary>
-	public void CheckInstalled() => Installed = File.Exists(Provider.Credentials);
+	public void CheckInstalled() => Installed = Provider.Installed;
 
-	private DateTime Stamp() => File.GetLastWriteTimeUtc(Provider.Credentials);
+	private DateTime Stamp() => Provider.SignedIn;
 
 	/// <summary>Считается при каждом тике, а не запоминается: новый интервал из настроек действует сразу.</summary>
 	public DateTime NextFetch(int intervalSeconds) =>
@@ -187,8 +191,11 @@ internal sealed class Poller
 	public IReadOnlyList<ProviderState> Providers { get; } =
 		[new(new ClaudeProvider()), new(new CodexProvider()), new(new GeminiProvider())];
 
-	/// <summary>Установленные агенты: только их показывают и спрашивают.</summary>
+	/// <summary>Установленные агенты: только их спрашивают.</summary>
 	public IEnumerable<ProviderState> Installed => Providers.Where(state => state.Installed);
+
+	/// <summary>Агенты с вкладкой: их показывают, о них тосты, значок и статус-страницы.</summary>
+	public IEnumerable<ProviderState> Visible => Installed.Where(state => state.Visible);
 
 	/// <summary>Самое узкое окно среди агентов; null — ни у кого нет свежих данных.</summary>
 	public static double? Tightest(IEnumerable<ProviderState> agents, DateTime now) => agents.Max(state => state.Tightest(now));
@@ -217,9 +224,9 @@ internal sealed class Poller
 		_ = TickAsync(force: false);
 
 		// После сна вход истёк, пока CLI агента его не обновит: новый файл входа — сразу тик, а не через минуту.
-		foreach (var state in Providers)
+		foreach (var file in Providers.Select(state => state.Provider.Credentials).OfType<string>())
 		{
-			_notices.Add(new FileNotice(state.Provider.Credentials, () => Dispatcher.UIThread.Post(() => _ = TickAsync(force: false))));
+			_notices.Add(new FileNotice(file, () => Dispatcher.UIThread.Post(() => _ = TickAsync(force: false))));
 		}
 	}
 
@@ -235,7 +242,7 @@ internal sealed class Poller
 			await Task.Delay(delay);
 			await TickAsync(force: true);
 
-			if (!Offline(Installed))
+			if (!Offline(Visible))
 			{
 				return;
 			}
@@ -298,7 +305,8 @@ internal sealed class Poller
 				QuotaMemory.Save(QuotaMemory.Location, Installed.ToDictionary(state => state.Provider.Name, state => state.Remember()));
 			}
 
-			foreach (var state in Installed)
+			// Статус — только у агентов с вкладкой: Copilot без подтверждения его не показывает.
+			foreach (var state in Visible)
 			{
 				await state.FetchStatusAsync(_http, now, force);
 			}

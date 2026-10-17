@@ -191,7 +191,7 @@ internal sealed class TrayApp
 	/// <summary>Свежий снимок: «обновлено N мин назад» и «сброс через» сдвигаются со временем.</summary>
 	private Vitals Gather() =>
 		Views.Build(
-			[.. _poller.Installed],
+			[.. _poller.Visible],
 			HookTarget.All.ToDictionary(target => target.Agent, target => HookInstaller.Link(target, out _)),
 			_sessions,
 			DateTime.UtcNow,
@@ -240,7 +240,7 @@ internal sealed class TrayApp
 	{
 		var now = DateTime.UtcNow;
 
-		if (_alarm.Check(_poller.Installed.Select(state => (state.Provider.Name, state.Windows(now))), Store.Current.Thresholds, now) is { } alert)
+		if (_alarm.Check(_poller.Visible.Select(state => (state.Provider.Name, state.Windows(now))), Store.Current.Thresholds, now) is { } alert)
 		{
 			var (title, message) = Text.QuotaToast(alert, now);
 			var brush = alert.Level switch
@@ -262,7 +262,7 @@ internal sealed class TrayApp
 		}
 
 		// У каждого агента своя страница: тост — о той, что сменила индикатор.
-		foreach (var state in _poller.Installed)
+		foreach (var state in _poller.Visible)
 		{
 			if (state.Status is not { } status)
 			{
@@ -332,7 +332,7 @@ internal sealed class TrayApp
 
 	[SupportedOSPlatform("windows")]
 	private IntPtr Glyph() =>
-		TrayGlyph.Get(Poller.Health(_poller.Installed, DateTime.UtcNow, Store.Current.Thresholds), SessionWatcher.Overall(_sessions), _tick, _darkTaskbar, Tray.IconSize);
+		TrayGlyph.Get(Poller.Health(_poller.Visible, DateTime.UtcNow, Store.Current.Thresholds), SessionWatcher.Overall(_sessions), _tick, _darkTaskbar, Tray.IconSize);
 
 	private void OnTrayMove()
 	{

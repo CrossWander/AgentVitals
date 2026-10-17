@@ -11,8 +11,12 @@ A coding assistant with its own CLI and sign-in whose quotas are watched: Claude
 _Avoid_: tool, client, account
 
 **Installed**:
-An agent is installed when its sign-in file is on the computer; only installed agents are shown and asked.
+An agent is installed when there are signs of it on the computer — usually its sign-in file; installed agents are asked.
 _Avoid_: available, enabled
+
+**Visible**:
+An installed agent that has a tab: at once for most agents, but Copilot only after GitHub has confirmed it once, since its signs are on almost every computer with VS Code.
+_Avoid_: shown, enabled
 
 **Plan**:
 What the person pays the agent's maker for, such as Pro or Max.

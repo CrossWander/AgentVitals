@@ -253,6 +253,60 @@ public class PollerTests
 	}
 
 	[Fact]
+	public async Task UnconfirmedAgentStaysHidden() // признаки Copilot есть у всех с VS Code — этого мало, чтобы показать вкладку
+	{
+		using var temp = new TempDirectory();
+		var credentials = temp.File("auth.json");
+		File.WriteAllText(credentials, "{}");
+		var state = new ProviderState(new Fake(() => throw new TokenExpiredException("git", "langErrorNoCopilot"), credentials, confirmFirst: true));
+		using var http = new HttpClient();
+
+		await state.FetchAsync(http, _now);
+
+		Assert.True(state.Installed); // спрашивать — да
+		Assert.False(state.Visible); // показывать — нет
+	}
+
+	[Fact]
+	public async Task ConfirmedAgentStaysAfterRejection() // ошибка видна на вкладке, а не прячет её
+	{
+		using var temp = new TempDirectory();
+		var credentials = temp.File("auth.json");
+		File.WriteAllText(credentials, "{}");
+		var calls = 0;
+		var state = new ProviderState(new Fake(() => ++calls == 1 ? _snapshot : throw new TokenExpiredException("git", "langErrorGitHub"), credentials, confirmFirst: true));
+		using var http = new HttpClient();
+
+		await state.FetchAsync(http, _now);
+		await state.FetchAsync(http, _now.AddMinutes(1));
+
+		Assert.True(state.Visible);
+	}
+
+	[Fact]
+	public void RememberedAnswerConfirms() // подтверждение из quota.json: вкладка сразу после запуска
+	{
+		using var temp = new TempDirectory();
+		var credentials = temp.File("auth.json");
+		File.WriteAllText(credentials, "{}");
+		var state = new ProviderState(new Fake(() => _snapshot, credentials, confirmFirst: true));
+
+		state.Recall(new RememberedQuota(_snapshot, _now, null), _now);
+
+		Assert.True(state.Visible);
+	}
+
+	[Fact]
+	public void OrdinaryAgentShowsOnceInstalled()
+	{
+		using var temp = new TempDirectory();
+		var credentials = temp.File("auth.json");
+		File.WriteAllText(credentials, "{}");
+
+		Assert.True(new ProviderState(new Fake(() => _snapshot, credentials)).Visible);
+	}
+
+	[Fact]
 	public async Task BrokenStatisticsDoNotStopPolling() // тик опроса — async void: исключение уронило бы программу
 	{
 		using var http = new HttpClient();
@@ -285,8 +339,10 @@ public class PollerTests
 		Assert.Equal(_now.AddSeconds(expected), Poller.Schedule(null, seconds, _now));
 
 	/// <summary>Агент, который отвечает тем, что вернёт или бросит answer.</summary>
-	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json", IStatusPage? status = null) : IProvider
+	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json", IStatusPage? status = null, bool confirmFirst = false) : IProvider
 	{
+		public bool ConfirmFirst => confirmFirst;
+
 		public string Name => "Fake";
 
 		public string Cli => "fake";
