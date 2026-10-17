@@ -1,6 +1,8 @@
-# <img src="app.png" width="36" height="36" valign="middle" alt=""> AgentVitals
+# <img src="src/AgentVitals/app.png" width="36" height="36" valign="middle" alt=""> AgentVitals
 
-**Claude Code quotas, live sessions and spend — in the Windows tray.**
+**English** · [Русский](README.ru.md) · [Українська](README.uk.md)
+
+**AI agent quotas, live sessions and spend — in the Windows tray.**
 
 [![Release](https://github.com/CrossWander/AgentVitals/actions/workflows/release.yml/badge.svg)](https://github.com/CrossWander/AgentVitals/actions/workflows/release.yml)
 [![Latest release](https://img.shields.io/github/v/release/CrossWander/AgentVitals)](https://github.com/CrossWander/AgentVitals/releases/latest)
@@ -8,11 +10,12 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D4.svg)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
-A Windows tray app that shows how much of your Claude quota is left and when it resets, what each
-Claude Code or Codex session is doing right now, what today's work would cost at API prices, and whether
-the agent's service is up. A toast warns you before you run out, when Claude finishes a long turn and when it
-asks for permission. Inspired by [ClaudeBar](https://github.com/tddworks/ClaudeBar) and
-[claude-status-bar](https://github.com/m1ckc3s/claude-status-bar), which do this on macOS.
+A Windows tray app for Claude Code, Codex, GitHub Copilot and Cursor. It shows how much of each
+agent's quota is left and when it resets, what each Claude Code or Codex session is doing right now,
+what today's work would cost at API prices, and whether the agent's service is up. A toast warns you
+before you run out, when an agent finishes a long turn and when it asks for permission. Each agent
+you are signed in to gets its own tab. Inspired by [ClaudeBar](https://github.com/tddworks/ClaudeBar)
+and [claude-status-bar](https://github.com/m1ckc3s/claude-status-bar), which do this on macOS.
 
 | Light | Dark |
 |---|---|
@@ -25,8 +28,9 @@ asks for permission. Inspired by [ClaudeBar](https://github.com/tddworks/ClaudeB
    installer: the exe runs from any folder.
 2. Start it. A pulse icon appears in the tray. Windows 10 may put it into the hidden area — drag it
    onto the taskbar once.
-3. If you are signed in to Claude Code, the quotas show up right away. To see live sessions, open
-   Settings → *Live sessions* → **Connect**.
+3. Every agent you are signed in to shows its quotas right away, each on its own tab — see
+   [Agents](#agents). To see live sessions, open Settings → *Live sessions* → **Connect** on the
+   Claude Code or Codex row.
 
 Hover the icon for a quick card, click it for the full window, right-click for the menu. The window
 stays open while you work in other windows: close it with ✕, another click on the icon or Esc.
@@ -37,12 +41,12 @@ scrolls.
 
 | Area | What you get |
 |---|---|
-| Quotas | Session, week and per-model weekly limits with a reset countdown; a mark on the bar shows where even spending would be by now → [more](#quotas-and-alerts) |
-| Tray icon | A pulse line coloured by the limit closest to running out; it beats while Claude works, and a blue dot blinks while Claude waits for you |
-| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a limit won't last until its reset at this pace, when a critical limit resets, when a long turn ends, when Claude asks for permission and when an agent's service status changes; two soft sounds you can turn on — for permission and for *critical* |
+| Quotas | Every limit the agent reports, with a reset countdown: the session, week and per-model weeks for Claude; the session and week for Codex, or the month on Free; premium requests, chat and completions for the month for Copilot; the month with its Auto and API shares for Cursor. A mark on the bar shows where even spending would be by now → [more](#quotas-and-alerts) |
+| Tray icon | A pulse line coloured by the limit closest to running out; it beats while an agent works, and a blue dot blinks while one waits for you |
+| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a limit won't last until its reset at this pace, when a critical limit resets, when a long turn ends, when an agent asks for permission and when an agent's service status changes; two soft sounds you can turn on — for permission and for *critical* |
 | Live sessions | Every open Claude Code and Codex session, on its agent's tab, with its folder, git branch, state and turn timer → [more](#live-sessions) |
-| Usage statistics | Today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
-| Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears); a toast when one changes |
+| Usage statistics | For Claude and Codex: today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
+| Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears), the Copilot component of githubstatus.com for Copilot, status.cursor.com for Cursor; a toast when one changes |
 | After sleep | Asks again as soon as the PC wakes; a window whose reset time has passed shows 0% instead of stale numbers |
 | Updates | Checks GitHub at start and once a day and toasts a new version once; **Update** in settings downloads it, checks its SHA-256 and swaps the exe in place → [more](#updates) |
 | Screen sharing | The eye at the end of the plan line hides the account email and session prompts, in the window and the hover card |
@@ -53,7 +57,8 @@ scrolls.
 
 The sliders button at the bottom of the window, or *Settings* in the right-click menu, opens
 settings: language, theme, how often to check quotas, the *important* and *critical* levels,
-session toasts, their two sounds, start with Windows and the Claude Code hooks for live sessions.
+session toasts, their two sounds, start with Windows, updates and the Claude Code and Codex hooks
+for live sessions.
 
 | Light | Dark |
 |---|---|
@@ -78,7 +83,9 @@ takes whichever of the two lasts longer (not verified).
 ## Quotas and alerts
 
 - **Cards.** Each quota window is a card with the percentage used, a bar and the time left until it
-  resets. A window at 100% says *used up*. Extra usage is shown if it is enabled.
+  resets. A window at 100% says *used up*. Extra usage is shown if it is enabled: Claude's extra
+  usage, Cursor's spend past the plan. Cards go in pairs; on a tab with quotas only — no statistics
+  and no sessions, as for Copilot and Cursor — each card takes the full width.
 - **Pace.** The session and week bars (per-model weeks too) carry a mark where even spending would be by now, and the
   card says *on pace* or *room to spare* (within 5 points is on pace). Ahead of pace it says when
   the window runs out if you keep going as fast as so far: *lasts until 15:40*, or *lasts until
@@ -89,11 +96,12 @@ takes whichever of the two lasts longer (not verified).
   about; cards, bars and the header follow them too. The window header speaks for the tab you are
   on, and a tab whose agent runs low gets a dot of that colour. An exhausted week turns the icon red
   even with an empty session.
-- **Toasts.** When the session or the week reaches 75% (*important*, a quarter left) and 90%
+- **Toasts.** When a window reaches 75% (*important*, a quarter left) and 90%
   (*critical*, almost used up), with the time until it resets. Both levels move in steps of 5
   between 50% and 95% in settings. Each toast comes once, and again only after that window resets;
   a window that is already past a level when AgentVitals starts gets its toast too. The toast also
-  says until when the rest lasts at this pace, if that comes before the reset.
+  says until when the rest lasts at this pace, if that comes before the reset. Cursor's Auto and API
+  shares are parts of its month and get no toasts of their own.
 - **Sound for *critical*.** *Play a sound when a quota is almost used up* adds a soft wooden knock,
   two notes falling, to the *critical* toast only — off by default. It is unlike the rising chime of
   a permission request, so you can tell them apart without looking.
@@ -127,8 +135,8 @@ Settings → *Live sessions* → **Connect** on the Claude Code row adds AgentVi
 Each hook runs `AgentVitals.exe hook` in the background, which writes one small state file per
 session into `sessions\` next to the exe. **Disconnect** removes only AgentVitals' entries.
 
-- The pulse runs while Claude is working, and a blue dot blinks while it waits for your permission.
-- A running turn shows how long it has been going (*working · 3 min*). A toast says when Claude
+- The pulse runs while an agent is working, and a blue dot blinks while it waits for your permission.
+- A running turn shows how long it has been going (*working · 3 min*). A toast says when an agent
   finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
   in settings. *Play a sound when an agent asks for permission* adds a soft two-note chime to the
   permission toast only — off by default, and silent while the session's window is the active one.
@@ -138,7 +146,7 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
   next to the plan line hides the prompts along with the email.
 - A click on a session there, or on its toast, brings up the window the session runs in — the
   terminal, VS Code or another IDE — so you can answer right away. AgentVitals finds it from the
-  Claude Code process up through its parents; when one program holds several windows, such as
+  agent's process up through its parents; when one program holds several windows, such as
   VS Code, the one with the session's
   folder in its title wins. It brings up the window, not the tab: with several tabs, pick the right
   one yourself. When no window is found, a toast click opens the AgentVitals window instead.
@@ -179,7 +187,7 @@ once — Claude Code writes the same answer several times while it streams.
   [OpenAI's pricing page](https://developers.openai.com/api/docs/pricing), kept in
   `prices-openai.md`; a model without a cached-input or cache-write price pays the plain input price
   for those tokens.
-- Gemini has no statistics yet: the slot is there (`IAgent.Usage`), the reader isn't.
+- Gemini, Copilot and Cursor have no statistics yet: the slot is there (`IAgent.Usage`), the reader isn't.
 
 ## Updates
 
@@ -187,7 +195,7 @@ With *Check for updates daily* on (the default), AgentVitals asks GitHub for the
 it starts and then once a day, and toasts a new version once. Settings → *Updates* → **Check** asks
 right away. **Update** downloads `AgentVitals.exe` from the release, checks its SHA-256 against the
 one GitHub publishes and refuses a file that does not match. A short script then waits for the
-program to close, puts the new exe in place of the old one — the same path, so the Claude Code hooks
+program to close, puts the new exe in place of the old one — the same path, so the hooks
 keep working — and starts it; if the swap cannot finish in 40 seconds, the old version starts again.
 After the restart a toast names the version now running and opens its release notes. Pre-releases
 and drafts are never offered. If the exe sits where it cannot write (say, `Program Files`), the card
@@ -195,21 +203,25 @@ says so and links to the release.
 
 ## Privacy
 
-- **The token is only ever read.** AgentVitals never refreshes it: Claude Code does that itself, and
-  a refresh token spent by someone else would sign Claude Code out.
+- **Sign-ins are only ever read.** AgentVitals never refreshes a token: Claude Code and Codex do that
+  themselves, and a refresh token spent by someone else would sign the agent out. Credential Manager
+  and Cursor's `state.vscdb` are opened for reading only.
 - **The GitHub token stays with git.** For Copilot, AgentVitals reads the sign-in that git already keeps in
   Windows Credential Manager, fresh before each check, and sends it to one address only:
   `api.github.com/copilot_internal/user`. It is never written, logged or shown, and nothing is ever written to
   Credential Manager.
-- **No tokens are spent.** The quota endpoint is not a model call, so checking it costs nothing
+- **The Cursor sign-in stays with Cursor.** It is read from Cursor's `state.vscdb` before each check and
+  sent as a cookie to `cursor.com/api/usage-summary` only: redirects are not followed, and cookies
+  Cursor sets are not kept.
+- **No tokens are spent.** The quota endpoints are not model calls, so checking them costs nothing
   from your limits.
-- **Where it connects:** the quota endpoints in [Agents](#agents), status.claude.com, status.openai.com, www.githubstatus.com,
-  cursor.com and status.cursor.com,
+- **Where it connects:** the quota endpoints in [Agents](#agents), status.claude.com, status.openai.com, www.githubstatus.com
+  and status.cursor.com,
   Anthropic's and OpenAI's pricing pages once a day, and GitHub: `api.github.com` for the release check (can be
   turned off) and the release download, only when you press **Update**. Nothing else — no account
   of its own, no telemetry.
 - **The last answer stays on this machine.** `quota.json` holds the plan, the account email and
-  the percentages from the last check; the token is never written anywhere.
+  the percentages from the last check; tokens are never written anywhere.
 - **Logs stay on this machine.** The statistics keep only token counts. To notice a turn stopped
   with Esc, the end of a live session's transcript is checked for Claude Code's interruption mark.
   Nothing from the logs leaves the computer.
@@ -230,7 +242,7 @@ Requires the .NET 10 SDK.
     dotnet test AgentVitals.slnx
     powershell -File tools\publish.ps1            # release\AgentVitals.exe, needs .NET 10 Runtime
     powershell -File tools\publish.ps1 -SelfContained
-    powershell -File tools\make-icons.ps1         # redraw app.ico and app.png
+    powershell -File tools\make-icons.ps1         # redraw src\AgentVitals\app.ico and app.png
 
 The code is four projects in `src\`, and each one knows only those before it:
 
@@ -245,6 +257,9 @@ The code is four projects in `src\`, and each one knows only those before it:
 [`release.yml`](.github/workflows/release.yml): it tests the tagged sources, builds the exe with
 `tools\publish.ps1` and attaches it to that release.
 
+The README comes in three languages: `README.md` is the original, `README.ru.md` and `README.uk.md`
+follow it. A change to one goes into all three.
+
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
@@ -253,8 +268,8 @@ Copyright 2026 Dykalo Pavlo. Forks and derivative works must keep the contents o
 and mark the files they changed (sections 4b and 4d of the license).
 
 Claude and Anthropic are trademarks of Anthropic PBC. This project is independent, not
-affiliated with or supported by Anthropic, OpenAI or Google; the names identify the services
-the software reads.
+affiliated with or supported by Anthropic, OpenAI, Google, GitHub or Anysphere (Cursor); the names
+identify the services the software reads.
 
 ## Author
 

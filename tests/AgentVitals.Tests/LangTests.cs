@@ -39,7 +39,7 @@ public class LangTests
 
 	private static string Lang() => Path.Combine(Root(), "src", "AgentVitals", "Lang");
 
-	private static string Root()
+	internal static string Root()
 	{
 		var folder = new DirectoryInfo(AppContext.BaseDirectory);
 
