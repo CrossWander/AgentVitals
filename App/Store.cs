@@ -26,6 +26,9 @@ internal static class Store
 
 		public int TurnMinutes { get; set; } = 5;
 
+		// Звук к тосту «ждёт разрешения»; тосты беззвучны, пока человек сам не включит.
+		public bool WaitingSound { get; set; }
+
 		// Глаз в окне: почта аккаунта и запросы сессий скрыты — экран показывают другим.
 		public bool Private { get; set; }
 

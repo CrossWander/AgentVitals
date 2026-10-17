@@ -42,6 +42,11 @@ internal partial class SettingsPanel : UserControl
 		ShowLevels();
 		SessionToastsToggle.IsChecked = Store.Current.SessionToasts;
 		TurnPanel.IsEnabled = Store.Current.SessionToasts;
+		WaitingSoundToggle.IsChecked = Store.Current.WaitingSound;
+		WaitingSoundToggle.IsEnabled = Store.Current.SessionToasts;
+
+		// Звук играет только Windows (winmm).
+		WaitingSoundToggle.IsVisible = OperatingSystem.IsWindows();
 		AutostartCard.IsVisible = OperatingSystem.IsWindows();
 
 		if (OperatingSystem.IsWindows())
@@ -131,7 +136,23 @@ internal partial class SettingsPanel : UserControl
 		{
 			Store.Current.SessionToasts = SessionToastsToggle.IsChecked == true;
 			TurnPanel.IsEnabled = Store.Current.SessionToasts;
+			WaitingSoundToggle.IsEnabled = Store.Current.SessionToasts;
 			Store.Save();
+		}
+	}
+
+	private void OnWaitingSound(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading)
+		{
+			Store.Current.WaitingSound = WaitingSoundToggle.IsChecked == true;
+			Store.Save();
+
+			// Включили — сразу слышно, что это за звук.
+			if (Store.Current.WaitingSound)
+			{
+				Sound.Play();
+			}
 		}
 	}
 

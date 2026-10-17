@@ -39,7 +39,7 @@ scrolls.
 |---|---|
 | Quotas | Session, week and per-model weekly limits with a reset countdown; a mark on the bar shows where even spending would be by now → [more](#quotas-and-alerts) |
 | Tray icon | A pulse line coloured by the limit closest to running out; it beats while Claude works, and a blue dot blinks while Claude waits for you |
-| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a limit won't last until its reset at this pace, when a critical limit resets, when a long turn ends, when Claude asks for permission and when an agent's service status changes |
+| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a limit won't last until its reset at this pace, when a critical limit resets, when a long turn ends, when Claude asks for permission (with a soft chime, if you turn it on) and when an agent's service status changes |
 | Live sessions | Every open Claude Code and Codex session, on its agent's tab, with its folder, git branch, state and turn timer → [more](#live-sessions) |
 | Usage statistics | Today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
 | Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears); a toast when one changes |
@@ -53,7 +53,7 @@ scrolls.
 
 The sliders button at the bottom of the window, or *Settings* in the right-click menu, opens
 settings: language, theme, how often to check quotas, the *important* and *critical* levels,
-session toasts, start with Windows and the Claude Code hooks for live sessions.
+session toasts and their chime, start with Windows and the Claude Code hooks for live sessions.
 
 | Light | Dark |
 |---|---|
@@ -121,7 +121,8 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
 - The pulse runs while Claude is working, and a blue dot blinks while it waits for your permission.
 - A running turn shows how long it has been going (*working · 3 min*). A toast says when Claude
   finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
-  in settings.
+  in settings. *Play a sound when an agent asks for permission* adds a soft two-note chime to the
+  permission toast only — off by default; turning it on plays it once so you know it.
 - The list keeps one height — about four sessions — and scrolls past that, with a thin scroll bar.
 - Two sessions in the same folder show the start of their first prompt instead of the branch, so
   you can tell them apart; hovering a row shows the folder, branch and prompt in full. The eye

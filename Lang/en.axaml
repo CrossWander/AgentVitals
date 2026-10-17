@@ -96,6 +96,7 @@
     <x:String x:Key="langLevelImportant">Quota: important at</x:String>
     <x:String x:Key="langLevelCritical">Quota: critical at</x:String>
     <x:String x:Key="langSessionToasts">Tell me when Claude finishes or asks</x:String>
+    <x:String x:Key="langWaitingSound">Play a sound when an agent asks for permission</x:String>
     <x:String x:Key="langTurnLonger">FINISHED TURNS LONGER THAN</x:String>
     <x:String x:Key="langHooks">LIVE SESSIONS</x:String>
     <x:String x:Key="langHooksOffClaude">Not connected. AgentVitals will add its hooks to ~/.claude/settings.json and keep a backup next to it.</x:String>

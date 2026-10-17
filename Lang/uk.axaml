@@ -96,6 +96,7 @@
     <x:String x:Key="langLevelImportant">Квота: «важливо» з</x:String>
     <x:String x:Key="langLevelCritical">Квота: «критично» з</x:String>
     <x:String x:Key="langSessionToasts">Повідомляти про кінець ходу й питання</x:String>
+    <x:String x:Key="langWaitingSound">Звук, коли агент чекає дозволу</x:String>
     <x:String x:Key="langTurnLonger">ПРО КІНЕЦЬ ХОДУ, ЯКЩО ВІН ДОВШИЙ</x:String>
     <x:String x:Key="langHooks">ЖИВІ СЕСІЇ</x:String>
     <x:String x:Key="langHooksOffClaude">Не підключено. AgentVitals додасть свої hooks у ~/.claude/settings.json і збереже поруч резервну копію.</x:String>

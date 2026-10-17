@@ -87,6 +87,8 @@
                         </Grid>
                         <CheckBox Name="SessionToastsToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langSessionToasts}"
                                   IsCheckedChanged="OnSessionToasts"/>
+                        <CheckBox Name="WaitingSoundToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langWaitingSound}"
+                                  IsCheckedChanged="OnWaitingSound"/>
                         <StackPanel Name="TurnPanel" Spacing="6">
                             <TextBlock Classes="label" Text="{DynamicResource langTurnLonger}"/>
                             <Border Classes="track" HorizontalAlignment="Left">

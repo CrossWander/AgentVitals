@@ -54,4 +54,7 @@ internal static class SessionAlarm
 			.Select(session => new SessionAlert(session, session.State == SessionState.Waiting))
 			.MaxBy(alert => alert.Waiting);
 	}
+
+	/// <summary>Звук — только к вопросу о разрешении, когда он включён: агент стоит, пока не ответят. Конец хода — тихий тост.</summary>
+	public static bool Chimes(SessionAlert alert, bool enabled) => enabled && alert.Waiting;
 }

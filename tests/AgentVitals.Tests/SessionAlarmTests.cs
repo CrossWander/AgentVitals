@@ -51,4 +51,20 @@ public class SessionAlarmTests
 	[Fact]
 	public void UnchangedStateIsSilent() =>
 		Assert.Null(SessionAlarm.Check([Live(SessionState.Waiting)], [Live(SessionState.Waiting)], _fiveMinutes));
+
+	[Theory]
+	[InlineData(true, true, true)]
+	[InlineData(false, true, false)] // конец хода — тихий тост: агент не стоит
+	[InlineData(true, false, false)] // звук выключен в настройках
+	public void ChimesOnlyWhenTheAgentWaits(bool waiting, bool enabled, bool chimes) =>
+		Assert.Equal(chimes, SessionAlarm.Chimes(new SessionAlert(Live(SessionState.Waiting), waiting), enabled));
+
+	[Fact]
+	public void ChimeIsBuiltIn() // звук внутри exe: файла рядом нет, и пропасть ему неоткуда
+	{
+		var wave = Sound.Chime;
+
+		Assert.Equal("RIFF", System.Text.Encoding.ASCII.GetString(wave, 0, 4));
+		Assert.Equal("WAVE", System.Text.Encoding.ASCII.GetString(wave, 8, 4));
+	}
 }

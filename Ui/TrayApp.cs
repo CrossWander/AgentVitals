@@ -286,6 +286,11 @@ internal sealed class TrayApp
 			var (title, message) = Text.SessionToast(alert);
 			_toast.Say(message, Anchor(), title, Views.Brush(alert.Waiting ? "Blue" : "Good"), Toast.Long, () => GoTo(alert.Session));
 			Journal.Add($"toast: {title}: {message}");
+
+			if (SessionAlarm.Chimes(alert, Store.Current.WaitingSound))
+			{
+				Sound.Play();
+			}
 		}
 	}
 
