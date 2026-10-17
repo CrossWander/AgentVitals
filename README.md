@@ -72,6 +72,9 @@ session toasts, their two sounds, start with Windows and the Claude Code hooks f
 An agent whose credential file is missing is simply not shown. Copilot shows up only after GitHub has
 confirmed it once: Copilot Chat comes with VS Code, so its folder alone says nothing.
 
+If Claude Code keeps its sign-in in Windows Credential Manager, AgentVitals reads it from there too and
+takes whichever of the two lasts longer (not verified).
+
 ## Quotas and alerts
 
 - **Cards.** Each quota window is a card with the percentage used, a bar and the time left until it

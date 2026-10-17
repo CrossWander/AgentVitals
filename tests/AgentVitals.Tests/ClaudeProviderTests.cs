@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Xunit;
@@ -125,5 +127,69 @@ public class ClaudeProviderTests
 			""")!;
 
 		Assert.Equal(new ExtraUsage(5.41m, 20m, "USD"), ClaudeProvider.Parse(usage, "", null).Extra);
+	}
+
+	// Вход в «Диспетчере учётных данных» — по реверсу pitboard: на живом режиме не проверено, «Диспетчер» здесь — словарь.
+	private static string Login(string token, long expires) => "{\"claudeAiOauth\":{\"accessToken\":\"" + token + "\",\"expiresAt\":" + expires + "}}";
+
+	private static readonly string _pieces = Convert.ToBase64String(Encoding.UTF8.GetBytes(Login("new", 2)));
+
+	private static Dictionary<string, string> Chunked(string meta) => new()
+	{
+		[ClaudeProvider.Vault] = Login("old", 1), // целая запись, оставшаяся с прошлого раза
+		[ClaudeProvider.Vault + "#m"] = meta,
+		[ClaudeProvider.Vault + "#0"] = _pieces[..10],
+		[ClaudeProvider.Vault + "#1"] = _pieces[10..],
+	};
+
+	[Fact]
+	public void ReadsWholeVaultEntry() =>
+		Assert.Equal(Login("a", 1), ClaudeProvider.FromVault(new Dictionary<string, string> { [ClaudeProvider.Vault] = Login("a", 1) }.GetValueOrDefault));
+
+	[Fact]
+	public void JoinsVaultPieces() => // куски важнее целой записи
+		Assert.Equal(Login("new", 2), ClaudeProvider.FromVault(Chunked($$"""{"n":2,"l":{{_pieces.Length}}}""").GetValueOrDefault));
+
+	[Theory]
+	[InlineData(3, 0)] // куска #2 нет
+	[InlineData(2, 1)] // длина не сошлась
+	[InlineData(0, 0)]
+	[InlineData(257, 0)]
+	public void BrokenPiecesMeanNoEntry(int count, int extra) =>
+		Assert.Null(ClaudeProvider.FromVault(Chunked($$"""{"n":{{count}},"l":{{_pieces.Length + extra}}}""").GetValueOrDefault));
+
+	[Fact]
+	public void PiecesLongerThanTheyMayBeMeanNoEntry() => // больше n·2400 знаков
+		Assert.Null(ClaudeProvider.FromVault(Chunked("""{"n":2,"l":4801}""").GetValueOrDefault));
+
+	[Fact]
+	public void NeverReadsThePending() // #p — недописанная запись: Claude Code ещё пишет куски
+	{
+		List<string> asked = [];
+		var vault = Chunked($$"""{"n":2,"l":{{_pieces.Length}}}""");
+
+		ClaudeProvider.FromVault(target =>
+		{
+			asked.Add(target);
+
+			return vault.GetValueOrDefault(target);
+		});
+
+		Assert.DoesNotContain(asked, target => target.EndsWith("#p", StringComparison.Ordinal));
+	}
+
+	[Theory]
+	[InlineData(1000, 2000, "vault")] // новый режим: файл остался запасным и устарел
+	[InlineData(2000, 1000, "file")] // режим выключили: старая запись не мешает файлу
+	public void PicksLaterExpiry(long file, long vault, string winner) =>
+		Assert.Equal(winner, (string?)ClaudeProvider.Pick(Login("file", file), Login("vault", vault))!["accessToken"]);
+
+	[Fact]
+	public void FileAloneOrVaultAloneIsEnough()
+	{
+		Assert.Equal("file", (string?)ClaudeProvider.Pick(Login("file", 1), null)!["accessToken"]);
+		Assert.Equal("vault", (string?)ClaudeProvider.Pick(null, Login("vault", 1))!["accessToken"]);
+		Assert.Equal("file", (string?)ClaudeProvider.Pick(Login("file", 1), "not json")!["accessToken"]);
+		Assert.Null(ClaudeProvider.Pick(null, null));
 	}
 }
