@@ -47,7 +47,7 @@ public class QuotaMemoryTests
 	[Fact]
 	public void FreshAnswerIsNotAskedAgainAtStart() // перезапуск не тратит лимит запросов
 	{
-		var state = new ProviderState(new ClaudeProvider());
+		var state = new AgentState(new ClaudeAgent());
 
 		state.Recall(new(_answer, _now.AddSeconds(-30), null), _now);
 
@@ -58,7 +58,7 @@ public class QuotaMemoryTests
 	[Fact]
 	public void OldAnswerIsAskedAtOnce() // после ночи — сразу за свежими данными, а старые пока видны
 	{
-		var state = new ProviderState(new ClaudeProvider());
+		var state = new AgentState(new ClaudeAgent());
 
 		state.Recall(new(_answer, _now.AddHours(-10), null), _now);
 
@@ -69,7 +69,7 @@ public class QuotaMemoryTests
 	[Fact]
 	public void ServerWaitOutlivesARestart() // сервер велел ждать до 19:30 — перезапуск в 19:25 не спрашивает раньше
 	{
-		var state = new ProviderState(new ClaudeProvider());
+		var state = new AgentState(new ClaudeAgent());
 
 		state.Recall(new(null, null, _now.AddMinutes(5)), _now);
 
@@ -80,7 +80,7 @@ public class QuotaMemoryTests
 	[Fact]
 	public void PassedWaitIsForgotten()
 	{
-		var state = new ProviderState(new ClaudeProvider());
+		var state = new AgentState(new ClaudeAgent());
 
 		state.Recall(new(_answer, _now.AddHours(-1), _now.AddMinutes(-1)), _now);
 
@@ -91,7 +91,7 @@ public class QuotaMemoryTests
 	[Fact]
 	public void RemembersTheAnswerAndItsTime()
 	{
-		var state = new ProviderState(new ClaudeProvider()) { Snapshot = _answer, Updated = _now };
+		var state = new AgentState(new ClaudeAgent()) { Snapshot = _answer, Updated = _now };
 
 		Assert.Equal(new RememberedQuota(_answer, _now, null), state.Remember());
 	}

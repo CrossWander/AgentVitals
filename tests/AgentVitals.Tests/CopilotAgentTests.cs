@@ -11,7 +11,7 @@ using Xunit;
 namespace AgentVitals.Tests;
 
 /// <summary>Разбор ответа и отказов Copilot. Настоящий вход из «Диспетчера учётных данных» тесты не читают.</summary>
-public class CopilotProviderTests
+public class CopilotAgentTests
 {
 	// План Free с машины пользователя, без личных полей.
 	private const string _free = """
@@ -40,7 +40,7 @@ public class CopilotProviderTests
 	[Fact]
 	public void ReadsFreePlan()
 	{
-		var snapshot = CopilotProvider.Parse(JsonNode.Parse(_free)!);
+		var snapshot = CopilotAgent.Parse(JsonNode.Parse(_free)!);
 
 		Assert.Equal(["chat", "completions"], snapshot.Windows.Select(window => window.Label)); // премиум с entitlement 0 — пропущен
 		Assert.All(snapshot.Windows, window => Assert.Equal(WindowKind.MonthFeature, window.Kind));
@@ -55,7 +55,7 @@ public class CopilotProviderTests
 	[Fact]
 	public void ReadsPaidPlan()
 	{
-		var snapshot = CopilotProvider.Parse(JsonNode.Parse(_paid)!);
+		var snapshot = CopilotAgent.Parse(JsonNode.Parse(_paid)!);
 
 		var window = Assert.Single(snapshot.Windows);
 		Assert.Equal("premium_interactions", window.Label);
@@ -65,13 +65,13 @@ public class CopilotProviderTests
 
 	[Fact]
 	public void PremiumComesFirstAndStrangersLast() =>
-		Assert.Equal(["premium_interactions", "chat", "completions", "agent_mode"], CopilotProvider.Parse(Snapshots(
+		Assert.Equal(["premium_interactions", "chat", "completions", "agent_mode"], CopilotAgent.Parse(Snapshots(
 			("completions", 100, 50), ("agent_mode", 10, 5), ("chat", 100, 50), ("premium_interactions", 300, 150))).Windows.Select(window => window.Label));
 
 	[Fact]
 	public void SkipsUnlimited()
 	{
-		var snapshot = CopilotProvider.Parse(JsonNode.Parse("""
+		var snapshot = CopilotAgent.Parse(JsonNode.Parse("""
 			{ "access_type_sku": "copilot_pro", "quota_snapshots": {
 			  "chat": { "entitlement": 0, "remaining": 0, "unlimited": true },
 			  "completions": { "entitlement": 2000, "remaining": 2000, "percent_remaining": 100, "unlimited": true },
@@ -83,23 +83,23 @@ public class CopilotProviderTests
 
 	[Fact]
 	public void CountsFromRemainingWithoutPercent() =>
-		Assert.Equal(25, CopilotProvider.Parse(JsonNode.Parse(
+		Assert.Equal(25, CopilotAgent.Parse(JsonNode.Parse(
 			"""{"access_type_sku":"copilot_pro","quota_snapshots":{"chat":{"entitlement":200,"remaining":150,"unlimited":false}}}""")!).Windows[0].Used, 1);
 
 	[Fact]
 	public void FallsBackToQuotaResetDate() => // дата без времени — полночь UTC: так GitHub и сбрасывает
-		Assert.Equal(new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.Zero), CopilotProvider.Parse(JsonNode.Parse(
+		Assert.Equal(new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.Zero), CopilotAgent.Parse(JsonNode.Parse(
 			"""{"access_type_sku":"copilot_pro","quota_reset_date":"2026-11-01","quota_snapshots":{"chat":{"entitlement":100,"remaining":50,"percent_remaining":50,"unlimited":false}}}""")!).Windows[0].ResetsAt);
 
 	[Fact]
 	public void FreeWithoutQuotasIsNoCopilot() =>
-		Assert.Equal(SignInProblem.NoSubscription, Assert.Throws<SignInException>(() => CopilotProvider.Parse(JsonNode.Parse(
+		Assert.Equal(SignInProblem.NoSubscription, Assert.Throws<SignInException>(() => CopilotAgent.Parse(JsonNode.Parse(
 			"""{"access_type_sku":"free_limited_copilot","quota_snapshots":{"chat":{"entitlement":0,"remaining":0,"percent_remaining":0,"unlimited":false}}}""")!)).Problem);
 
 	[Fact]
 	public void PaidWithoutQuotasIsEmptyNotError() // безлимит: только строка тарифа
 	{
-		var snapshot = CopilotProvider.Parse(JsonNode.Parse(
+		var snapshot = CopilotAgent.Parse(JsonNode.Parse(
 			"""{"access_type_sku":"copilot_enterprise_seat","copilot_plan":"enterprise","quota_snapshots":{"chat":{"unlimited":true}}}""")!);
 
 		Assert.Empty(snapshot.Windows);
@@ -114,7 +114,7 @@ public class CopilotProviderTests
 	{
 		using var response = new HttpResponseMessage(status);
 
-		Assert.Equal(problem, Assert.IsType<SignInException>(CopilotProvider.Refusal(response)).Problem);
+		Assert.Equal(problem, Assert.IsType<SignInException>(CopilotAgent.Refusal(response)).Problem);
 	}
 
 	[Fact]
@@ -123,7 +123,7 @@ public class CopilotProviderTests
 		using var response = new HttpResponseMessage(HttpStatusCode.Forbidden);
 		response.Headers.Add("X-RateLimit-Remaining", "0");
 
-		Assert.IsType<RateLimitedException>(CopilotProvider.Refusal(response));
+		Assert.IsType<RateLimitedException>(CopilotAgent.Refusal(response));
 	}
 
 	[Fact]
@@ -134,7 +134,7 @@ public class CopilotProviderTests
 		response.Headers.Add("X-RateLimit-Remaining", "0");
 		response.Headers.Add("X-RateLimit-Reset", reset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture));
 
-		var until = Assert.IsType<RateLimitedException>(CopilotProvider.Refusal(response)).Until;
+		var until = Assert.IsType<RateLimitedException>(CopilotAgent.Refusal(response)).Until;
 
 		Assert.Equal(reset.ToUnixTimeSeconds(), new DateTimeOffset(until, TimeSpan.Zero).ToUnixTimeSeconds());
 	}
@@ -143,7 +143,7 @@ public class CopilotProviderTests
 	[InlineData("""{"entitlement":200,"remaining":-20,"percent_remaining":-10,"unlimited":false}""")]
 	[InlineData("""{"entitlement":200,"remaining":-20,"unlimited":false}""")]
 	public void OverageGoesPastAHundred(string quota) =>
-		Assert.Equal(110, CopilotProvider.Parse(JsonNode.Parse(
+		Assert.Equal(110, CopilotAgent.Parse(JsonNode.Parse(
 			"{\"access_type_sku\":\"copilot_pro\",\"quota_snapshots\":{\"premium_interactions\":" + quota + "}}")!).Windows[0].Used, 1);
 
 	[Fact]
@@ -151,7 +151,7 @@ public class CopilotProviderTests
 	{
 		using var response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
 
-		Assert.Null(CopilotProvider.Refusal(response));
+		Assert.Null(CopilotAgent.Refusal(response));
 	}
 
 	[Fact]
@@ -160,7 +160,7 @@ public class CopilotProviderTests
 		var answer = new Answer(HttpStatusCode.OK, _paid);
 		using var http = new HttpClient(answer);
 
-		await CopilotProvider.AskAsync(http, "gho_secret", CancellationToken.None);
+		await CopilotAgent.AskAsync(http, "gho_secret", CancellationToken.None);
 
 		var sent = Assert.Single(answer.Requests);
 		Assert.Equal("https://api.github.com/copilot_internal/user", sent.Url.ToString());
@@ -173,7 +173,7 @@ public class CopilotProviderTests
 	{
 		using var http = new HttpClient(new Answer(HttpStatusCode.Unauthorized));
 
-		var error = await Assert.ThrowsAsync<SignInException>(() => CopilotProvider.AskAsync(http, "gho_secret", CancellationToken.None));
+		var error = await Assert.ThrowsAsync<SignInException>(() => CopilotAgent.AskAsync(http, "gho_secret", CancellationToken.None));
 
 		Assert.Equal(SignInProblem.Rejected, error.Problem);
 		Assert.DoesNotContain("gho_secret", error.ToString());

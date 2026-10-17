@@ -26,9 +26,9 @@
             <TextBlock Classes="caption" Text="{DynamicResource langNoAgents}" TextWrapping="Wrap"
                        IsVisible="{Binding NoAgents}"/>
 
-            <ItemsControl ItemsSource="{Binding Providers}">
+            <ItemsControl ItemsSource="{Binding Agents}">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="local:ProviderView">
+                    <DataTemplate x:DataType="local:AgentView">
                         <Border Classes="card" Margin="0,0,0,8">
                             <StackPanel Spacing="8">
                                 <Grid ColumnDefinitions="Auto,*">

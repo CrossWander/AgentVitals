@@ -181,7 +181,7 @@ public class QuotaAlarmTests
 	}
 
 	[Fact]
-	public void ProvidersAreIndependent()
+	public void AgentsAreIndependent()
 	{
 		_alarm.Check("Claude", [Session(50)], _default, Now);
 		_alarm.Check("Codex", [Session(95)], _default, Now);
@@ -194,7 +194,7 @@ public class QuotaAlarmTests
 	{
 		var alert = _alarm.Check([("Claude", [Session(80)]), ("Codex", [Session(92)])], _default, Now);
 
-		Assert.Equal(("Codex", true), (alert?.Provider, alert?.Critical));
+		Assert.Equal(("Codex", true), (alert?.Agent, alert?.Critical));
 		Assert.Null(_alarm.Check([("Claude", [Session(85)]), ("Codex", [Session(93)])], _default, Now)); // о «важно» у Claude уже сказано
 	}
 }

@@ -17,7 +17,7 @@ internal static class CodexHooks
 	public static HookTarget Target { get; } = new(
 		"Codex",
 		"Codex",
-		Path.Combine(CodexProvider.Home, "hooks.json"),
+		Path.Combine(CodexAgent.Home, "hooks.json"),
 		[
 			new("SessionStart"),
 			new("UserPromptSubmit"),

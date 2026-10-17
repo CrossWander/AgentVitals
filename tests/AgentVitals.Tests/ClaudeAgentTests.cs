@@ -8,7 +8,7 @@ using Xunit;
 
 namespace AgentVitals.Tests;
 
-public class ClaudeProviderTests
+public class ClaudeAgentTests
 {
 	// Живой ответ /api/oauth/usage от 2026-10-07 (тариф Team), сокращённый до используемых полей.
 	private const string _real = """
@@ -27,7 +27,7 @@ public class ClaudeProviderTests
 		}
 		""";
 
-	// Фикстура ClaudeBar (Modules/Providers/Tests/ClaudeAPITests.swift): модельный лимит и включённый spend.
+	// Фикстура ClaudeBar (Modules/Agents/Tests/ClaudeAPITests.swift): модельный лимит и включённый spend.
 	private const string _scoped = """
 		{
 		  "limits": [
@@ -47,7 +47,7 @@ public class ClaudeProviderTests
 	[Fact]
 	public void ReadsRealResponse()
 	{
-		var snapshot = ClaudeProvider.Parse(JsonNode.Parse(_real)!, "Team", "me@example.com");
+		var snapshot = ClaudeAgent.Parse(JsonNode.Parse(_real)!, "Team", "me@example.com");
 
 		Assert.Equal("Team", snapshot.Plan);
 		Assert.Equal("me@example.com", snapshot.Account);
@@ -72,7 +72,7 @@ public class ClaudeProviderTests
 	[Fact]
 	public void ReadsModelLimitAndSpend()
 	{
-		var snapshot = ClaudeProvider.Parse(JsonNode.Parse(_scoped)!, "Max", null);
+		var snapshot = ClaudeAgent.Parse(JsonNode.Parse(_scoped)!, "Max", null);
 
 		Assert.Equal(3, snapshot.Windows.Count);
 
@@ -94,7 +94,7 @@ public class ClaudeProviderTests
 			  "seven_day": { "utilization": 60.0, "resets_at": null } }
 			""")!;
 
-		var snapshot = ClaudeProvider.Parse(usage, "", null);
+		var snapshot = ClaudeAgent.Parse(usage, "", null);
 
 		Assert.Equal([40d, 60d], snapshot.Windows.Select(window => window.Used));
 		Assert.Null(snapshot.Windows[1].ResetsAt);
@@ -107,7 +107,7 @@ public class ClaudeProviderTests
 			{ "limits": [ { "kind": "monthly_all", "percent": 90 }, { "kind": "session", "percent": 5 } ] }
 			""")!;
 
-		var window = Assert.Single(ClaudeProvider.Parse(usage, "", null).Windows);
+		var window = Assert.Single(ClaudeAgent.Parse(usage, "", null).Windows);
 		Assert.Equal(WindowKind.Session, window.Kind);
 	}
 
@@ -116,7 +116,7 @@ public class ClaudeProviderTests
 	{
 		var usage = JsonNode.Parse("""{ "limits": null, "five_hour": null, "seven_day": null, "spend": null, "extra_usage": null }""")!;
 
-		Assert.Throws<JsonException>(() => ClaudeProvider.Parse(usage, "", null));
+		Assert.Throws<JsonException>(() => ClaudeAgent.Parse(usage, "", null));
 	}
 
 	[Fact]
@@ -126,7 +126,7 @@ public class ClaudeProviderTests
 			{ "extra_usage": { "is_enabled": true, "used_credits": 541, "monthly_limit": 2000, "decimal_places": 2, "currency": "USD" } }
 			""")!;
 
-		Assert.Equal(new ExtraUsage(5.41m, 20m, "USD"), ClaudeProvider.Parse(usage, "", null).Extra);
+		Assert.Equal(new ExtraUsage(5.41m, 20m, "USD"), ClaudeAgent.Parse(usage, "", null).Extra);
 	}
 
 	// Вход в «Диспетчере учётных данных» — по реверсу pitboard: на живом режиме не проверено, «Диспетчер» здесь — словарь.
@@ -136,19 +136,19 @@ public class ClaudeProviderTests
 
 	private static Dictionary<string, string> Chunked(string meta) => new()
 	{
-		[ClaudeProvider.Vault] = Login("old", 1), // целая запись, оставшаяся с прошлого раза
-		[ClaudeProvider.Vault + "#m"] = meta,
-		[ClaudeProvider.Vault + "#0"] = _pieces[..10],
-		[ClaudeProvider.Vault + "#1"] = _pieces[10..],
+		[ClaudeAgent.Vault] = Login("old", 1), // целая запись, оставшаяся с прошлого раза
+		[ClaudeAgent.Vault + "#m"] = meta,
+		[ClaudeAgent.Vault + "#0"] = _pieces[..10],
+		[ClaudeAgent.Vault + "#1"] = _pieces[10..],
 	};
 
 	[Fact]
 	public void ReadsWholeVaultEntry() =>
-		Assert.Equal(Login("a", 1), ClaudeProvider.FromVault(new Dictionary<string, string> { [ClaudeProvider.Vault] = Login("a", 1) }.GetValueOrDefault));
+		Assert.Equal(Login("a", 1), ClaudeAgent.FromVault(new Dictionary<string, string> { [ClaudeAgent.Vault] = Login("a", 1) }.GetValueOrDefault));
 
 	[Fact]
 	public void JoinsVaultPieces() => // куски важнее целой записи
-		Assert.Equal(Login("new", 2), ClaudeProvider.FromVault(Chunked($$"""{"n":2,"l":{{_pieces.Length}}}""").GetValueOrDefault));
+		Assert.Equal(Login("new", 2), ClaudeAgent.FromVault(Chunked($$"""{"n":2,"l":{{_pieces.Length}}}""").GetValueOrDefault));
 
 	[Theory]
 	[InlineData(3, 0)] // куска #2 нет
@@ -156,11 +156,11 @@ public class ClaudeProviderTests
 	[InlineData(0, 0)]
 	[InlineData(257, 0)]
 	public void BrokenPiecesMeanNoEntry(int count, int extra) =>
-		Assert.Null(ClaudeProvider.FromVault(Chunked($$"""{"n":{{count}},"l":{{_pieces.Length + extra}}}""").GetValueOrDefault));
+		Assert.Null(ClaudeAgent.FromVault(Chunked($$"""{"n":{{count}},"l":{{_pieces.Length + extra}}}""").GetValueOrDefault));
 
 	[Fact]
 	public void PiecesLongerThanTheyMayBeMeanNoEntry() => // больше n·2400 знаков
-		Assert.Null(ClaudeProvider.FromVault(Chunked("""{"n":2,"l":4801}""").GetValueOrDefault));
+		Assert.Null(ClaudeAgent.FromVault(Chunked("""{"n":2,"l":4801}""").GetValueOrDefault));
 
 	[Fact]
 	public void NeverReadsThePending() // #p — недописанная запись: Claude Code ещё пишет куски
@@ -168,7 +168,7 @@ public class ClaudeProviderTests
 		List<string> asked = [];
 		var vault = Chunked($$"""{"n":2,"l":{{_pieces.Length}}}""");
 
-		ClaudeProvider.FromVault(target =>
+		ClaudeAgent.FromVault(target =>
 		{
 			asked.Add(target);
 
@@ -182,20 +182,20 @@ public class ClaudeProviderTests
 	[InlineData(1000, 2000, "vault")] // новый режим: файл остался запасным и устарел
 	[InlineData(2000, 1000, "file")] // режим выключили: старая запись не мешает файлу
 	public void PicksLaterExpiry(long file, long vault, string winner) =>
-		Assert.Equal(winner, (string?)ClaudeProvider.Pick(Login("file", file), Login("vault", vault))!["accessToken"]);
+		Assert.Equal(winner, (string?)ClaudeAgent.Pick(Login("file", file), Login("vault", vault))!["accessToken"]);
 
 	[Fact]
 	public void FileAloneOrVaultAloneIsEnough()
 	{
-		Assert.Equal("file", (string?)ClaudeProvider.Pick(Login("file", 1), null)!["accessToken"]);
-		Assert.Equal("vault", (string?)ClaudeProvider.Pick(null, Login("vault", 1))!["accessToken"]);
-		Assert.Equal("file", (string?)ClaudeProvider.Pick(Login("file", 1), "not json")!["accessToken"]);
-		Assert.Null(ClaudeProvider.Pick(null, null));
+		Assert.Equal("file", (string?)ClaudeAgent.Pick(Login("file", 1), null)!["accessToken"]);
+		Assert.Equal("vault", (string?)ClaudeAgent.Pick(null, Login("vault", 1))!["accessToken"]);
+		Assert.Equal("file", (string?)ClaudeAgent.Pick(Login("file", 1), "not json")!["accessToken"]);
+		Assert.Null(ClaudeAgent.Pick(null, null));
 	}
 
 	[Theory]
 	[InlineData("claude_max", "Max")] // приставка — Claude, а не тарифа: её знает он сам, а не общий код
 	[InlineData("pro", "Pro")]
 	[InlineData(null, "")]
-	public void NamesItsPlanWithoutThePrefix(string? subscription, string expected) => Assert.Equal(expected, ClaudeProvider.Plan(subscription));
+	public void NamesItsPlanWithoutThePrefix(string? subscription, string expected) => Assert.Equal(expected, ClaudeAgent.Plan(subscription));
 }

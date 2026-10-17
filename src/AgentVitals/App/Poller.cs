@@ -11,7 +11,7 @@ using AgentVitals.Platform;
 
 namespace AgentVitals;
 
-/// <summary>Расписание запросов к провайдерам и их статус-страницам.</summary>
+/// <summary>Расписание запросов к агентам и их статус-страницам.</summary>
 internal sealed class Poller
 {
 	private static readonly TimeSpan[] _afterWake = [TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(45)];
@@ -34,19 +34,19 @@ internal sealed class Poller
 	// Тик попросили, пока шёл другой: null — никто, true — «Обновить», который не ждёт срока.
 	private bool? _again;
 
-	public IReadOnlyList<ProviderState> Providers { get; } = [.. AgentCatalog.All().Select(agent => new ProviderState(agent))];
+	public IReadOnlyList<AgentState> Agents { get; } = [.. AgentCatalog.All().Select(agent => new AgentState(agent))];
 
 	/// <summary>Установленные агенты: только их спрашивают.</summary>
-	public IEnumerable<ProviderState> Installed => Providers.Where(state => state.Installed);
+	public IEnumerable<AgentState> Installed => Agents.Where(state => state.Installed);
 
 	/// <summary>Агенты с вкладкой: их показывают, о них тосты, значок и статус-страницы.</summary>
-	public IEnumerable<ProviderState> Visible => Installed.Where(state => state.Visible);
+	public IEnumerable<AgentState> Visible => Installed.Where(state => state.Visible);
 
 	/// <summary>Самое узкое окно среди агентов; null — ни у кого нет свежих данных.</summary>
-	public static double? Tightest(IEnumerable<ProviderState> agents, DateTime now) => agents.Max(state => state.Tightest(now));
+	public static double? Tightest(IEnumerable<AgentState> agents, DateTime now) => agents.Max(state => state.Tightest(now));
 
 	/// <summary>Общее состояние квот — по самому узкому окну.</summary>
-	public static Health Health(IEnumerable<ProviderState> agents, DateTime now, Thresholds levels) =>
+	public static Health Health(IEnumerable<AgentState> agents, DateTime now, Thresholds levels) =>
 		Tightest(agents, now) is { } used ? Quota.Rate(used, levels) : Core.Quotas.Health.Unknown;
 
 	/// <summary>Прошёл тик: что-то могло обновиться, а относительное время в подписях — сдвинуться.</summary>
@@ -56,9 +56,9 @@ internal sealed class Poller
 	{
 		var memory = QuotaMemory.Load(QuotaMemory.Location);
 
-		foreach (var state in Providers)
+		foreach (var state in Agents)
 		{
-			if (memory.TryGetValue(state.Provider.Name, out var remembered))
+			if (memory.TryGetValue(state.Agent.Name, out var remembered))
 			{
 				state.Recall(remembered, DateTime.UtcNow);
 			}
@@ -69,7 +69,7 @@ internal sealed class Poller
 		_ = TickAsync(force: false);
 
 		// После сна вход истёк, пока CLI агента его не обновит: новый файл входа — сразу тик, а не через минуту.
-		foreach (var file in Providers.Select(state => state.Provider.Credentials).OfType<string>())
+		foreach (var file in Agents.Select(state => state.Agent.Credentials).OfType<string>())
 		{
 			_notices.Add(new FileNotice(file, () => Dispatcher.UIThread.Post(() => _ = TickAsync(force: false))));
 		}
@@ -95,8 +95,8 @@ internal sealed class Poller
 	}
 
 	/// <summary>Кто-то не дозвался до сервера: ни ответа, ни отказа, — или статус-страница агента молчит.</summary>
-	internal static bool Offline(IEnumerable<ProviderState> states) =>
-		states.Any(state => state.Error is HttpRequestException or TaskCanceledException || (state.Provider.Status is not null && state.Status is null));
+	internal static bool Offline(IEnumerable<AgentState> states) =>
+		states.Any(state => state.Error is HttpRequestException or TaskCanceledException || (state.Agent.Status is not null && state.Status is null));
 
 	private async Task TickAsync(bool force)
 	{
@@ -115,7 +115,7 @@ internal sealed class Poller
 		{
 			var now = DateTime.UtcNow;
 
-			foreach (var state in Providers)
+			foreach (var state in Agents)
 			{
 				state.CheckInstalled();
 			}
@@ -131,7 +131,7 @@ internal sealed class Poller
 
 			if (due.Count > 0)
 			{
-				QuotaMemory.Save(QuotaMemory.Location, Installed.ToDictionary(state => state.Provider.Name, state => state.Remember()));
+				QuotaMemory.Save(QuotaMemory.Location, Installed.ToDictionary(state => state.Agent.Name, state => state.Remember()));
 			}
 
 			// Статус — только у агентов с вкладкой: Copilot без подтверждения его не показывает.

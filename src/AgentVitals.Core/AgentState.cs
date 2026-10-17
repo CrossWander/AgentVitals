@@ -12,8 +12,8 @@ using AgentVitals.Platform;
 
 namespace AgentVitals.Core;
 
-/// <summary>Что известно о провайдере: последний удачный снимок, последняя ошибка, когда спрашивать снова.</summary>
-public sealed class ProviderState(IProvider provider)
+/// <summary>Что известно об агенте: последний удачный снимок, последняя ошибка, когда спрашивать снова.</summary>
+public sealed class AgentState(IAgent agent)
 {
 	/// <summary>Как часто спрашивать статус-страницу агента.</summary>
 	internal static readonly TimeSpan StatusEvery = TimeSpan.FromMinutes(5);
@@ -36,14 +36,14 @@ public sealed class ProviderState(IProvider provider)
 		_ => now.AddMinutes(5),
 	};
 
-	public IProvider Provider { get; } = provider;
+	public IAgent Agent { get; } = agent;
 
 	/// <summary>Агент установлен — его спрашивают. Проверяется раз в тик опроса, а не каждым читателем.</summary>
-	public bool Installed { get; private set; } = provider.Installed;
+	public bool Installed { get; private set; } = agent.Installed;
 
 	/// <summary>У агента есть вкладка: он установлен, а кому нужно подтверждение — уже ответил хотя бы раз
 	/// (в этом запуске или в quota.json). Подтверждённый не пропадает и после отказа: ошибка видна на вкладке.</summary>
-	public bool Visible => Installed && (!Provider.ConfirmFirst || Snapshot is not null);
+	public bool Visible => Installed && (!Agent.ConfirmFirst || Snapshot is not null);
 
 	public Snapshot? Snapshot { get; set; }
 
@@ -57,7 +57,7 @@ public sealed class ProviderState(IProvider provider)
 	/// <summary>Статус сервиса агента; null — статус-страницы нет, её ещё не спрашивали или она не ответила.</summary>
 	public ServiceStatus? Status { get; set; }
 
-	/// <summary>Начало тика, в котором провайдера спрашивали последний раз.</summary>
+	/// <summary>Начало тика, в котором агента спрашивали последний раз.</summary>
 	public DateTime Started { get; private set; } = DateTime.MinValue;
 
 	// Когда переписали вход, на момент отказа: пока он тот же, спрашивать снова бесполезно.
@@ -79,7 +79,7 @@ public sealed class ProviderState(IProvider provider)
 
 		try
 		{
-			Snapshot = await Provider.FetchAsync(http, CancellationToken.None);
+			Snapshot = await Agent.FetchAsync(http, CancellationToken.None);
 			Record(null, credentials, started);
 			Updated = DateTime.UtcNow;
 		}
@@ -88,7 +88,7 @@ public sealed class ProviderState(IProvider provider)
 			// В журнал — при смене вида ошибки, а не каждую минуту одно и то же.
 			if (Error?.GetType() != exception.GetType())
 			{
-				Journal.Add($"{Provider.Name}: {exception.GetType().Name}: {exception.Message}");
+				Journal.Add($"{Agent.Name}: {exception.GetType().Name}: {exception.Message}");
 			}
 
 			Record(exception, credentials, started);
@@ -116,7 +116,7 @@ public sealed class ProviderState(IProvider provider)
 	/// <summary>Дочитать логи агента. Статистика вторична: её сбой не должен ронять тик опроса — он async void.</summary>
 	public async Task ReadUsageAsync(HttpClient http, DateTime now)
 	{
-		if (Provider.Usage is not { } log)
+		if (Agent.Usage is not { } log)
 		{
 			return;
 		}
@@ -129,7 +129,7 @@ public sealed class ProviderState(IProvider provider)
 		{
 			if (_usageError != exception.GetType().Name)
 			{
-				Journal.Add($"{Provider.Name} usage: {exception.GetType().Name}: {exception.Message}");
+				Journal.Add($"{Agent.Name} usage: {exception.GetType().Name}: {exception.Message}");
 			}
 
 			_usageError = exception.GetType().Name;
@@ -139,7 +139,7 @@ public sealed class ProviderState(IProvider provider)
 	/// <summary>Спросить статус-страницу агента, если пора или просят «Обновить»; не ответила — «неизвестно».</summary>
 	public async Task FetchStatusAsync(HttpClient http, DateTime started, bool force)
 	{
-		if (Provider.Status is not { } page || (!force && started < _nextStatus))
+		if (Agent.Status is not { } page || (!force && started < _nextStatus))
 		{
 			return;
 		}
@@ -157,9 +157,9 @@ public sealed class ProviderState(IProvider provider)
 	}
 
 	/// <summary>Агента установили или удалили, пока программа работает.</summary>
-	public void CheckInstalled() => Installed = Provider.Installed;
+	public void CheckInstalled() => Installed = Agent.Installed;
 
-	private DateTime Stamp() => Provider.SignedIn;
+	private DateTime Stamp() => Agent.SignedIn;
 
 	/// <summary>Считается при каждом тике, а не запоминается: новый интервал из настроек действует сразу.</summary>
 	public DateTime NextFetch(int intervalSeconds) =>

@@ -7,14 +7,14 @@ using Xunit;
 
 namespace AgentVitals.Tests;
 
-public class OtherProvidersTests
+public class OtherAgentsTests
 {
 	[Fact]
 	public void CodexAccountIsTheEmailInItsIdToken()
 	{
 		var payload = Base64Url.EncodeToString(Encoding.UTF8.GetBytes("""{"email":"name@example.com","https://api.openai.com/auth":{"chatgpt_plan_type":"free"}}"""));
 
-		Assert.Equal("name@example.com", CodexProvider.Email($"eyJhbGciOiJSUzI1NiJ9.{payload}.signature"));
+		Assert.Equal("name@example.com", CodexAgent.Email($"eyJhbGciOiJSUzI1NiJ9.{payload}.signature"));
 	}
 
 	[Theory]
@@ -24,7 +24,7 @@ public class OtherProvidersTests
 	[InlineData("a.%%%.c")]
 	[InlineData("a.bm90IGpzb24.c")] // «not json»
 	[InlineData("a.WzFd.c")] // «[1]» — не объект
-	public void BrokenIdTokenIsNoEmail(string? token) => Assert.Null(CodexProvider.Email(token));
+	public void BrokenIdTokenIsNoEmail(string? token) => Assert.Null(CodexAgent.Email(token));
 
 	[Fact]
 	public void ReadsCodexWindows()
@@ -36,7 +36,7 @@ public class OtherProvidersTests
 			  "plan_type": "plus" }
 			""")!;
 
-		var snapshot = CodexProvider.Parse(usage);
+		var snapshot = CodexAgent.Parse(usage);
 
 		Assert.Equal("Plus", snapshot.Plan);
 		Assert.Equal([WindowKind.Session, WindowKind.Week], snapshot.Windows.Select(window => window.Kind));
@@ -58,7 +58,7 @@ public class OtherProvidersTests
 			  "plan_type": "free" }
 			""")!;
 
-		Assert.Equal(kind, Assert.Single(CodexProvider.Parse(usage).Windows).Kind);
+		Assert.Equal(kind, Assert.Single(CodexAgent.Parse(usage).Windows).Kind);
 	}
 
 	[Fact]
@@ -70,12 +70,12 @@ public class OtherProvidersTests
 			    "secondary_window": { "used_percent": 20, "limit_window_seconds": 18000 } } }
 			""")!;
 
-		Assert.Equal([WindowKind.Week, WindowKind.Session], CodexProvider.Parse(usage).Windows.Select(window => window.Kind));
+		Assert.Equal([WindowKind.Week, WindowKind.Session], CodexAgent.Parse(usage).Windows.Select(window => window.Kind));
 	}
 
 	[Fact]
 	public void CodexWithoutWindowsIsEmpty() =>
-		Assert.Empty(CodexProvider.Parse(JsonNode.Parse("""{ "plan_type": "free" }""")!).Windows);
+		Assert.Empty(CodexAgent.Parse(JsonNode.Parse("""{ "plan_type": "free" }""")!).Windows);
 
 	[Fact]
 	public void FoldsGeminiModelsIntoFamilies()
@@ -88,7 +88,7 @@ public class OtherProvidersTests
 			    { "modelId": "gemini-2.5-flash-lite", "remainingFraction": 1.0 } ] }
 			""")!;
 
-		var snapshot = GeminiProvider.Parse(quota, "Gemini Code Assist");
+		var snapshot = GeminiAgent.Parse(quota, "Gemini Code Assist");
 
 		Assert.Equal("Gemini Code Assist", snapshot.Plan);
 		Assert.Equal(["Pro", "Flash", "Flash Lite"], snapshot.Windows.Select(window => window.Label));

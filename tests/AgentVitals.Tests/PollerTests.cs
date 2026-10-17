@@ -16,15 +16,15 @@ public class PollerTests
 	private static readonly Snapshot _snapshot = new("Max", null, [], null);
 
 	[Fact]
-	public void SuccessWaitsInterval() => Assert.Equal(_now.AddMinutes(2), ProviderState.Schedule(null, 120, _now));
+	public void SuccessWaitsInterval() => Assert.Equal(_now.AddMinutes(2), AgentState.Schedule(null, 120, _now));
 
 	[Fact]
 	public void ExpiredTokenRechecksOnNextTick() =>
-		Assert.Equal(_now, ProviderState.Schedule(new SignInException("claude"), 60, _now));
+		Assert.Equal(_now, AgentState.Schedule(new SignInException("claude"), 60, _now));
 
 	[Fact]
 	public void RateLimitWaitsUntilAllowed() =>
-		Assert.Equal(_now.AddMinutes(42), ProviderState.Schedule(new RateLimitedException(_now.AddMinutes(42)), 60, _now));
+		Assert.Equal(_now.AddMinutes(42), AgentState.Schedule(new RateLimitedException(_now.AddMinutes(42)), 60, _now));
 
 	[Theory]
 	[InlineData(1, 5)]
@@ -32,14 +32,14 @@ public class PollerTests
 	[InlineData(3, 20)]
 	[InlineData(4, 30)]
 	[InlineData(9, 30)]
-	public void RefusalsInARowWaitLonger(int refusals, int minutes) => Assert.Equal(TimeSpan.FromMinutes(minutes), ProviderState.Backoff(refusals));
+	public void RefusalsInARowWaitLonger(int refusals, int minutes) => Assert.Equal(TimeSpan.FromMinutes(minutes), AgentState.Backoff(refusals));
 
 	[Fact]
 	public async Task RepeatedRefusalWaitsLongerThanTheServerSays() // сервер всякий раз говорит «через ноль» — пауза растёт
 	{
 		using var http = new HttpClient();
 		var start = _now;
-		var state = new ProviderState(new Fake(() => throw new RateLimitedException(start.AddMinutes(5))));
+		var state = new AgentState(new Fake(() => throw new RateLimitedException(start.AddMinutes(5))));
 
 		await state.FetchAsync(http, start);
 		Assert.Equal(_now.AddMinutes(5), state.NextFetch(60));
@@ -53,7 +53,7 @@ public class PollerTests
 	public async Task LongerServerWaitWins()
 	{
 		using var http = new HttpClient();
-		var state = new ProviderState(new Fake(() => throw new RateLimitedException(_now.AddHours(1))));
+		var state = new AgentState(new Fake(() => throw new RateLimitedException(_now.AddHours(1))));
 
 		await state.FetchAsync(http, _now);
 
@@ -65,7 +65,7 @@ public class PollerTests
 	{
 		using var http = new HttpClient();
 		var refuse = true;
-		var state = new ProviderState(new Fake(() => refuse ? throw new RateLimitedException(_now.AddMinutes(5)) : _snapshot));
+		var state = new AgentState(new Fake(() => refuse ? throw new RateLimitedException(_now.AddMinutes(5)) : _snapshot));
 
 		await state.FetchAsync(http, _now);
 		await state.FetchAsync(http, _now);
@@ -79,14 +79,14 @@ public class PollerTests
 
 	[Fact]
 	public void BrokenCredentialsRetryInFiveMinutes() =>
-		Assert.Equal(_now.AddMinutes(5), ProviderState.Schedule(new JsonException("truncated"), 60, _now));
+		Assert.Equal(_now.AddMinutes(5), AgentState.Schedule(new JsonException("truncated"), 60, _now));
 
 	[Fact]
 	public async Task WakeRetriesOnlyWhileTheNetworkIsDown() // после сна сеть поднимается не сразу
 	{
 		using var http = new HttpClient();
 		Exception? answer = new HttpRequestException();
-		var state = new ProviderState(new Fake(() => answer is null ? _snapshot : throw answer));
+		var state = new AgentState(new Fake(() => answer is null ? _snapshot : throw answer));
 
 		await state.FetchAsync(http, _now);
 		Assert.True(Poller.Offline([state]));
@@ -109,7 +109,7 @@ public class PollerTests
 	{
 		using var http = new HttpClient();
 		Exception? answer = new HttpRequestException();
-		var state = new ProviderState(new Fake(() => _snapshot, status: new Page(() => answer is null ? new("none", "", null, "Fake") : throw answer)));
+		var state = new AgentState(new Fake(() => _snapshot, status: new Page(() => answer is null ? new("none", "", null, "Fake") : throw answer)));
 
 		await state.FetchAsync(http, _now);
 		await state.FetchStatusAsync(http, _now, force: true);
@@ -127,7 +127,7 @@ public class PollerTests
 	{
 		using var http = new HttpClient();
 		var asked = 0;
-		var state = new ProviderState(new Fake(() => _snapshot, status: new Page(() =>
+		var state = new AgentState(new Fake(() => _snapshot, status: new Page(() =>
 		{
 			asked++;
 
@@ -144,13 +144,13 @@ public class PollerTests
 	}
 
 	[Fact]
-	public void AgentWithoutStatusPageIsNotOffline() => Assert.False(Poller.Offline([new ProviderState(new Fake(() => _snapshot))]));
+	public void AgentWithoutStatusPageIsNotOffline() => Assert.False(Poller.Offline([new AgentState(new Fake(() => _snapshot))]));
 
 	[Fact]
 	public void IconAndHeaderSeeThePassedReset() // карточка показывала 0%, а значок и шапка — старые 95%
 	{
 		var reset = new QuotaWindow(WindowKind.Session, null, 95, _now.AddMinutes(-1), Limiting: true);
-		var state = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", null, [reset], null) };
+		var state = new AgentState(new ClaudeAgent()) { Snapshot = new("Max", null, [reset], null) };
 
 		Assert.Equal(0, state.Tightest(_now));
 		Assert.Equal(0, Assert.Single(state.Windows(_now)).Used);
@@ -160,7 +160,7 @@ public class PollerTests
 	public async Task ExpiredSignInHasNoTightest() // старые проценты при истёкшем входе ничего не говорят — серое
 	{
 		using var http = new HttpClient();
-		var state = new ProviderState(new Fake(() => throw new SignInException("fake")))
+		var state = new AgentState(new Fake(() => throw new SignInException("fake")))
 		{
 			Snapshot = new("Max", null, [new(WindowKind.Session, null, 40, null, Limiting: true)], null),
 		};
@@ -174,7 +174,7 @@ public class PollerTests
 	public async Task AnswerIsKeptWithItsTime()
 	{
 		using var http = new HttpClient();
-		var state = new ProviderState(new Fake(() => _snapshot));
+		var state = new AgentState(new Fake(() => _snapshot));
 
 		await state.FetchAsync(http, _now);
 
@@ -185,13 +185,13 @@ public class PollerTests
 
 	[Fact]
 	public void NetworkErrorRetriesInFiveMinutes() =>
-		Assert.Equal(_now.AddMinutes(5), ProviderState.Schedule(new HttpRequestException(), 60, _now));
+		Assert.Equal(_now.AddMinutes(5), AgentState.Schedule(new HttpRequestException(), 60, _now));
 
 	[Fact]
 	public async Task NewIntervalAppliesAtOnce() // с 10 минут на минуту — без ожидания прежних 10 минут
 	{
 		using var http = new HttpClient();
-		var state = new ProviderState(new Fake(() => _snapshot));
+		var state = new AgentState(new Fake(() => _snapshot));
 
 		await state.FetchAsync(http, _now);
 
@@ -206,7 +206,7 @@ public class PollerTests
 		using var http = new HttpClient();
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
-		var state = new ProviderState(new Fake(() => throw new SignInException("fake"), credentials));
+		var state = new AgentState(new Fake(() => throw new SignInException("fake"), credentials));
 
 		await state.FetchAsync(http, _now);
 		Assert.Equal(DateTime.MaxValue, state.NextFetch(60));
@@ -222,7 +222,7 @@ public class PollerTests
 		using var http = new HttpClient();
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
-		var state = new ProviderState(new Fake(() =>
+		var state = new AgentState(new Fake(() =>
 		{
 			File.SetLastWriteTimeUtc(credentials, DateTime.UtcNow.AddMinutes(1));
 
@@ -236,7 +236,7 @@ public class PollerTests
 
 	[Fact]
 	public void NoSubscriptionIsAskedAgainNextDay() => // подписку могли оформить, пока программа работает; вход git от этого не меняется
-		Assert.Equal(_now.AddDays(1), ProviderState.Schedule(new SignInException("git", SignInProblem.NoSubscription), 60, _now));
+		Assert.Equal(_now.AddDays(1), AgentState.Schedule(new SignInException("git", SignInProblem.NoSubscription), 60, _now));
 
 	[Fact]
 	public async Task NoSubscriptionDoesNotWaitForNewCredentials()
@@ -244,7 +244,7 @@ public class PollerTests
 		using var temp = new TempDirectory();
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
-		var state = new ProviderState(new Fake(() => throw new SignInException("git", SignInProblem.NoSubscription), credentials));
+		var state = new AgentState(new Fake(() => throw new SignInException("git", SignInProblem.NoSubscription), credentials));
 		using var http = new HttpClient();
 
 		await state.FetchAsync(http, _now);
@@ -253,14 +253,14 @@ public class PollerTests
 	}
 
 	[Fact]
-	public void FirstFetchIsDueAtOnce() => Assert.True(new ProviderState(new ClaudeProvider()).NextFetch(60) < _now);
+	public void FirstFetchIsDueAtOnce() => Assert.True(new AgentState(new ClaudeAgent()).NextFetch(60) < _now);
 
 	[Fact]
 	public void AgentShowsUpOnceItsCredentialsAppear() // проверка — раз в тик, а не на каждый кадр значка
 	{
 		using var temp = new TempDirectory();
 		var credentials = temp.File("auth.json");
-		var state = new ProviderState(new Fake(() => _snapshot, credentials));
+		var state = new AgentState(new Fake(() => _snapshot, credentials));
 		Assert.False(state.Installed);
 
 		File.WriteAllText(credentials, "{}"); // человек вошёл в CLI агента
@@ -276,7 +276,7 @@ public class PollerTests
 		using var temp = new TempDirectory();
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
-		var state = new ProviderState(new Fake(() => throw new SignInException("git", SignInProblem.NoSubscription), credentials, confirmFirst: true));
+		var state = new AgentState(new Fake(() => throw new SignInException("git", SignInProblem.NoSubscription), credentials, confirmFirst: true));
 		using var http = new HttpClient();
 
 		await state.FetchAsync(http, _now);
@@ -292,7 +292,7 @@ public class PollerTests
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
 		var calls = 0;
-		var state = new ProviderState(new Fake(() => ++calls == 1 ? _snapshot : throw new SignInException("git", SignInProblem.Rejected), credentials, confirmFirst: true));
+		var state = new AgentState(new Fake(() => ++calls == 1 ? _snapshot : throw new SignInException("git", SignInProblem.Rejected), credentials, confirmFirst: true));
 		using var http = new HttpClient();
 
 		await state.FetchAsync(http, _now);
@@ -307,7 +307,7 @@ public class PollerTests
 		using var temp = new TempDirectory();
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
-		var state = new ProviderState(new Fake(() => _snapshot, credentials, confirmFirst: true));
+		var state = new AgentState(new Fake(() => _snapshot, credentials, confirmFirst: true));
 
 		state.Recall(new RememberedQuota(_snapshot, _now, null), _now);
 
@@ -321,14 +321,14 @@ public class PollerTests
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
 
-		Assert.True(new ProviderState(new Fake(() => _snapshot, credentials)).Visible);
+		Assert.True(new AgentState(new Fake(() => _snapshot, credentials)).Visible);
 	}
 
 	[Fact]
 	public async Task BrokenStatisticsDoNotStopPolling() // тик опроса — async void: исключение уронило бы программу
 	{
 		using var http = new HttpClient();
-		var state = new ProviderState(new WithLog(new Broken()));
+		var state = new AgentState(new WithLog(new Broken()));
 
 		await state.ReadUsageAsync(http, _now);
 
@@ -340,7 +340,7 @@ public class PollerTests
 	{
 		using var http = new HttpClient();
 		IReadOnlyList<UsageDay> days = [new(new DateOnly(2026, 10, 7), 1, 2, 3, 4, null, false, TimeSpan.Zero)];
-		var state = new ProviderState(new WithLog(new Fixed(days)));
+		var state = new AgentState(new WithLog(new Fixed(days)));
 
 		await state.ReadUsageAsync(http, _now);
 
@@ -354,10 +354,10 @@ public class PollerTests
 	[InlineData(-5, 60)]
 	[InlineData(999_999, 86_400)]
 	public void ClampsHandEditedInterval(int seconds, int expected) =>
-		Assert.Equal(_now.AddSeconds(expected), ProviderState.Schedule(null, seconds, _now));
+		Assert.Equal(_now.AddSeconds(expected), AgentState.Schedule(null, seconds, _now));
 
 	/// <summary>Агент, который отвечает тем, что вернёт или бросит answer.</summary>
-	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json", IStatusPage? status = null, bool confirmFirst = false) : IProvider
+	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json", IStatusPage? status = null, bool confirmFirst = false) : IAgent
 	{
 		public bool ConfirmFirst => confirmFirst;
 
@@ -378,7 +378,7 @@ public class PollerTests
 		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => Task.FromResult(answer());
 	}
 
-	private sealed class WithLog(IUsageLog log) : IProvider
+	private sealed class WithLog(IUsageLog log) : IAgent
 	{
 		public string Name => "Fake";
 

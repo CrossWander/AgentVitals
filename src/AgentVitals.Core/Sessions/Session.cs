@@ -31,7 +31,7 @@ internal sealed record SessionRecord(SessionState State, string? Tool, string Cw
 /// <summary>Сессия для показа: состояние с поправкой на давность, папка и ветка.</summary>
 /// <remarks>TurnStarted — начало идущего хода; TurnDuration — сколько занял закончившийся (null — прерван или неизвестно).</remarks>
 /// <remarks>Pid и Cwd — процесс Claude Code и полный путь папки: по ним находится окно, где идёт сессия.</remarks>
-/// <remarks>Agent — имя провайдера: по нему сессия попадает на свою вкладку и в подпись тоста.</remarks>
+/// <remarks>Agent — имя агента: по нему сессия попадает на свою вкладку и в подпись тоста.</remarks>
 /// <remarks>Prompt — первый запрос; null — сессия начата до обновления или запроса ещё не было.</remarks>
 public sealed record Session(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? TurnStarted = null, TimeSpan? TurnDuration = null, int? Pid = null, string? Cwd = null, string Agent = "Claude", string? Prompt = null);
 

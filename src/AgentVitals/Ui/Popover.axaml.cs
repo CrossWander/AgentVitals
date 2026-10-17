@@ -93,7 +93,7 @@ internal partial class Popover : TrayWindow
 		_vitals = vitals;
 		DataContext = vitals;
 
-		var names = vitals.Providers.Select(provider => provider.Name).ToList();
+		var names = vitals.Agents.Select(agent => agent.Name).ToList();
 		_selected = Keep(_selected, names);
 
 		// Render бывает раз в секунду, пока Claude работает: вкладки пересоздаются, только если сменился
@@ -110,7 +110,7 @@ internal partial class Popover : TrayWindow
 				{
 					Theme = (ControlTheme)this.FindResource("Tab")!,
 
-					// Точка — у вкладки соседа, когда у него запас на исходе (ShowProvider).
+					// Точка — у вкладки соседа, когда у него запас на исходе (ShowAgent).
 					Content = new StackPanel
 					{
 						Orientation = Orientation.Horizontal,
@@ -121,7 +121,7 @@ internal partial class Popover : TrayWindow
 							new Ellipse { Width = 7, Height = 7, VerticalAlignment = VerticalAlignment.Center, IsVisible = false },
 						},
 					},
-					GroupName = "providers",
+					GroupName = "agents",
 					IsChecked = name == _selected,
 					Tag = name,
 				};
@@ -131,7 +131,7 @@ internal partial class Popover : TrayWindow
 			}
 		}
 
-		ShowProvider();
+		ShowAgent();
 	}
 
 	/// <summary>Выбранная вкладка по имени: появился или пропал другой агент — выбор не съезжает.</summary>
@@ -143,37 +143,37 @@ internal partial class Popover : TrayWindow
 		if (sender is RadioButton { IsChecked: true, Tag: string name })
 		{
 			_selected = name;
-			ShowProvider();
+			ShowAgent();
 		}
 	}
 
-	private ProviderView? Selected => _vitals?.Providers.FirstOrDefault(provider => provider.Name == _selected);
+	private AgentView? Selected => _vitals?.Agents.FirstOrDefault(agent => agent.Name == _selected);
 
-	private void ShowProvider()
+	private void ShowAgent()
 	{
-		var provider = Selected;
+		var agent = Selected;
 
 		// Шапка — о выбранном агенте: Claude на 90% не делает «критично» вкладку Codex без трат.
-		HealthPill.DataContext = provider;
-		HealthPill.IsVisible = provider is not null;
+		HealthPill.DataContext = agent;
+		HealthPill.IsVisible = agent is not null;
 		ShowAlerts();
 
-		Cards.DataContext = provider;
-		Cards.ItemsSource = provider?.Cards;
-		InfoLine.Text = string.Join(" · ", new[] { provider?.Updated, provider?.Info }.Where(text => !string.IsNullOrEmpty(text)));
+		Cards.DataContext = agent;
+		Cards.ItemsSource = agent?.Cards;
+		InfoLine.Text = string.Join(" · ", new[] { agent?.Updated, agent?.Info }.Where(text => !string.IsNullOrEmpty(text)));
 		PrivateIcon.Data = this.FindResource(Store.Current.Private ? "IconEyeOff" : "IconEye") as Geometry;
 		ToolTip.SetTip(PrivateButton, Localization.Get(Store.Current.Private ? "langShowPrivate" : "langHidePrivate"));
-		ErrorLine.Text = provider?.Error;
-		ErrorLine.IsVisible = provider?.HasError == true;
-		BareHint.Text = provider is null ? null : Localization.Format("langNoStats", provider.Name);
-		BareHint.IsVisible = provider?.Bare == true;
-		DashboardButton.IsVisible = provider?.Dashboard is not null;
-		StatusLine.DataContext = provider;
-		StatusLine.IsVisible = provider?.StatusUrl is not null;
-		SessionsCard.DataContext = provider;
-		SessionsCard.IsVisible = provider?.Sessions is not null;
+		ErrorLine.Text = agent?.Error;
+		ErrorLine.IsVisible = agent?.HasError == true;
+		BareHint.Text = agent is null ? null : Localization.Format("langNoStats", agent.Name);
+		BareHint.IsVisible = agent?.Bare == true;
+		DashboardButton.IsVisible = agent?.Dashboard is not null;
+		StatusLine.DataContext = agent;
+		StatusLine.IsVisible = agent?.StatusUrl is not null;
+		SessionsCard.DataContext = agent;
+		SessionsCard.IsVisible = agent?.Sessions is not null;
 
-		var usage = provider?.Usage;
+		var usage = agent?.Usage;
 		UsageBlock.IsVisible = usage is not null;
 		UsageBlock.DataContext = usage;
 
@@ -190,9 +190,9 @@ internal partial class Popover : TrayWindow
 		{
 			if (tab.Content is StackPanel { Children: [_, Ellipse dot] })
 			{
-				var provider = _vitals?.Providers.FirstOrDefault(provider => provider.Name == tab.Tag as string);
-				dot.IsVisible = provider is { Alert: true } && provider.Name != _selected;
-				dot.Fill = provider?.HealthBrush;
+				var agent = _vitals?.Agents.FirstOrDefault(agent => agent.Name == tab.Tag as string);
+				dot.IsVisible = agent is { Alert: true } && agent.Name != _selected;
+				dot.Fill = agent?.HealthBrush;
 			}
 		}
 	}
@@ -256,7 +256,7 @@ internal partial class Popover : TrayWindow
 			// Срабатывает и при загрузке разметки, когда показывать ещё нечего.
 			if (_vitals is not null)
 			{
-				ShowProvider();
+				ShowAgent();
 			}
 		}
 	}

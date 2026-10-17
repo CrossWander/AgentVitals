@@ -21,7 +21,7 @@ namespace AgentVitals.Agents.Cursor;
 /// Месячный расход Cursor по его собственному входу из state.vscdb. Не проверено на живом аккаунте: адрес, cookie
 /// и поля — из ClaudeBar (cursor-usage.js) и CodexBar. База только читается; токен никуда, кроме cursor.com, не уходит.
 /// </summary>
-internal sealed class CursorProvider : IProvider
+internal sealed class CursorAgent : IAgent
 {
 	private const string _url = "https://cursor.com/api/usage-summary";
 	private const string _cli = "cursor";

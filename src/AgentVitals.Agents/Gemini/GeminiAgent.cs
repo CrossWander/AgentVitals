@@ -19,7 +19,7 @@ namespace AgentVitals.Agents.Gemini;
 /// Квоты Gemini CLI по его OAuth-токену. Не проверено на живом аккаунте: эндпоинты и поля — из
 /// ClaudeBar (gemini.json). Свой refresh не делаем: токен обновляет сам gemini.
 /// </summary>
-internal sealed class GeminiProvider : IProvider
+internal sealed class GeminiAgent : IAgent
 {
 	private const string _api = "https://cloudcode-pa.googleapis.com/v1internal:";
 

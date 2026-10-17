@@ -17,9 +17,9 @@ namespace AgentVitals.Agents.Codex;
 
 /// <summary>
 /// Квоты Codex (ChatGPT) по токену Codex CLI: wham/usage, как у самого Codex (codex-rs/backend-client).
-/// Пока файла авторизации нет, провайдер скрыт.
+/// Пока файла авторизации нет, агент скрыт.
 /// </summary>
-internal sealed class CodexProvider : IProvider
+internal sealed class CodexAgent : IAgent
 {
 	private const string _url = "https://chatgpt.com/backend-api/wham/usage";
 

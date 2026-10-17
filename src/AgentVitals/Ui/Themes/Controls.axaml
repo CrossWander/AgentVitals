@@ -104,7 +104,7 @@
         </Style>
     </ControlTheme>
 
-    <!-- Вкладка провайдера: пилюля, выбранная — фирменным градиентом -->
+    <!-- Вкладка агента: пилюля, выбранная — фирменным градиентом -->
     <ControlTheme x:Key="Tab" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource Text}"/>
         <Setter Property="Background" Value="{DynamicResource PillFill}"/>

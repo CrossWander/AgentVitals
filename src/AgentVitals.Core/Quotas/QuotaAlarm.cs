@@ -17,7 +17,7 @@ public enum QuotaLevel
 }
 
 /// <summary>Окно агента дошло до порога, обгоняет темп или сбросилось.</summary>
-public sealed record QuotaAlert(string Provider, QuotaWindow Window, QuotaLevel Level)
+public sealed record QuotaAlert(string Agent, QuotaWindow Window, QuotaLevel Level)
 {
 	public bool Critical => Level == QuotaLevel.Critical;
 }
@@ -44,27 +44,27 @@ public sealed class QuotaAlarm
 		? levels with { Critical = Math.Clamp(levels.Critical + delta, Math.Max(_lowest, levels.Important + _step), _highest) }
 		: levels with { Important = Math.Clamp(levels.Important + delta, _lowest, Math.Min(_highest, levels.Critical - _step)) };
 
-	/// <summary>Окна провайдера, которые только что дошли до следующего порога. Уже высокое при запуске — тоже:
+	/// <summary>Окна агента, которые только что дошли до следующего порога. Уже высокое при запуске — тоже:
 	/// запуск утром или после обновления — как раз тот момент, когда об этом важно знать.</summary>
-	/// <param name="provider">Имя агента: у каждого свои окна.</param>
+	/// <param name="agent">Имя агента: у каждого свои окна.</param>
 	/// <param name="windows">Окна из свежего снимка.</param>
 	/// <param name="levels">Пороги из настроек.</param>
 	/// <param name="now">От него темп: сколько окна уже прошло.</param>
 	/// <returns>По тревоге на окно, только о самом высоком из пройденных порогов.</returns>
-	public IReadOnlyList<QuotaAlert> Check(string provider, IReadOnlyList<QuotaWindow> windows, Thresholds levels, DateTime now)
+	public IReadOnlyList<QuotaAlert> Check(string agent, IReadOnlyList<QuotaWindow> windows, Thresholds levels, DateTime now)
 	{
 		var alerts = new List<QuotaAlert>();
 
 		foreach (var window in windows.Where(window => window.Limiting))
 		{
-			var key = $"{provider}/{window.Kind}/{window.Label}";
+			var key = $"{agent}/{window.Kind}/{window.Label}";
 
 			if (window.Used < levels.Important)
 			{
 				// Расход внутри окна только растёт: ниже 50% после «критично» опускает лишь сброс, а не поднятый порог.
 				if (_fired.Remove(key, out var critical) && critical && window.Used < _lowest)
 				{
-					alerts.Add(new(provider, window, QuotaLevel.Reset));
+					alerts.Add(new(agent, window, QuotaLevel.Reset));
 				}
 
 				// Темп — с половины окна: в начале он скачет, а 30% за первые полчаса — ещё не повод.
@@ -74,7 +74,7 @@ public sealed class QuotaAlarm
 				}
 				else if (Quota.Runout(window, now) is not null && _paced.Add(key))
 				{
-					alerts.Add(new(provider, window, QuotaLevel.Pace));
+					alerts.Add(new(agent, window, QuotaLevel.Pace));
 				}
 
 				continue;
@@ -89,7 +89,7 @@ public sealed class QuotaAlarm
 			}
 
 			_fired[key] = high;
-			alerts.Add(new(provider, window, high ? QuotaLevel.Critical : QuotaLevel.Important));
+			alerts.Add(new(agent, window, high ? QuotaLevel.Critical : QuotaLevel.Important));
 		}
 
 		return alerts;
@@ -100,8 +100,8 @@ public sealed class QuotaAlarm
 
 	/// <summary>Самая серьёзная из новых тревог всех агентов: выше порога у двух разом бывает разве что при
 	/// запуске — тост один, о главном. Пороги взводятся у всех, а не только у сказанного.</summary>
-	public QuotaAlert? Check(IEnumerable<(string Provider, IReadOnlyList<QuotaWindow> Windows)> agents, Thresholds levels, DateTime now) =>
+	public QuotaAlert? Check(IEnumerable<(string Agent, IReadOnlyList<QuotaWindow> Windows)> agents, Thresholds levels, DateTime now) =>
 		agents
-			.SelectMany(agent => Check(agent.Provider, agent.Windows, levels, now))
+			.SelectMany(agent => Check(agent.Agent, agent.Windows, levels, now))
 			.MaxBy(alert => (alert.Level, alert.Window.Used));
 }

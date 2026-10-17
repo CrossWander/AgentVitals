@@ -9,7 +9,7 @@ namespace AgentVitals.Core.Sessions;
 public sealed record HookEvent(string Name, string? Matcher = null, bool Async = true, int? Timeout = null);
 
 /// <summary>
-/// Куда и в каком виде подключаются hooks одного агента. Agent — имя провайдера: им помечаются сессии;
+/// Куда и в каком виде подключаются hooks одного агента. Agent — имя агента: им помечаются сессии;
 /// Title — имя программы в подписях. Make строит запись hook для exe; Exe узнаёт свою запись и отдаёт путь из неё.
 /// Key — слово после «hook» в команде; Processes — имена exe агента, предка процесса hook;
 /// Interrupted — как по журналу сессии узнать прерывание, о котором hooks молчат; null — журнал не нужен.

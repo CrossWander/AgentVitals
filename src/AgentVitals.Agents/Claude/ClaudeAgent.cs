@@ -21,7 +21,7 @@ namespace AgentVitals.Agents.Claude;
 /// Квоты Claude по OAuth-токену Claude Code. Токен только читается: обновляет его сам CLI, а
 /// одноразовый refresh-токен, потраченный нами, выбил бы из входа сам Claude Code.
 /// </summary>
-internal sealed class ClaudeProvider : IProvider
+internal sealed class ClaudeAgent : IAgent
 {
 	private const string _url = "https://api.anthropic.com/api/oauth/usage";
 

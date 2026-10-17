@@ -21,7 +21,7 @@ namespace AgentVitals.Agents.Copilot;
 /// Токен читается заново перед каждым запросом и уходит в один-единственный адрес; нигде не хранится и не пишется.
 /// Адрес недокументированный — так его зовёт сам ClaudeBar.
 /// </summary>
-internal sealed class CopilotProvider : IProvider
+internal sealed class CopilotAgent : IAgent
 {
 	/// <summary>Запись Git Credential Manager для github.com. Других записей не читаем и не перебираем.</summary>
 	internal const string Target = "git:https://github.com";

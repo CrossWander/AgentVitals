@@ -12,7 +12,7 @@ using Xunit;
 namespace AgentVitals.Tests;
 
 /// <summary>Разбор ответа Cursor — по тестам ClaudeBar: на живом аккаунте не проверено.</summary>
-public class CursorProviderTests
+public class CursorAgentTests
 {
 	private const string _usage = """
 		{
@@ -33,7 +33,7 @@ public class CursorProviderTests
 	private static string Jwt(string sub) =>
 		"e30." + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{{\"sub\":\"{sub}\"}}")).TrimEnd('=').Replace('+', '-').Replace('/', '_') + ".sig";
 
-	private static Snapshot Plan(string plan, bool unlimited = false) => CursorProvider.Parse(JsonNode.Parse(
+	private static Snapshot Plan(string plan, bool unlimited = false) => CursorAgent.Parse(JsonNode.Parse(
 		$$"""{ "billingCycleEnd": "2026-03-06T03:34:49.000Z", "isUnlimited": {{(unlimited ? "true" : "false")}}, "individualUsage": { "plan": {{plan}} } }""")!, null);
 
 	[Theory]
@@ -41,15 +41,15 @@ public class CursorProviderTests
 	[InlineData("github|user.x-1_y", "user.x-1_y")]
 	[InlineData("auth0|bad id", null)] // в cookie ушло бы что попало
 	[InlineData("auth0|", null)]
-	public void TakesUserIdFromToken(string sub, string? id) => Assert.Equal(id, CursorProvider.UserId(Jwt(sub)));
+	public void TakesUserIdFromToken(string sub, string? id) => Assert.Equal(id, CursorAgent.UserId(Jwt(sub)));
 
 	[Fact]
-	public void BrokenTokenHasNoUserId() => Assert.Null(CursorProvider.UserId("not-a-jwt"));
+	public void BrokenTokenHasNoUserId() => Assert.Null(CursorAgent.UserId("not-a-jwt"));
 
 	[Fact]
 	public void ReadsUsage()
 	{
-		var snapshot = CursorProvider.Parse(JsonNode.Parse(_usage)!, "dev@example.com");
+		var snapshot = CursorAgent.Parse(JsonNode.Parse(_usage)!, "dev@example.com");
 
 		Assert.Equal([(WindowKind.Month, null), (WindowKind.MonthFeature, "Auto"), (WindowKind.MonthFeature, "API")],
 			snapshot.Windows.Select(window => (window.Kind, window.Label)));
@@ -75,7 +75,7 @@ public class CursorProviderTests
 	public void NoPlanIsAParseError() => Assert.Throws<JsonException>(() => Plan("""{ "enabled": false }"""));
 
 	// Ответ с одним планом и расходом сверх него; team — командный пул, только при limitType "team".
-	private static Snapshot Spend(string onDemand, string? team = null) => CursorProvider.Parse(JsonNode.Parse($$"""
+	private static Snapshot Spend(string onDemand, string? team = null) => CursorAgent.Parse(JsonNode.Parse($$"""
 		{ "billingCycleEnd": "2026-03-06T03:34:49.000Z", "membershipType": "pro", "limitType": "{{(team is null ? "user" : "team")}}", "isUnlimited": false,
 		  "individualUsage": { "plan": { "enabled": true, "used": 10, "limit": 2000 }, "onDemand": {{onDemand}} }
 		  {{(team is null ? "" : ", \"teamUsage\": { \"onDemand\": " + team + " }")}} }
@@ -93,7 +93,7 @@ public class CursorProviderTests
 	public void UntouchedOnDemandWithoutLimitIsNoCard() => Assert.Null(Spend("""{ "enabled": true, "used": 0, "limit": null }""").Extra);
 
 	[Fact]
-	public void DisabledOnDemandIsNoCard() => Assert.Null(CursorProvider.Parse(JsonNode.Parse(_usage)!, null).Extra);
+	public void DisabledOnDemandIsNoCard() => Assert.Null(CursorAgent.Parse(JsonNode.Parse(_usage)!, null).Extra);
 
 	[Fact]
 	public void TeamPoolWhenThereIsNoPersonalCap() =>
@@ -108,7 +108,7 @@ public class CursorProviderTests
 	[Fact]
 	public void OnDemandAloneIsNotAParseError() // плана нет, а расход сверх него — есть
 	{
-		var snapshot = CursorProvider.Parse(JsonNode.Parse("""
+		var snapshot = CursorAgent.Parse(JsonNode.Parse("""
 			{ "billingCycleEnd": "2026-03-06T03:34:49.000Z", "isUnlimited": false,
 			  "individualUsage": { "plan": { "enabled": false }, "onDemand": { "enabled": true, "used": 700, "limit": 1000 } } }
 			""")!, null);
@@ -120,8 +120,8 @@ public class CursorProviderTests
 	[Fact]
 	public void SessionCookieStaysWithCursor() // .NET при переадресации стирает только Authorization — cookie понёс бы дальше
 	{
-		Assert.False(CursorProvider.Handler.AllowAutoRedirect);
-		Assert.False(CursorProvider.Handler.UseCookies); // и чужие Set-Cookie не копятся в общем клиенте
+		Assert.False(CursorAgent.Handler.AllowAutoRedirect);
+		Assert.False(CursorAgent.Handler.UseCookies); // и чужие Set-Cookie не копятся в общем клиенте
 	}
 
 	[Fact]
@@ -131,7 +131,7 @@ public class CursorProviderTests
 		using var http = new HttpClient(answer);
 		var token = Jwt("auth0|user_01ABC");
 
-		await CursorProvider.AskAsync(http, token, null, CancellationToken.None);
+		await CursorAgent.AskAsync(http, token, null, CancellationToken.None);
 
 		var sent = Assert.Single(answer.Requests);
 		Assert.Equal("https://cursor.com/api/usage-summary", sent.Url.ToString());
@@ -145,7 +145,7 @@ public class CursorProviderTests
 		using var http = new HttpClient(new Answer(HttpStatusCode.Unauthorized));
 		var token = Jwt("auth0|user_01ABC");
 
-		var error = await Assert.ThrowsAsync<SignInException>(() => CursorProvider.AskAsync(http, token, null, CancellationToken.None));
+		var error = await Assert.ThrowsAsync<SignInException>(() => CursorAgent.AskAsync(http, token, null, CancellationToken.None));
 
 		Assert.Equal(SignInProblem.Rejected, error.Problem);
 		Assert.DoesNotContain(token, error.ToString());

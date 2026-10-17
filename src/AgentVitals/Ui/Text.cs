@@ -71,11 +71,11 @@ internal static class Text
 	{
 		if (alert.Level == QuotaLevel.Reset)
 		{
-			return (Localization.Get("langAlertReset"), Localization.Format("langAlertResetText", alert.Provider, Title(alert.Window)));
+			return (Localization.Get("langAlertReset"), Localization.Format("langAlertResetText", alert.Agent, Title(alert.Window)));
 		}
 
 		var left = Math.Max(0, 100 - Math.Round(alert.Window.Used));
-		var message = Localization.Format("langAlertLeft", alert.Provider, Title(alert.Window), left);
+		var message = Localization.Format("langAlertLeft", alert.Agent, Title(alert.Window), left);
 
 		if (Quota.Runout(alert.Window, now) is { } runout)
 		{

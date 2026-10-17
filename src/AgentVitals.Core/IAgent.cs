@@ -10,8 +10,8 @@ using AgentVitals.Core.Usage;
 
 namespace AgentVitals.Core;
 
-/// <summary>Источник квот одного AI-агента.</summary>
-public interface IProvider
+/// <summary>AI-агент: имя, вход, квоты, расход, статус-страница и hooks живых сессий.</summary>
+public interface IAgent
 {
 	/// <summary>Имя агента в интерфейсе.</summary>
 	string Name { get; }

@@ -45,7 +45,7 @@ internal sealed class CodexLog(string home, string pricesFile) : IUsageLog
 	private string? _lastError;
 
 	public CodexLog()
-		: this(CodexProvider.Home, Path.Combine(Paths.Data, "prices-openai.md"))
+		: this(CodexAgent.Home, Path.Combine(Paths.Data, "prices-openai.md"))
 	{
 	}
 

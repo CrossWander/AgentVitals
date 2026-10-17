@@ -14,8 +14,8 @@ namespace AgentVitals.Agents;
 public static class AgentCatalog
 {
 	/// <summary>Агенты заново: у каждого опроса — свои.</summary>
-	public static IReadOnlyList<IProvider> All() =>
-		[new ClaudeProvider(), new CodexProvider(), new GeminiProvider(), new CopilotProvider(), new CursorProvider()];
+	public static IReadOnlyList<IAgent> All() =>
+		[new ClaudeAgent(), new CodexAgent(), new GeminiAgent(), new CopilotAgent(), new CursorAgent()];
 
 	/// <summary>Агенты, к которым подключаются hooks живых сессий.</summary>
 	/// <remarks>Режим hook строит всех агентов на каждое событие: их конструкторы не читают файлов и не бросают.</remarks>

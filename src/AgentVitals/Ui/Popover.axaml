@@ -23,7 +23,7 @@
                             <TextBlock Text="AgentVitals" FontSize="18" FontWeight="Bold"/>
                             <TextBlock Classes="caption" Text="{DynamicResource langSubtitle}"/>
                         </StackPanel>
-                        <Border Name="HealthPill" Grid.Column="2" Classes="pill" x:DataType="local:ProviderView" BorderBrush="{Binding HealthBrush}" VerticalAlignment="Center">
+                        <Border Name="HealthPill" Grid.Column="2" Classes="pill" x:DataType="local:AgentView" BorderBrush="{Binding HealthBrush}" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="7">
                                 <Ellipse Width="9" Height="9" Fill="{Binding HealthBrush}" VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding HealthText}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -31,7 +31,7 @@
                         </Border>
                     </Grid>
 
-                    <!-- Вкладки провайдеров строятся в коде: их столько, сколько агентов установлено -->
+                    <!-- Вкладки агентов строятся в коде: их столько, сколько агентов установлено -->
                     <StackPanel Name="Tabs" Orientation="Horizontal" Spacing="6"/>
 
                     <StackPanel Spacing="4">
@@ -43,7 +43,7 @@
                             </Button>
                         </Grid>
                         <!-- Статус сервиса выбранного агента: у каждой вкладки свой -->
-                        <StackPanel Name="StatusLine" x:DataType="local:ProviderView" Orientation="Horizontal" Spacing="6"
+                        <StackPanel Name="StatusLine" x:DataType="local:AgentView" Orientation="Horizontal" Spacing="6"
                                     Background="Transparent" Cursor="Hand" PointerReleased="OnStatus">
                             <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" VerticalAlignment="Center"/>
                             <TextBlock Classes="faint" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
@@ -61,7 +61,7 @@
                         <ItemsControl Name="Cards" Margin="-4,0">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <local:CardGrid x:DataType="local:ProviderView" Wide="{Binding Bare}"/>
+                                    <local:CardGrid x:DataType="local:AgentView" Wide="{Binding Bare}"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
@@ -226,7 +226,7 @@
                         </StackPanel>
 
                         <!-- Сессии агента выбранной вкладки: карточка во всю ширину -->
-                        <Border Name="SessionsCard" Classes="card" x:DataType="local:ProviderView">
+                        <Border Name="SessionsCard" Classes="card" x:DataType="local:AgentView">
                             <StackPanel Spacing="8">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <Path Classes="icon" Width="11" Height="11" Data="{StaticResource IconTerminal}"

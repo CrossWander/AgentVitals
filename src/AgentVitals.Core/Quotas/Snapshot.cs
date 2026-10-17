@@ -55,7 +55,7 @@ public sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, Da
 /// <summary>Расход сверх тарифа в деньгах; Limit null — потолка нет. Team — общий пул команды (Cursor), а не свой расход.</summary>
 public sealed record ExtraUsage(decimal Used, decimal? Limit, string Currency, bool Team = false);
 
-/// <summary>Квоты одного провайдера на момент запроса.</summary>
+/// <summary>Квоты одного агента на момент запроса.</summary>
 public sealed record Snapshot(string Plan, string? Account, IReadOnlyList<QuotaWindow> Windows, ExtraUsage? Extra);
 
 /// <summary>Темп расхода против ровного: с запасом, ровно, с опережением.</summary>

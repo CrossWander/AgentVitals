@@ -244,7 +244,7 @@ internal sealed class TrayApp
 	{
 		var now = DateTime.UtcNow;
 
-		if (_alarm.Check(_poller.Visible.Select(state => (state.Provider.Name, state.Windows(now))), Store.Current.Thresholds, now) is { } alert)
+		if (_alarm.Check(_poller.Visible.Select(state => (state.Agent.Name, state.Windows(now))), Store.Current.Thresholds, now) is { } alert)
 		{
 			var (title, message) = Text.QuotaToast(alert, now);
 			var brush = alert.Level switch
@@ -273,12 +273,12 @@ internal sealed class TrayApp
 				continue;
 			}
 
-			if (_indicators.TryGetValue(state.Provider.Name, out var previous) && previous != status.Indicator)
+			if (_indicators.TryGetValue(state.Agent.Name, out var previous) && previous != status.Indicator)
 			{
 				_toast.Say(Text.StatusToast(status), Anchor(), click: () => OpenPopover(settings: false));
 			}
 
-			_indicators[state.Provider.Name] = status.Indicator;
+			_indicators[state.Agent.Name] = status.Indicator;
 		}
 	}
 

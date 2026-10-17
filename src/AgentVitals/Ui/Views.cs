@@ -48,7 +48,7 @@ internal sealed record CardView(
 /// <param name="StatusUrl">Страница статуса агента; null — её нет, и строки статуса тоже.</param>
 /// <param name="Sessions">Живые сессии агента; null — hooks у агента нет, и карточки тоже.</param>
 /// <param name="HealthText">Плашка в шапке, пока выбрана эта вкладка: по самому узкому окну этого агента.</param>
-internal sealed record ProviderView(
+internal sealed record AgentView(
 	string Name,
 	string Info,
 	string Updated,
@@ -136,13 +136,13 @@ internal sealed record UsageView(
 internal sealed record Vitals(
 	string HealthText,
 	IBrush HealthBrush,
-	IReadOnlyList<ProviderView> Providers,
+	IReadOnlyList<AgentView> Agents,
 	string StatusText,
 	IBrush StatusBrush,
 	string LiveText,
 	IBrush LiveBrush)
 {
-	public bool NoAgents => Providers.Count == 0;
+	public bool NoAgents => Agents.Count == 0;
 }
 
 /// <summary>Собирает представления из данных опроса и сессий. Кисти — из палитры текущей темы.</summary>
@@ -154,7 +154,7 @@ internal static class Views
 	/// <param name="now">Момент снимка: от него «обновлено N мин назад» и «сброс через».</param>
 	/// <param name="levels">Пороги из настроек.</param>
 	/// <param name="hide">Показывают экран: почты аккаунтов и запросов сессий не видно.</param>
-	public static Vitals Build(IReadOnlyList<ProviderState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false)
+	public static Vitals Build(IReadOnlyList<AgentState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false)
 	{
 		// Значок и карточка по наведению — по худшему агенту; шапка окна — по выбранной вкладке.
 		var badge = Badge(agents, now, levels);
@@ -165,7 +165,7 @@ internal static class Views
 		return new(
 			badge.Text,
 			badge.Brush,
-			[.. agents.Select(state => Provider(state, now, levels, hooks.TryGetValue(state.Provider.Name, out var link) ? link : null, sessions, hide))],
+			[.. agents.Select(state => Agent(state, now, levels, hooks.TryGetValue(state.Agent.Name, out var link) ? link : null, sessions, hide))],
 			status.Text,
 			Brush(Level(status.Health)),
 			focus is null ? "" : Text.Live(focus),
@@ -173,7 +173,7 @@ internal static class Views
 	}
 
 	/// <summary>Плашка по самому узкому окну агентов: исчерпано оно — «исчерпано», как на его карточке.</summary>
-	private static (string Text, IBrush Brush, Health Health) Badge(IReadOnlyList<ProviderState> agents, DateTime now, Thresholds levels)
+	private static (string Text, IBrush Brush, Health Health) Badge(IReadOnlyList<AgentState> agents, DateTime now, Thresholds levels)
 	{
 		var health = Poller.Health(agents, now, levels);
 
@@ -181,9 +181,9 @@ internal static class Views
 	}
 
 	/// <summary>Строка статуса в карточке наведения: худший статус среди агентов; все в порядке — «все сервисы работают».</summary>
-	internal static (string Text, Health Health) Overall(IReadOnlyList<ProviderState> agents)
+	internal static (string Text, Health Health) Overall(IReadOnlyList<AgentState> agents)
 	{
-		var pages = agents.Where(state => state.Provider.Status is not null).ToList();
+		var pages = agents.Where(state => state.Agent.Status is not null).ToList();
 
 		if (pages.Count == 0)
 		{
@@ -195,7 +195,7 @@ internal static class Views
 
 		return pages.Count > 1 && health == Health.Good
 			? (Localization.Get("langStatusAllOk"), Health.Good)
-			: (Text.Status(worst.Status, worst.Provider.Status!.Name), health);
+			: (Text.Status(worst.Status, worst.Agent.Status!.Name), health);
 	}
 
 	// Тревога важнее неизвестности, неизвестность — важнее «всё в порядке».
@@ -209,7 +209,7 @@ internal static class Views
 
 	/// <param name="hooks">Подключены ли hooks агента; null — у агента их нет.</param>
 	/// <param name="hide">Показывают экран: почты аккаунта и запросов сессий не видно.</param>
-	internal static ProviderView Provider(ProviderState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null, bool hide = false)
+	internal static AgentView Agent(AgentState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null, bool hide = false)
 	{
 		List<CardView> cards = [];
 
@@ -226,20 +226,20 @@ internal static class Views
 		var info = string.Join(" · ", new[] { state.Snapshot?.Plan, hide ? null : state.Snapshot?.Account }.Where(text => !string.IsNullOrEmpty(text)));
 
 		var badge = Badge([state], now, levels);
-		var target = hooks is null ? null : state.Provider.Hooks;
-		List<Session> own = [.. (sessions ?? []).Where(session => session.Agent == state.Provider.Name)];
+		var target = hooks is null ? null : state.Agent.Hooks;
+		List<Session> own = [.. (sessions ?? []).Where(session => session.Agent == state.Agent.Name)];
 
 		return new(
-			state.Provider.Name,
+			state.Agent.Name,
 			info,
 			Text.Ago(state.Updated, now),
 			cards,
-			state.Error is { } error ? Text.Error(error, state.Provider.Name) : "",
-			state.Provider.Dashboard,
-			state.Provider.Usage is null ? null : Usage(state.Days),
-			state.Provider.Status is { } page ? Text.Status(state.Status, page.Name) : "",
+			state.Error is { } error ? Text.Error(error, state.Agent.Name) : "",
+			state.Agent.Dashboard,
+			state.Agent.Usage is null ? null : Usage(state.Days),
+			state.Agent.Status is { } page ? Text.Status(state.Status, page.Name) : "",
 			Brush(Level(state.Status?.Health ?? Health.Unknown)),
-			state.Provider.Status?.Url,
+			state.Agent.Status?.Url,
 			target is null ? "" : Localization.Format("langSessions", target.Title.ToUpper(Localization.Culture)),
 			target is null ? null : [.. own.Select(session => new SessionView(
 				session.Folder,

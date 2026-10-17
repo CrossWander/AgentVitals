@@ -31,7 +31,7 @@ public class HookInstallerTests
 	public void HookArgumentFindsItsAgent(string? key, string agent) => Assert.Equal(agent, AgentCatalog.Hook(key).Agent);
 
 	[Fact]
-	public void ProvidersCarryTheirHooks() // сессии — часть контракта агента, как расход и статус
+	public void AgentsCarryTheirHooks() // сессии — часть контракта агента, как расход и статус
 	{
 		Assert.Equal(["Claude", "Codex"], AgentCatalog.Hooks.Select(target => target.Agent));
 		Assert.All(AgentCatalog.All(), agent => Assert.True(agent.Hooks is null || agent.Hooks.Agent == agent.Name));
