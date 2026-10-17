@@ -47,7 +47,7 @@ scrolls.
 | Updates | Checks GitHub at start and once a day and toasts a new version once; **Update** in settings downloads it, checks its SHA-256 and swaps the exe in place → [more](#updates) |
 | Screen sharing | The eye at the end of the plan line hides the account email and session prompts, in the window and the hover card |
 | Languages and themes | English, Ukrainian and Russian; light, dark or as in Windows |
-| Keyboard | Esc closes the window, F5 or Ctrl+R refreshes, Ctrl+1…3 switch the agent tabs |
+| Keyboard | Esc closes the window, F5 or Ctrl+R refreshes, Ctrl+1, Ctrl+2… switch the agent tabs in their order |
 
 ## Settings
 
