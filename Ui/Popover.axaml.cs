@@ -156,6 +156,7 @@ internal partial class Popover : TrayWindow
 		HealthPill.IsVisible = provider is not null;
 		ShowAlerts();
 
+		Cards.DataContext = provider;
 		Cards.ItemsSource = provider?.Cards;
 		InfoLine.Text = string.Join(" · ", new[] { provider?.Updated, provider?.Info }.Where(text => !string.IsNullOrEmpty(text)));
 		PrivateIcon.Data = this.FindResource(Store.Current.Private ? "IconEyeOff" : "IconEye") as Geometry;

@@ -57,11 +57,11 @@
                         <TextBlock Classes="caption" Text="{DynamicResource langNoAgents}" TextWrapping="Wrap"
                                    IsVisible="{Binding NoAgents}"/>
 
-                        <!-- Одинокая карточка в последнем ряду — во всю ширину -->
+                        <!-- Одинокая карточка в последнем ряду — во всю ширину; на вкладке только квоты — все во всю ширину -->
                         <ItemsControl Name="Cards" Margin="-4,0">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <local:CardGrid/>
+                                    <local:CardGrid x:DataType="local:ProviderView" Wide="{Binding Bare}"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
