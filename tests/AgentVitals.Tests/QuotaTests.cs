@@ -82,7 +82,6 @@ public class QuotaTests
 
 	[Theory]
 	[InlineData("team", "Team")]
-	[InlineData("claude_max", "Max")]
 	[InlineData("pro", "Pro")]
 	[InlineData(null, "")]
 	public void NamesPlan(string? subscription, string expected) => Assert.Equal(expected, Quota.PlanName(subscription));

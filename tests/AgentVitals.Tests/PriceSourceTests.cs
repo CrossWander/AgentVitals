@@ -10,7 +10,7 @@ public class PriceSourceTests
 	{
 		using var temp = new TempDirectory();
 		var saved = temp.File("prices.md");
-		var source = new PriceSource(PriceList.Url, saved, PriceList.Parse);
+		var source = new PriceSource(ClaudePrices.Url, saved, ClaudePrices.Parse);
 
 		Assert.True(source.Accept(PriceListTests.Page));
 		Assert.False(source.Accept("<html>редизайн</html>"));
@@ -25,7 +25,7 @@ public class PriceSourceTests
 		using var temp = new TempDirectory();
 		var saved = temp.File("prices.md");
 		File.WriteAllText(saved, PriceListTests.Page);
-		var source = new PriceSource(PriceList.Url, saved, PriceList.Parse);
+		var source = new PriceSource(ClaudePrices.Url, saved, ClaudePrices.Parse);
 
 		source.LoadSaved();
 
@@ -37,7 +37,7 @@ public class PriceSourceTests
 	{
 		using var temp = new TempDirectory();
 
-		Assert.True(new PriceSource(PriceList.OpenAiUrl, temp.File("prices-openai.md"), PriceList.ParseOpenAi).Accept(PriceListTests.OpenAiPage));
-		Assert.False(new PriceSource(PriceList.Url, temp.File("prices.md"), PriceList.Parse).Accept(PriceListTests.OpenAiPage));
+		Assert.True(new PriceSource(OpenAiPrices.Url, temp.File("prices-openai.md"), OpenAiPrices.Parse).Accept(PriceListTests.OpenAiPage));
+		Assert.False(new PriceSource(ClaudePrices.Url, temp.File("prices.md"), ClaudePrices.Parse).Accept(PriceListTests.OpenAiPage));
 	}
 }

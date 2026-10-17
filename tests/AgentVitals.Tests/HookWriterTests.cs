@@ -42,7 +42,7 @@ public class HookWriterTests
 		Codex(temp, "UserPromptSubmit", now.AddMinutes(-10));
 		Codex(temp, "Interrupt", now.AddSeconds(-1));
 
-		var session = Assert.Single(SessionWatcher.Read(temp.Path, now));
+		var session = Assert.Single(SessionWatcher.Read(temp.Path, now, AgentCatalog.Hooks));
 		Assert.Equal(SessionState.Idle, session.State);
 		Assert.Null(session.TurnDuration);
 		Assert.Equal("Codex", session.Agent);
@@ -60,7 +60,7 @@ public class HookWriterTests
 		HookWriter.Apply(new JsonObject { ["session_id"] = "s1", ["hook_event_name"] = "Stop", ["cwd"] = @"C:\x" }, temp.Path, now.AddMinutes(-2).Ticks);
 		Prompt(temp, "да", now.AddMinutes(-1));
 
-		Assert.Equal("Почини тесты в pdu", Assert.Single(SessionWatcher.Read(temp.Path, now)).Prompt);
+		Assert.Equal("Почини тесты в pdu", Assert.Single(SessionWatcher.Read(temp.Path, now, AgentCatalog.Hooks)).Prompt);
 	}
 
 	[Fact]
@@ -77,10 +77,21 @@ public class HookWriterTests
 	public void CodexKeepsNoTranscript() // прерывание Codex сообщает сам — журнал читать незачем
 	{
 		using var temp = new TempDirectory();
-		HookWriter.Apply(new JsonObject { ["session_id"] = "c1", ["hook_event_name"] = "PreToolUse", ["tool_name"] = "Bash", ["cwd"] = @"C:\x", ["transcript_path"] = @"C:\x\rollout.jsonl" }, temp.Path, 100, pid: 7, agent: "Codex");
+		var codex = CodexHooks.Target;
+		HookWriter.Apply(new JsonObject { ["session_id"] = "c1", ["hook_event_name"] = "PreToolUse", ["tool_name"] = "Bash", ["cwd"] = @"C:\x", ["transcript_path"] = @"C:\x\rollout.jsonl" }, temp.Path, 100, pid: 7, agent: codex.Agent, transcript: codex.Transcript);
 
 		var record = HookWriter.Read(temp.File("c1.json"))!;
 		Assert.Equal(("Codex", null, 7), (record.Agent, record.Transcript, record.Pid));
+	}
+
+	[Fact]
+	public void ClaudeKeepsItsTranscript() // о прерывании Esc hooks Claude Code молчат — его видно только в журнале
+	{
+		using var temp = new TempDirectory();
+		var claude = ClaudeHooks.Target;
+		HookWriter.Apply(new JsonObject { ["session_id"] = "c1", ["hook_event_name"] = "PreToolUse", ["cwd"] = @"C:\x", ["transcript_path"] = @"C:\x\c1.jsonl" }, temp.Path, 100, agent: claude.Agent, transcript: claude.Transcript);
+
+		Assert.Equal(@"C:\x\c1.jsonl", HookWriter.Read(temp.File("c1.json"))!.Transcript);
 	}
 
 	[Fact]
@@ -90,7 +101,7 @@ public class HookWriterTests
 		var now = DateTime.UtcNow;
 		File.WriteAllText(temp.File("s1.json"), $$"""{ "state": "working", "cwd": "C:\\x", "utc": {{now.AddSeconds(-1).Ticks}} }""");
 
-		Assert.Equal("Claude", Assert.Single(SessionWatcher.Read(temp.Path, now)).Agent);
+		Assert.Equal("Claude", Assert.Single(SessionWatcher.Read(temp.Path, now, AgentCatalog.Hooks)).Agent);
 	}
 
 	[Fact]
@@ -204,7 +215,7 @@ public class HookWriterTests
 		HookWriter.Apply(Event("SessionStart"), temp.Path, at: now.AddSeconds(-2).Ticks);
 		HookWriter.Apply(Event("SessionEnd"), temp.Path, at: now.AddSeconds(-1).Ticks);
 
-		Assert.Empty(SessionWatcher.Read(temp.Path, now));
+		Assert.Empty(SessionWatcher.Read(temp.Path, now, AgentCatalog.Hooks));
 	}
 
 	[Fact]
@@ -215,7 +226,7 @@ public class HookWriterTests
 		HookWriter.Apply(Event("SessionEnd"), temp.Path, at: now.AddSeconds(-1).Ticks);
 		HookWriter.Apply(Event("PostToolUse"), temp.Path, at: now.AddSeconds(-2).Ticks);
 
-		Assert.Empty(SessionWatcher.Read(temp.Path, now));
+		Assert.Empty(SessionWatcher.Read(temp.Path, now, AgentCatalog.Hooks));
 	}
 
 	[Fact]
@@ -226,7 +237,7 @@ public class HookWriterTests
 		HookWriter.Apply(Event("SessionEnd"), temp.Path, at: now.AddMinutes(-5).Ticks);
 		HookWriter.Apply(Event("SessionStart"), temp.Path, at: now.AddSeconds(-1).Ticks);
 
-		Assert.Single(SessionWatcher.Read(temp.Path, now));
+		Assert.Single(SessionWatcher.Read(temp.Path, now, AgentCatalog.Hooks));
 	}
 
 	[Theory]

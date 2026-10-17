@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Агенты: у каждого своя папка — квоты, лог расхода, статус-страница и hooks. -->
+  <ItemGroup>
+    <ProjectReference Include="../AgentVitals.Core/AgentVitals.Core.csproj" />
+    <ProjectReference Include="../AgentVitals.Platform/AgentVitals.Platform.csproj" />
+    <InternalsVisibleTo Include="AgentVitals.Tests" />
+  </ItemGroup>
+
+</Project>

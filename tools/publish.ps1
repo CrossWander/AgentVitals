@@ -4,7 +4,7 @@
     По умолчанию — один файл, которому нужен установленный .NET 10 Runtime
     (https://dotnet.microsoft.com/download/dotnet/10.0).
     -SelfContained — рантайм внутри, ставить ничего не нужно, но файл в несколько раз больше.
-    -Version — версия exe, например тег релиза v1.0.0; без него — из AgentVitals.csproj.
+    -Version — версия exe, например тег релиза v1.0.0; без него — из Directory.Build.props.
 #>
 param(
     [switch]$SelfContained,
@@ -41,7 +41,7 @@ if (Test-Path $output) {
 }
 
 $arguments = @(
-    'publish', (Join-Path $root 'AgentVitals.csproj')
+    'publish', (Join-Path $root 'src\AgentVitals\AgentVitals.csproj')
     '-c', 'Release'
     '-r', 'win-x64'
     '-o', $output

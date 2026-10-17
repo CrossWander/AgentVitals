@@ -1,4 +1,7 @@
 <Solution>
-  <Project Path="AgentVitals.csproj" />
+  <Project Path="src/AgentVitals/AgentVitals.csproj" />
+  <Project Path="src/AgentVitals.Agents/AgentVitals.Agents.csproj" />
+  <Project Path="src/AgentVitals.Core/AgentVitals.Core.csproj" />
+  <Project Path="src/AgentVitals.Platform/AgentVitals.Platform.csproj" />
   <Project Path="tests/AgentVitals.Tests/AgentVitals.Tests.csproj" />
 </Solution>

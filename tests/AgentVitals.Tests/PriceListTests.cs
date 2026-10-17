@@ -32,7 +32,7 @@ public class PriceListTests
 	[Fact]
 	public void ReadsTheModelTable()
 	{
-		var prices = PriceList.Parse(Page);
+		var prices = ClaudePrices.Parse(Page);
 
 		Assert.Equal(6, prices.Count); // вторая таблица — другой раздел, её цены не в счёт
 		Assert.Equal(new Price(4, 5, 8, 0.20m, 20), prices.Find("claude-opus-5-5"));
@@ -41,7 +41,7 @@ public class PriceListTests
 	[Fact]
 	public void StripsLinksAndFootnotes()
 	{
-		var prices = PriceList.Parse(Page);
+		var prices = ClaudePrices.Parse(Page);
 
 		Assert.NotNull(prices.Find("claude-mythos-5-1"));
 		Assert.Equal(new Price(2, 2.50m, 4, 0.20m, 10), prices.Find("claude-sonnet-5"));
@@ -49,12 +49,12 @@ public class PriceListTests
 
 	[Fact]
 	public void DatedIdTakesItsModelsPrice() =>
-		Assert.Equal(new Price(1, 1.25m, 2, 0.10m, 5), PriceList.Parse(Page).Find("claude-haiku-4-5-20251001"));
+		Assert.Equal(new Price(1, 1.25m, 2, 0.10m, 5), ClaudePrices.Parse(Page).Find("claude-haiku-4-5-20251001"));
 
 	[Fact]
 	public void NewerModelGetsNoPrice()
 	{
-		var prices = PriceList.Parse(Page);
+		var prices = ClaudePrices.Parse(Page);
 
 		Assert.Null(prices.Find("claude-opus-5-6"));
 		Assert.Equal(5, prices.Find("claude-opus-5")!.Input); // не цена opus-5-5, хоть имя и короче
@@ -71,11 +71,11 @@ public class PriceListTests
 			| Claude Opus 5.5 | $20 / MTok | $2 / MTok | $4 / MTok | $5 / MTok | $8 / MTok | $0.20 / MTok |
 			""";
 
-		Assert.Equal(new Price(4, 5, 8, 0.20m, 20), PriceList.Parse(page).Find("claude-opus-5-5"));
+		Assert.Equal(new Price(4, 5, 8, 0.20m, 20), ClaudePrices.Parse(page).Find("claude-opus-5-5"));
 	}
 
 	[Fact]
-	public void PageWithoutTheTableIsEmpty() => Assert.Equal(0, PriceList.Parse("# Pricing\n\nSee the website.").Count);
+	public void PageWithoutTheTableIsEmpty() => Assert.Equal(0, ClaudePrices.Parse("# Pricing\n\nSee the website.").Count);
 
 	[Fact]
 	public void HourCacheCostsMoreThanFiveMinutes()
@@ -131,7 +131,7 @@ public class PriceListTests
 	[Fact]
 	public void ReadsOpenAiStandardPrices()
 	{
-		var prices = PriceList.ParseOpenAi(OpenAiPage);
+		var prices = OpenAiPrices.Parse(OpenAiPage);
 
 		Assert.Equal(new Price(0.10m, 0.125m, 0.125m, 0.01m, 0.50m), prices.Find("gpt-6-luna")); // Standard, а не Batch
 		Assert.Equal(new Price(1.75m, 1.75m, 1.75m, 0.175m, 14m), prices.Find("gpt-5.3-codex")); // таблица с колонкой Category
@@ -143,12 +143,12 @@ public class PriceListTests
 	[Fact]
 	public void DashMeansThePlainInputPrice() // нет цены кэша — он платится как обычный вход
 	{
-		var prices = PriceList.ParseOpenAi(OpenAiPage);
+		var prices = OpenAiPrices.Parse(OpenAiPage);
 
 		Assert.Equal(new Price(5m, 5m, 5m, 0.50m, 30m), prices.Find("gpt-5.5")); // приписка «(<272K context length)» снята
 		Assert.Equal(new Price(30m, 30m, 30m, 30m, 180m), prices.Find("gpt-5.5-pro"));
 	}
 
 	[Fact]
-	public void OpenAiPageWithoutStandardTablesIsEmpty() => Assert.Equal(0, PriceList.ParseOpenAi("<html>редизайн</html>").Count);
+	public void OpenAiPageWithoutStandardTablesIsEmpty() => Assert.Equal(0, OpenAiPrices.Parse("<html>редизайн</html>").Count);
 }

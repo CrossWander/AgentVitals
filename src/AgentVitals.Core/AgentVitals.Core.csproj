@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Квоты, расход, статусы и сессии: модель и контракт агента. Ни интерфейса, ни имён агентов. -->
+  <ItemGroup>
+    <ProjectReference Include="../AgentVitals.Platform/AgentVitals.Platform.csproj" />
+    <InternalsVisibleTo Include="AgentVitals.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -105,13 +105,13 @@ $frames = New-Object 'System.Collections.Generic.List[byte[]]'
 foreach ($size in $sizes) {
     $bmp = New-Bitmap $size
     if ($size -eq 256) {
-        $bmp.Save((Join-Path $root 'app.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+        $bmp.Save((Join-Path $root 'src\AgentVitals\app.png'), [System.Drawing.Imaging.ImageFormat]::Png)
     }
     $frames.Add((New-Frame $bmp))
     $bmp.Dispose()
 }
 
-$file = [System.IO.File]::Create((Join-Path $root 'app.ico'))
+$file = [System.IO.File]::Create((Join-Path $root 'src\AgentVitals\app.ico'))
 $writer = New-Object System.IO.BinaryWriter $file
 $writer.Write([UInt16]0)                     # reserved
 $writer.Write([UInt16]1)                     # type: icon

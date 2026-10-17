@@ -59,9 +59,9 @@ session toasts, their two sounds, start with Windows and the Claude Code hooks f
 |---|---|
 | <img src="docs/settings-light.png" width="360" alt="AgentVitals settings, light theme"> | <img src="docs/settings-dark.png" width="360" alt="AgentVitals settings, dark theme"> |
 
-## Providers
+## Agents
 
-| Provider | Source | Status |
+| Agent | Source | Status |
 |---|---|---|
 | Claude | `GET api.anthropic.com/api/oauth/usage` with the Claude Code token from `~/.claude/.credentials.json` | working |
 | Codex | `GET chatgpt.com/backend-api/wham/usage` with `~/.codex/auth.json`; the account email from its `id_token` | working |
@@ -179,7 +179,7 @@ once — Claude Code writes the same answer several times while it streams.
   [OpenAI's pricing page](https://developers.openai.com/api/docs/pricing), kept in
   `prices-openai.md`; a model without a cached-input or cache-write price pays the plain input price
   for those tokens.
-- Gemini has no statistics yet: the slot is there (`IProvider.Usage`), the reader isn't.
+- Gemini has no statistics yet: the slot is there (`IAgent.Usage`), the reader isn't.
 
 ## Updates
 
@@ -203,7 +203,7 @@ says so and links to the release.
   Credential Manager.
 - **No tokens are spent.** The quota endpoint is not a model call, so checking it costs nothing
   from your limits.
-- **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com, status.openai.com, www.githubstatus.com,
+- **Where it connects:** the quota endpoints in [Agents](#agents), status.claude.com, status.openai.com, www.githubstatus.com,
   cursor.com and status.cursor.com,
   Anthropic's and OpenAI's pricing pages once a day, and GitHub: `api.github.com` for the release check (can be
   turned off) and the release download, only when you press **Update**. Nothing else — no account
@@ -231,6 +231,15 @@ Requires the .NET 10 SDK.
     powershell -File tools\publish.ps1            # release\AgentVitals.exe, needs .NET 10 Runtime
     powershell -File tools\publish.ps1 -SelfContained
     powershell -File tools\make-icons.ps1         # redraw app.ico and app.png
+
+The code is four projects in `src\`, and each one knows only those before it:
+
+- `AgentVitals.Platform` — Windows calls, files, the log and sounds;
+- `AgentVitals.Core` — quotas, usage, status pages and live sessions: the model and the contract every agent fills in,
+  with no UI;
+- `AgentVitals.Agents` — a folder per agent with what is particular to it: quotas, usage log and price page, status
+  page, hooks and session transcript;
+- `AgentVitals` — the tray app: windows, strings, polling, settings and updates.
 
 `release\` is a build folder and stays out of git. Publishing a release on GitHub runs
 [`release.yml`](.github/workflows/release.yml): it tests the tagged sources, builds the exe with

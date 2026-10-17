@@ -8,7 +8,7 @@ A tray companion for people who code with AI agents: how much of each agent's qu
 
 **Agent**:
 A coding assistant with its own CLI and sign-in whose quotas are watched: Claude Code, Codex, Gemini CLI, GitHub Copilot or Cursor. Gemini, Copilot and Cursor have no statistics and no live sessions.
-_Avoid_: tool, client, account
+_Avoid_: tool, client, account, provider
 
 **Installed**:
 An agent is installed when there are signs of it on the computer — usually its sign-in file; installed agents are asked.

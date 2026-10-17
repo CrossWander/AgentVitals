@@ -13,11 +13,11 @@ public class ViewsTests
 	public void EachTabShowsItsOwnUpdateTime() // у Codex со вчерашними данными не должно быть «только что»
 	{
 		var now = DateTime.UtcNow;
-		var claude = new ProviderState(new ClaudeProvider()) { Updated = now };
-		var codex = new ProviderState(new CodexProvider());
+		var claude = new AgentState(new ClaudeAgent()) { Updated = now };
+		var codex = new AgentState(new CodexAgent());
 
-		Assert.Equal("langUpdatedNow", Views.Provider(claude, now, _levels).Updated);
-		Assert.Equal("", Views.Provider(codex, now, _levels).Updated);
+		Assert.Equal("langUpdatedNow", Views.Agent(claude, now, _levels).Updated);
+		Assert.Equal("", Views.Agent(codex, now, _levels).Updated);
 	}
 
 	[Theory]
@@ -46,7 +46,7 @@ public class ViewsTests
 	public void HeaderNamesTheTightestWindow() // исчерпано окно — «исчерпано», как на его карточке
 	{
 		var now = DateTime.UtcNow;
-		var claude = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", null, [new(WindowKind.Session, null, 100, null, Limiting: true)], null) };
+		var claude = new AgentState(new ClaudeAgent()) { Snapshot = new("Max", null, [new(WindowKind.Session, null, 100, null, Limiting: true)], null) };
 
 		Assert.Equal("langHealthExhausted", Views.Build([claude], Hooks(), [], now, _levels).HealthText);
 		Assert.Equal("langHealthUnknown", Views.Build([], Hooks(), [], now, _levels).HealthText);
@@ -56,16 +56,16 @@ public class ViewsTests
 	public void EachTabHasItsOwnBadge() // на вкладке Codex без трат — не «критично» из-за Claude
 	{
 		var now = DateTime.UtcNow;
-		var claude = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", null, [new(WindowKind.Session, null, 95, null, Limiting: true)], null) };
-		var codex = new ProviderState(new CodexProvider()) { Snapshot = new("Free", null, [new(WindowKind.Month, null, 0, null, Limiting: true)], null) };
-		var gemini = new ProviderState(new GeminiProvider());
+		var claude = new AgentState(new ClaudeAgent()) { Snapshot = new("Max", null, [new(WindowKind.Session, null, 95, null, Limiting: true)], null) };
+		var codex = new AgentState(new CodexAgent()) { Snapshot = new("Free", null, [new(WindowKind.Month, null, 0, null, Limiting: true)], null) };
+		var gemini = new AgentState(new GeminiAgent());
 
 		var vitals = Views.Build([claude, codex, gemini], Hooks(), [], now, _levels);
 
 		Assert.Equal("langHealthCritical", vitals.HealthText); // значок и карточка по наведению — по худшему агенту
-		Assert.Equal(("langHealthCritical", true), (vitals.Providers[0].HealthText, vitals.Providers[0].Alert));
-		Assert.Equal(("langHealthGood", false), (vitals.Providers[1].HealthText, vitals.Providers[1].Alert));
-		Assert.Equal(("langHealthUnknown", false), (vitals.Providers[2].HealthText, vitals.Providers[2].Alert)); // без данных — не тревога
+		Assert.Equal(("langHealthCritical", true), (vitals.Agents[0].HealthText, vitals.Agents[0].Alert));
+		Assert.Equal(("langHealthGood", false), (vitals.Agents[1].HealthText, vitals.Agents[1].Alert));
+		Assert.Equal(("langHealthUnknown", false), (vitals.Agents[2].HealthText, vitals.Agents[2].Alert)); // без данных — не тревога
 	}
 
 	[Theory]
@@ -73,7 +73,7 @@ public class ViewsTests
 	[InlineData(HookLink.Moved, "langHooksHint")] // программу перенесли — hooks смотрят на старый путь
 	[InlineData(HookLink.On, "langNoSessions")]
 	public void HintSaysWhySessionsAreEmpty(HookLink hooks, string hint) =>
-		Assert.Equal(hint, Views.Build([new ProviderState(new ClaudeProvider())], Hooks(claude: hooks), [], DateTime.UtcNow, _levels).Providers[0].SessionsHint);
+		Assert.Equal(hint, Views.Build([new AgentState(new ClaudeAgent())], Hooks(claude: hooks), [], DateTime.UtcNow, _levels).Agents[0].SessionsHint);
 
 	private static Dictionary<string, HookLink> Hooks(HookLink claude = HookLink.On, HookLink codex = HookLink.On) =>
 		new() { ["Claude"] = claude, ["Codex"] = codex };
@@ -82,7 +82,7 @@ public class ViewsTests
 	public void EachTabShowsItsOwnSessions()
 	{
 		Session[] sessions = [new("a", SessionState.Working, null, "api", null), new("b", SessionState.Waiting, null, "web", null, Agent: "Codex")];
-		var tabs = Views.Build([new(new ClaudeProvider()), new(new CodexProvider()), new(new GeminiProvider())], Hooks(), sessions, DateTime.UtcNow, _levels).Providers;
+		var tabs = Views.Build([new(new ClaudeAgent()), new(new CodexAgent()), new(new GeminiAgent())], Hooks(), sessions, DateTime.UtcNow, _levels).Agents;
 
 		Assert.Equal(["api"], tabs[0].Sessions!.Select(row => row.Folder));
 		Assert.Equal(["web"], tabs[1].Sessions!.Select(row => row.Folder));
@@ -94,9 +94,9 @@ public class ViewsTests
 	public void EachTabShowsItsOwnStatus() // на вкладке Codex — статус Codex, а не Anthropic
 	{
 		var now = DateTime.UtcNow;
-		var claude = Views.Provider(new ProviderState(new ClaudeProvider()) { Status = new("none", "", null, "Anthropic") }, now, _levels);
-		var codex = Views.Provider(new ProviderState(new CodexProvider()), now, _levels);
-		var gemini = Views.Provider(new ProviderState(new GeminiProvider()), now, _levels);
+		var claude = Views.Agent(new AgentState(new ClaudeAgent()) { Status = new("none", "", null, "Anthropic") }, now, _levels);
+		var codex = Views.Agent(new AgentState(new CodexAgent()), now, _levels);
+		var gemini = Views.Agent(new AgentState(new GeminiAgent()), now, _levels);
 
 		Assert.Equal(("langStatusOk", "https://status.claude.com"), (claude.StatusText, claude.StatusUrl));
 		Assert.Equal(("langStatusUnknown", "https://status.openai.com"), (codex.StatusText, codex.StatusUrl)); // ещё не спрашивали
@@ -107,30 +107,30 @@ public class ViewsTests
 	public void HoverCardShowsTheWorstStatus()
 	{
 		var now = DateTime.UtcNow;
-		var claude = new ProviderState(new ClaudeProvider()) { Status = new("none", "", null, "Anthropic") };
-		var codex = new ProviderState(new CodexProvider()) { Status = new("minor", "Degraded Performance", "Codex is slow", "Codex") };
+		var claude = new AgentState(new ClaudeAgent()) { Status = new("none", "", null, "Anthropic") };
+		var codex = new AgentState(new CodexAgent()) { Status = new("minor", "Degraded Performance", "Codex is slow", "Codex") };
 
 		Assert.Equal("Codex is slow", Views.Build([claude, codex], Hooks(), [], now, _levels).StatusText);
 
 		codex.Status = new("none", "", null, "Codex");
 		Assert.Equal("langStatusAllOk", Views.Build([claude, codex], Hooks(), [], now, _levels).StatusText); // все в порядке — без имён
 		Assert.Equal("langStatusOk", Views.Build([claude], Hooks(), [], now, _levels).StatusText); // один агент — его строка
-		Assert.Equal("", Views.Build([new ProviderState(new GeminiProvider())], Hooks(), [], now, _levels).StatusText);
+		Assert.Equal("", Views.Build([new AgentState(new GeminiAgent())], Hooks(), [], now, _levels).StatusText);
 	}
 
 	[Fact]
 	public void HiddenAccountLeavesOnlyThePlan() // показывают экран — почты на виду нет, ни в окне, ни в карточке наведения
 	{
 		var now = DateTime.UtcNow;
-		var claude = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", "me@example.com", [], null) };
+		var claude = new AgentState(new ClaudeAgent()) { Snapshot = new("Max", "me@example.com", [], null) };
 
-		Assert.Equal("Max · me@example.com", Views.Provider(claude, now, _levels).Info);
-		Assert.Equal("Max", Views.Build([claude], Hooks(), [], now, _levels, hide: true).Providers[0].Info);
+		Assert.Equal("Max · me@example.com", Views.Agent(claude, now, _levels).Info);
+		Assert.Equal("Max", Views.Build([claude], Hooks(), [], now, _levels, hide: true).Agents[0].Info);
 	}
 
 	[Fact]
 	public void TabOpensItsAgentsUsagePage() =>
-		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Dashboard);
+		Assert.Equal("https://claude.ai/settings/usage", Views.Agent(new AgentState(new ClaudeAgent()), DateTime.UtcNow, _levels).Dashboard);
 
 	[Theory]
 	[InlineData("feature/APP-1234", null, "APP-1234-retry-failed-payments-in-checkout\nfeature/APP-1234")]
@@ -150,11 +150,11 @@ public class ViewsTests
 			new("d", SessionState.Idle, null, "api", null, Agent: "Codex", Prompt: "проверь"), // у Codex своя вкладка
 		];
 
-		var rows = Views.Build([new(new ClaudeProvider())], Hooks(), sessions, DateTime.UtcNow, _levels).Providers[0].Sessions!;
+		var rows = Views.Build([new(new ClaudeAgent())], Hooks(), sessions, DateTime.UtcNow, _levels).Agents[0].Sessions!;
 		Assert.Equal(["почини тесты", "master", "main"], rows.Select(row => row.Detail));
 
 		// Показывают экран — запросов не видно и в подсказке.
-		var hidden = Views.Build([new(new ClaudeProvider())], Hooks(), sessions, DateTime.UtcNow, _levels, hide: true).Providers[0].Sessions!;
+		var hidden = Views.Build([new(new ClaudeAgent())], Hooks(), sessions, DateTime.UtcNow, _levels, hide: true).Agents[0].Sessions!;
 		Assert.Equal(["master", "master", "main"], hidden.Select(row => row.Detail));
 		Assert.Equal("ProjectsComfy\nmaster", hidden[0].Tip);
 	}
@@ -164,7 +164,7 @@ public class ViewsTests
 	{
 		var session = new Session("s", SessionState.Working, null, "repo", "main", Pid: 4242, Cwd: @"C:\Work\repo");
 
-		Assert.Same(session, Views.Build([new ProviderState(new ClaudeProvider())], Hooks(), [session], DateTime.UtcNow, _levels).Providers[0].Sessions![0].Session);
+		Assert.Same(session, Views.Build([new AgentState(new ClaudeAgent())], Hooks(), [session], DateTime.UtcNow, _levels).Agents[0].Sessions![0].Session);
 	}
 
 	[Theory]
@@ -189,12 +189,12 @@ public class ViewsTests
 	public void CardTellsThePace(double used, string word)
 	{
 		var now = DateTime.UtcNow;
-		var state = new ProviderState(new ClaudeProvider())
+		var state = new AgentState(new ClaudeAgent())
 		{
 			Snapshot = new("Max", null, [new(WindowKind.Session, null, used, now.AddHours(2.5), Limiting: true)], null),
 		};
 
-		var card = Assert.Single(Views.Provider(state, now, _levels).Cards);
+		var card = Assert.Single(Views.Agent(state, now, _levels).Cards);
 
 		Assert.Equal(word, card.Caption); // в окне — вместо «использовано» у числа
 		Assert.EndsWith(" · " + word, card.Footer); // в карточке наведения — после сброса
@@ -206,30 +206,30 @@ public class ViewsTests
 	public void UsedUpWindowIsJustAhead() // исчерпано — «хватит до» уже некуда
 	{
 		var now = DateTime.UtcNow;
-		var state = new ProviderState(new ClaudeProvider())
+		var state = new AgentState(new ClaudeAgent())
 		{
 			Snapshot = new("Max", null, [new(WindowKind.Session, null, 100, now.AddHours(2.5), Limiting: true)], null),
 		};
 
-		Assert.Equal("langPaceAhead", Assert.Single(Views.Provider(state, now, _levels).Cards).Caption);
+		Assert.Equal("langPaceAhead", Assert.Single(Views.Agent(state, now, _levels).Cards).Caption);
 	}
 
 	[Fact]
 	public void NoPaceNoTip()
 	{
-		var state = new ProviderState(new ClaudeProvider())
+		var state = new AgentState(new ClaudeAgent())
 		{
 			Snapshot = new("Max", null, [new(WindowKind.Model, "Opus", 30, DateTime.UtcNow.AddDays(2), Limiting: false)], null),
 		};
 
-		Assert.Null(Assert.Single(Views.Provider(state, DateTime.UtcNow, _levels).Cards).PaceTip);
+		Assert.Null(Assert.Single(Views.Agent(state, DateTime.UtcNow, _levels).Cards).PaceTip);
 	}
 
 	[Fact]
 	public void PassedResetShowsAnEmptyWindow() // после сна вход истёк, а сессия за это время сбросилась — не 91%
 	{
 		var now = DateTime.UtcNow;
-		var state = new ProviderState(new ClaudeProvider())
+		var state = new AgentState(new ClaudeAgent())
 		{
 			Snapshot = new("Max", null,
 			[
@@ -238,7 +238,7 @@ public class ViewsTests
 			], null),
 		};
 
-		var cards = Views.Provider(state, now, _levels).Cards;
+		var cards = Views.Agent(state, now, _levels).Cards;
 
 		Assert.Equal(("0", 0d, "langResetDone"), (cards[0].Value, cards[0].Fill, cards[0].Resets));
 		Assert.Equal("40", cards[1].Value);
@@ -249,16 +249,16 @@ public class ViewsTests
 
 	[Fact]
 	public void GeminiHasNoStatisticsBlock() =>
-		Assert.Null(Views.Provider(new ProviderState(new GeminiProvider()), DateTime.UtcNow, _levels).Usage);
+		Assert.Null(Views.Agent(new AgentState(new GeminiAgent()), DateTime.UtcNow, _levels).Usage);
 
 	[Fact]
 	public void CodexCountsUntilTheFirstRead() =>
-		Assert.Equal("langCounting", Views.Provider(new ProviderState(new CodexProvider()), DateTime.UtcNow, _levels).Usage!.CostNote);
+		Assert.Equal("langCounting", Views.Agent(new AgentState(new CodexAgent()), DateTime.UtcNow, _levels).Usage!.CostNote);
 
 	[Fact]
 	public void ClaudeCountsUntilTheFirstRead() // первое чтение логов — секунды: не нули, а «считаю…»
 	{
-		var usage = Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Usage!;
+		var usage = Views.Agent(new AgentState(new ClaudeAgent()), DateTime.UtcNow, _levels).Usage!;
 
 		Assert.Equal("…", usage.Cost);
 		Assert.Equal("langCounting", usage.CostNote);
@@ -355,27 +355,27 @@ public class ViewsTests
 	[Fact]
 	public void AgentWithoutStatisticsOrSessionsIsBare() // на месте статистики — строка, почему её нет
 	{
-		Assert.True(Views.Provider(new ProviderState(new CopilotProvider()), DateTime.UtcNow, _levels).Bare);
-		Assert.False(Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Bare);
+		Assert.True(Views.Agent(new AgentState(new CopilotAgent()), DateTime.UtcNow, _levels).Bare);
+		Assert.False(Views.Agent(new AgentState(new ClaudeAgent()), DateTime.UtcNow, _levels).Bare);
 	}
 
 	[Fact]
 	public void TeamPoolCardSaysSo() // командный пул Cursor — не свой расход
 	{
-		var state = new ProviderState(new GeminiProvider()) { Snapshot = new("Team", null, [], new ExtraUsage(300m, 1000m, "USD", Team: true)) };
+		var state = new AgentState(new GeminiAgent()) { Snapshot = new("Team", null, [], new ExtraUsage(300m, 1000m, "USD", Team: true)) };
 
-		Assert.Equal("LANGEXTRATEAM", Assert.Single(Views.Provider(state, DateTime.UtcNow, _levels).Cards).Title);
+		Assert.Equal("LANGEXTRATEAM", Assert.Single(Views.Agent(state, DateTime.UtcNow, _levels).Cards).Title);
 	}
 
 	[Fact]
 	public void FeatureWindowGetsACard()
 	{
-		var state = new ProviderState(new GeminiProvider())
+		var state = new AgentState(new GeminiAgent())
 		{
 			Snapshot = new("Free", "octocat", [new(WindowKind.MonthFeature, "chat", 30, DateTime.UtcNow.AddDays(10), Limiting: true)], null),
 		};
 
-		var card = Assert.Single(Views.Provider(state, DateTime.UtcNow, _levels).Cards);
+		var card = Assert.Single(Views.Agent(state, DateTime.UtcNow, _levels).Cards);
 
 		Assert.Equal("CHAT", card.Title);
 		Assert.True(card.HasPace); // 30 дней — темп известен
