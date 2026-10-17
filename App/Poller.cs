@@ -189,7 +189,7 @@ internal sealed class Poller
 	private bool? _again;
 
 	public IReadOnlyList<ProviderState> Providers { get; } =
-		[new(new ClaudeProvider()), new(new CodexProvider()), new(new GeminiProvider()), new(new CopilotProvider())];
+		[new(new ClaudeProvider()), new(new CodexProvider()), new(new GeminiProvider()), new(new CopilotProvider()), new(new CursorProvider())];
 
 	/// <summary>Установленные агенты: только их спрашивают.</summary>
 	public IEnumerable<ProviderState> Installed => Providers.Where(state => state.Installed);

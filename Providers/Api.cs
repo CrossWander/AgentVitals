@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
@@ -53,6 +54,25 @@ internal static class Api
 			: retry?.Delta is { } delta ? now + delta : now;
 
 		return at > now ? at : now.AddMinutes(5);
+	}
+
+	/// <summary>Поле из средней части JWT, base64url; не разобралось — null. Подпись не проверяется: токен
+	/// читаем свой, из файла агента.</summary>
+	public static string? Claim(string? jwt, string name)
+	{
+		if (jwt?.Split('.') is not [_, var payload, ..])
+		{
+			return null;
+		}
+
+		try
+		{
+			return JsonNode.Parse((ReadOnlySpan<byte>)Base64Url.DecodeFromChars(payload)) is JsonObject claims ? (string?)claims[name] : null;
+		}
+		catch (Exception exception) when (exception is FormatException or JsonException or InvalidOperationException)
+		{
+			return null;
+		}
 	}
 
 	/// <param name="styles">Как понять время без смещения; по умолчанию — местное.</param>

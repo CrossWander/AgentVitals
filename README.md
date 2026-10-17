@@ -67,6 +67,7 @@ session toasts, their two sounds, start with Windows and the Claude Code hooks f
 | Codex | `GET chatgpt.com/backend-api/wham/usage` with `~/.codex/auth.json`; the account email from its `id_token` | working |
 | Gemini | `cloudcode-pa.googleapis.com` quota calls with `~/.gemini/oauth_creds.json` | not verified |
 | Copilot | `GET api.github.com/copilot_internal/user` with the GitHub sign-in git keeps in Windows Credential Manager (`git:https://github.com`) | working |
+| Cursor | `GET cursor.com/api/usage-summary` with the sign-in Cursor keeps in its `state.vscdb` (read-only) | not verified |
 
 An agent whose credential file is missing is simply not shown. Copilot shows up only after GitHub has
 confirmed it once: Copilot Chat comes with VS Code, so its folder alone says nothing.
@@ -200,6 +201,7 @@ says so and links to the release.
 - **No tokens are spent.** The quota endpoint is not a model call, so checking it costs nothing
   from your limits.
 - **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com, status.openai.com, www.githubstatus.com,
+  cursor.com and status.cursor.com,
   Anthropic's and OpenAI's pricing pages once a day, and GitHub: `api.github.com` for the release check (can be
   turned off) and the release download, only when you press **Update**. Nothing else — no account
   of its own, no telemetry.
