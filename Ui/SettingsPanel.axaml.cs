@@ -147,12 +147,6 @@ internal partial class SettingsPanel : UserControl
 		{
 			Store.Current.WaitingSound = WaitingSoundToggle.IsChecked == true;
 			Store.Save();
-
-			// Включили — сразу слышно, что это за звук.
-			if (Store.Current.WaitingSound)
-			{
-				Sound.Play();
-			}
 		}
 	}
 
