@@ -7,6 +7,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Styling;
 
 namespace AgentVitals;
@@ -34,6 +35,9 @@ internal partial class Popover : TrayWindow
 
 	/// <summary>Щелчок по сессии в списке.</summary>
 	public event Action<Session>? SessionChosen;
+
+	/// <summary>Глаз: почту спрятали или показали — окна рисуются заново.</summary>
+	public event Action? PrivateChanged;
 
 	public void Open(PixelRect anchor, bool settings)
 	{
@@ -143,6 +147,8 @@ internal partial class Popover : TrayWindow
 
 		Cards.ItemsSource = provider?.Cards;
 		InfoLine.Text = string.Join(" · ", new[] { provider?.Updated, provider?.Info }.Where(text => !string.IsNullOrEmpty(text)));
+		PrivateIcon.Data = this.FindResource(Store.Current.Private ? "IconEyeOff" : "IconEye") as Geometry;
+		ToolTip.SetTip(PrivateButton, Localization.Get(Store.Current.Private ? "langShowPrivate" : "langHidePrivate"));
 		ErrorLine.Text = provider?.Error;
 		ErrorLine.IsVisible = provider?.HasError == true;
 		DashboardButton.IsVisible = provider?.Dashboard is not null;
@@ -269,6 +275,13 @@ internal partial class Popover : TrayWindow
 	}
 
 	private void OnRefresh(object? sender, RoutedEventArgs e) => RefreshRequested?.Invoke();
+
+	private void OnPrivate(object? sender, RoutedEventArgs e)
+	{
+		Store.Current.Private = !Store.Current.Private;
+		Store.Save();
+		PrivateChanged?.Invoke();
+	}
 
 	private void OnSettings(object? sender, RoutedEventArgs e) => ShowSettings(true);
 

@@ -119,6 +119,16 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void HiddenAccountLeavesOnlyThePlan() // показывают экран — почты на виду нет, ни в окне, ни в карточке наведения
+	{
+		var now = DateTime.UtcNow;
+		var claude = new ProviderState(new ClaudeProvider()) { Snapshot = new("Max", "me@example.com", [], null) };
+
+		Assert.Equal("Max · me@example.com", Views.Provider(claude, now, _levels).Info);
+		Assert.Equal("Max", Views.Build([claude], Hooks(), [], now, _levels, hide: true).Providers[0].Info);
+	}
+
+	[Fact]
 	public void TabOpensItsAgentsUsagePage() =>
 		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Dashboard);
 

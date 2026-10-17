@@ -26,6 +26,9 @@ internal static class Store
 
 		public int TurnMinutes { get; set; } = 5;
 
+		// Глаз в окне: почта аккаунта скрыта — экран показывают другим.
+		public bool Private { get; set; }
+
 		// Пороги квоты, %: с них тосты «важно» и «критично», жёлтый и красный.
 		public int ImportantAt { get; set; } = 75;
 

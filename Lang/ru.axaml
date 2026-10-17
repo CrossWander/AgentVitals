@@ -54,6 +54,8 @@
     <x:String x:Key="langLiveTool">{0} работает: {1} · {2}</x:String>
     <x:String x:Key="langLiveWaiting">{0} ждёт разрешения · {1}</x:String>
     <x:String x:Key="langDashboard">Дашборд</x:String>
+    <x:String x:Key="langHidePrivate">Скрыть почту аккаунта — для показа экрана</x:String>
+    <x:String x:Key="langShowPrivate">Показать почту аккаунта</x:String>
     <x:String x:Key="langToday">СЕГОДНЯ</x:String>
     <x:String x:Key="langCostTitle">СТОИМОСТЬ</x:String>
     <x:String x:Key="langTokensTitle">ТОКЕНЫ</x:String>

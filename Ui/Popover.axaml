@@ -35,7 +35,13 @@
                     <StackPanel Name="Tabs" Orientation="Horizontal" Spacing="6"/>
 
                     <StackPanel Spacing="4">
-                        <TextBlock Name="InfoLine" Classes="faint"/>
+                        <!-- Глаз прячет почту: показать экран, не показав лишнего. Поля кнопки не раздвигают строку -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Name="InfoLine" Classes="faint" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            <Button Name="PrivateButton" Grid.Column="1" Theme="{StaticResource Faint}" Margin="6,-4,-5,-4" Click="OnPrivate">
+                                <Path Name="PrivateIcon" Classes="icon" Stroke="{Binding $parent[Button].Foreground}"/>
+                            </Button>
+                        </Grid>
                         <!-- Статус сервиса выбранного агента: у каждой вкладки свой -->
                         <StackPanel Name="StatusLine" x:DataType="local:ProviderView" Orientation="Horizontal" Spacing="6"
                                     Background="Transparent" Cursor="Hand" PointerReleased="OnStatus">

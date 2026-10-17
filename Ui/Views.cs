@@ -141,7 +141,8 @@ internal static class Views
 	/// <param name="sessions">Живые сессии всех агентов.</param>
 	/// <param name="now">Момент снимка: от него «обновлено N мин назад» и «сброс через».</param>
 	/// <param name="levels">Пороги из настроек.</param>
-	public static Vitals Build(IReadOnlyList<ProviderState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels)
+	/// <param name="hide">Показывают экран: почты аккаунтов не видно.</param>
+	public static Vitals Build(IReadOnlyList<ProviderState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false)
 	{
 		// Значок и карточка по наведению — по худшему агенту; шапка окна — по выбранной вкладке.
 		var badge = Badge(agents, now, levels);
@@ -152,7 +153,7 @@ internal static class Views
 		return new(
 			badge.Text,
 			badge.Brush,
-			[.. agents.Select(state => Provider(state, now, levels, hooks.TryGetValue(state.Provider.Name, out var link) ? link : null, sessions))],
+			[.. agents.Select(state => Provider(state, now, levels, hooks.TryGetValue(state.Provider.Name, out var link) ? link : null, sessions, hide))],
 			status.Text,
 			Brush(Level(status.Health)),
 			focus is null ? "" : Text.Live(focus),
@@ -195,7 +196,8 @@ internal static class Views
 	};
 
 	/// <param name="hooks">Подключены ли hooks агента; null — у агента их нет.</param>
-	internal static ProviderView Provider(ProviderState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null)
+	/// <param name="hide">Показывают экран: почты аккаунта не видно.</param>
+	internal static ProviderView Provider(ProviderState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null, bool hide = false)
 	{
 		List<CardView> cards = [];
 
@@ -209,7 +211,7 @@ internal static class Views
 			}
 		}
 
-		var info = string.Join(" · ", new[] { state.Snapshot?.Plan, state.Snapshot?.Account }.Where(text => !string.IsNullOrEmpty(text)));
+		var info = string.Join(" · ", new[] { state.Snapshot?.Plan, hide ? null : state.Snapshot?.Account }.Where(text => !string.IsNullOrEmpty(text)));
 
 		var badge = Badge([state], now, levels);
 		var target = hooks is null ? null : HookTarget.All.FirstOrDefault(target => target.Agent == state.Provider.Name);

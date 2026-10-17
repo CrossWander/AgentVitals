@@ -11,4 +11,6 @@
     <StreamGeometry x:Key="IconTerminal">M4,6 L9,11 L4,16 M11,18 H20</StreamGeometry>
     <StreamGeometry x:Key="IconCompass">M12,3 A9,9 0 1 0 12.01,3 Z M15.5,8.5 L13.4,13.4 L8.5,15.5 L10.6,10.6 Z</StreamGeometry>
     <StreamGeometry x:Key="IconPower">M12,3 V11 M6.3,6.3 A8,8 0 1 0 17.7,6.3</StreamGeometry>
+    <StreamGeometry x:Key="IconEye">M2,12 C4.5,7.5 8,5 12,5 C16,5 19.5,7.5 22,12 C19.5,16.5 16,19 12,19 C8,19 4.5,16.5 2,12 Z M12,9 A3,3 0 1 0 12.01,9 Z</StreamGeometry>
+    <StreamGeometry x:Key="IconEyeOff">M2,12 C4.5,7.5 8,5 12,5 C16,5 19.5,7.5 22,12 C19.5,16.5 16,19 12,19 C8,19 4.5,16.5 2,12 Z M12,9 A3,3 0 1 0 12.01,9 Z M4,4 L20,20</StreamGeometry>
 </ResourceDictionary>

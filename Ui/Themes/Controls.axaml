@@ -64,6 +64,19 @@
         </Style>
     </ControlTheme>
 
+    <!-- Бледный значок без подложки — ✕ тоста, глаз у почты: не спорит с текстом, ярче под мышью -->
+    <ControlTheme x:Key="Faint" TargetType="Button" BasedOn="{StaticResource Round}">
+        <Setter Property="Width" Value="22"/>
+        <Setter Property="Height" Value="22"/>
+        <Setter Property="CornerRadius" Value="11"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextFaint}"/>
+        <Style Selector="^:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+        </Style>
+    </ControlTheme>
+
     <!-- Строка меню: подпись слева, подсветка во всю ширину -->
     <ControlTheme x:Key="MenuRow" TargetType="Button">
         <Setter Property="Foreground" Value="{DynamicResource Text}"/>

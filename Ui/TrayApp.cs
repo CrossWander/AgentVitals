@@ -61,6 +61,7 @@ internal sealed class TrayApp
 	{
 		_poller.Changed += OnPolled;
 		_popover.RefreshRequested += Refresh;
+		_popover.PrivateChanged += Render;
 		_popover.SessionChosen += session =>
 		{
 			if (Raise(session))
@@ -194,7 +195,8 @@ internal sealed class TrayApp
 			HookTarget.All.ToDictionary(target => target.Agent, target => HookInstaller.Link(target, out _)),
 			_sessions,
 			DateTime.UtcNow,
-			Store.Current.Thresholds);
+			Store.Current.Thresholds,
+			Store.Current.Private);
 
 	private void ReadSessions()
 	{
