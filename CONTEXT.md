@@ -7,7 +7,7 @@ A tray companion for people who code with AI agents: how much of each agent's qu
 ### Agents and quotas
 
 **Agent**:
-A coding assistant with its own CLI and sign-in whose quotas are watched: Claude Code, Codex or Gemini CLI.
+A coding assistant with its own CLI and sign-in whose quotas are watched: Claude Code, Codex, Gemini CLI, GitHub Copilot or Cursor. Gemini, Copilot and Cursor have no statistics and no live sessions.
 _Avoid_: tool, client, account
 
 **Installed**:
@@ -74,7 +74,7 @@ Paid use past the plan, with its spent amount and monthly limit.
 _Avoid_: spend, overage
 
 **Sign-in expired**:
-The agent's sign-in no longer works; data comes back once the agent's own CLI renews it.
+The agent's sign-in no longer works; data comes back once the agent's own CLI renews it — for Copilot, git.
 _Avoid_: logged out, unauthorized
 
 ### Live sessions

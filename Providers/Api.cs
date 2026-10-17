@@ -55,10 +55,11 @@ internal static class Api
 		return at > now ? at : now.AddMinutes(5);
 	}
 
-	public static DateTimeOffset? Date(JsonNode? node) =>
+	/// <param name="styles">Как понять время без смещения; по умолчанию — местное.</param>
+	public static DateTimeOffset? Date(JsonNode? node, DateTimeStyles styles = DateTimeStyles.None) =>
 		node is JsonValue value
 		&& value.TryGetValue<string>(out var text)
-		&& DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+		&& DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, styles, out var date)
 			? date
 			: null;
 }
