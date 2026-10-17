@@ -37,6 +37,9 @@ internal static class Store
 
 		public int CriticalAt { get; set; } = 90;
 
+		// Звук к тосту «критично»; выключен, пока человек сам не включит.
+		public bool LowSound { get; set; }
+
 		// Обновления: спрашивать GitHub при запуске и раз в сутки; о какой версии уже был тост;
 		// какая версия работала в прошлый раз — по ней тост «обновлён до».
 		public bool AutoUpdate { get; set; } = true;

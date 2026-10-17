@@ -39,7 +39,7 @@ scrolls.
 |---|---|
 | Quotas | Session, week and per-model weekly limits with a reset countdown; a mark on the bar shows where even spending would be by now → [more](#quotas-and-alerts) |
 | Tray icon | A pulse line coloured by the limit closest to running out; it beats while Claude works, and a blue dot blinks while Claude waits for you |
-| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a limit won't last until its reset at this pace, when a critical limit resets, when a long turn ends, when Claude asks for permission (with a soft chime, if you turn it on) and when an agent's service status changes |
+| Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a limit won't last until its reset at this pace, when a critical limit resets, when a long turn ends, when Claude asks for permission and when an agent's service status changes; two soft sounds you can turn on — for permission and for *critical* |
 | Live sessions | Every open Claude Code and Codex session, on its agent's tab, with its folder, git branch, state and turn timer → [more](#live-sessions) |
 | Usage statistics | Today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
 | Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears); a toast when one changes |
@@ -53,7 +53,7 @@ scrolls.
 
 The sliders button at the bottom of the window, or *Settings* in the right-click menu, opens
 settings: language, theme, how often to check quotas, the *important* and *critical* levels,
-session toasts and their chime, start with Windows and the Claude Code hooks for live sessions.
+session toasts, their two sounds, start with Windows and the Claude Code hooks for live sessions.
 
 | Light | Dark |
 |---|---|
@@ -88,6 +88,9 @@ An agent whose credential file is missing is simply not shown.
   between 50% and 95% in settings. Each toast comes once, and again only after that window resets;
   a window that is already past a level when AgentVitals starts gets its toast too. The toast also
   says until when the rest lasts at this pace, if that comes before the reset.
+- **Sound for *critical*.** *Play a sound when a quota is almost used up* adds a soft wooden knock,
+  two notes falling, to the *critical* toast only — off by default. It is unlike the rising chime of
+  a permission request, so you can tell them apart without looking.
 - **Early and reset toasts.** From half used and below *important*, one toast per window when at
   this pace it won't last until the reset (*won't last until the reset*). After a *critical* toast,
   one more when the window resets (*available again*) — within a minute of the reset time, without

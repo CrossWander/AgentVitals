@@ -5,21 +5,26 @@ using System.Threading.Tasks;
 
 namespace AgentVitals;
 
-/// <summary>Мягкий звук «агент ждёт разрешения»: две ноты вверх, около секунды. Встроен в exe — файла рядом нет.</summary>
+/// <summary>Два мягких звука, встроенных в exe (файлов рядом нет): стекло вверх — агент ждёт разрешения,
+/// дерево вниз — квота почти исчерпана. Разные, чтобы различать на слух.</summary>
 internal static partial class Sound
 {
 	// SND_MEMORY — звук из массива; SND_NODEFAULT — не вышло, так тишина, а не системное «динь».
 	private const uint _memory = 0x0004;
 	private const uint _noDefault = 0x0002;
 
+	/// <summary>Две ноты вверх: агент ждёт разрешения.</summary>
 	internal static byte[] Chime { get; } = Read("chime.wav");
 
+	/// <summary>Деревянный молоточек, две ноты вниз: квота почти исчерпана.</summary>
+	internal static byte[] Low { get; } = Read("low.wav");
+
 	/// <summary>Сыграть, не держа поток окна: без SND_ASYNC PlaySound ждёт конца звука, а массив закреплён лишь на время вызова.</summary>
-	public static void Play()
+	public static void Play(byte[] wave)
 	{
 		if (OperatingSystem.IsWindows())
 		{
-			_ = Task.Run(() => PlaySound(Chime, 0, _memory | _noDefault));
+			_ = Task.Run(() => PlaySound(wave, 0, _memory | _noDefault));
 		}
 	}
 

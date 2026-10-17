@@ -117,8 +117,12 @@ A toast when a limiting window that had a Critical quota toast resets.
 A toast when an agent finishes a long turn or a live session waits for permission.
 
 **Chime**:
-The soft two-note sound that can come with the session toast for permission, and only with it; off until the person turns it on.
+The soft rising glass sound that can come with the session toast for permission, and only with it, unless the session's window is the active one; off until the person turns it on.
 _Avoid_: beep, alert sound
+
+**Knock**:
+The soft falling wooden sound that can come with the Critical quota toast, and only with it; off until the person turns it on.
+_Avoid_: alarm
 
 ### Usage statistics
 

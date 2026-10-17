@@ -87,7 +87,7 @@ internal sealed class RateLimitedException(DateTime until) : Exception($"rate li
 internal sealed record Thresholds(int Important, int Critical);
 
 /// <summary>О чём тост квоты, по возрастанию важности: окно сбросилось, при таком темпе не хватит до сброса, пороги.</summary>
-internal enum QuotaLevel
+public enum QuotaLevel
 {
 	Reset,
 	Pace,
@@ -173,6 +173,9 @@ internal sealed class QuotaAlarm
 
 		return alerts;
 	}
+
+	/// <summary>Звук — только к «критично», когда он включён: осталось мало. Остальные тосты о квоте тихие.</summary>
+	public static bool Knocks(QuotaAlert alert, bool enabled) => enabled && alert.Level == QuotaLevel.Critical;
 
 	/// <summary>Самая серьёзная из новых тревог всех агентов: выше порога у двух разом бывает разве что при
 	/// запуске — тост один, о главном. Пороги взводятся у всех, а не только у сказанного.</summary>

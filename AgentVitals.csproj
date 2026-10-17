@@ -29,6 +29,7 @@
   <ItemGroup>
     <AvaloniaResource Include="app.png" />
     <EmbeddedResource Include="chime.wav" LogicalName="chime.wav" />
+    <EmbeddedResource Include="low.wav" LogicalName="low.wav" />
     <InternalsVisibleTo Include="AgentVitals.Tests" />
   </ItemGroup>
 

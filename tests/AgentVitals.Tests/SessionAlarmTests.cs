@@ -61,11 +61,14 @@ public class SessionAlarmTests
 		Assert.Equal(chimes, SessionAlarm.Chimes(new SessionAlert(Live(SessionState.Waiting), waiting), enabled, inFront));
 
 	[Fact]
-	public void ChimeIsBuiltIn() // звук внутри exe: файла рядом нет, и пропасть ему неоткуда
+	public void SoundsAreBuiltIn() // звуки внутри exe: файлов рядом нет, и пропасть им неоткуда
 	{
-		var wave = Sound.Chime;
+		foreach (var wave in new[] { Sound.Chime, Sound.Low })
+		{
+			Assert.Equal("RIFF", System.Text.Encoding.ASCII.GetString(wave, 0, 4));
+			Assert.Equal("WAVE", System.Text.Encoding.ASCII.GetString(wave, 8, 4));
+		}
 
-		Assert.Equal("RIFF", System.Text.Encoding.ASCII.GetString(wave, 0, 4));
-		Assert.Equal("WAVE", System.Text.Encoding.ASCII.GetString(wave, 8, 4));
+		Assert.NotEqual(Sound.Chime, Sound.Low); // на слух не спутать вопрос агента и конец квоты
 	}
 }

@@ -45,8 +45,11 @@ internal partial class SettingsPanel : UserControl
 		WaitingSoundToggle.IsChecked = Store.Current.WaitingSound;
 		WaitingSoundToggle.IsEnabled = Store.Current.SessionToasts;
 
+		LowSoundToggle.IsChecked = Store.Current.LowSound;
+
 		// Звук играет только Windows (winmm).
 		WaitingSoundToggle.IsVisible = OperatingSystem.IsWindows();
+		LowSoundToggle.IsVisible = OperatingSystem.IsWindows();
 		AutostartCard.IsVisible = OperatingSystem.IsWindows();
 
 		if (OperatingSystem.IsWindows())
@@ -137,6 +140,15 @@ internal partial class SettingsPanel : UserControl
 			Store.Current.SessionToasts = SessionToastsToggle.IsChecked == true;
 			TurnPanel.IsEnabled = Store.Current.SessionToasts;
 			WaitingSoundToggle.IsEnabled = Store.Current.SessionToasts;
+			Store.Save();
+		}
+	}
+
+	private void OnLowSound(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading)
+		{
+			Store.Current.LowSound = LowSoundToggle.IsChecked == true;
 			Store.Save();
 		}
 	}

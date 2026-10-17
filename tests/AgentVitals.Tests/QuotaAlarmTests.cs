@@ -153,6 +153,15 @@ public class QuotaAlarmTests
 		Assert.Equal([(61, QuotaLevel.Pace)], Levels(Halfway(61)));
 	}
 
+	[Theory]
+	[InlineData(QuotaLevel.Critical, true, true)]
+	[InlineData(QuotaLevel.Important, true, false)] // четверть ещё есть — тихий тост
+	[InlineData(QuotaLevel.Pace, true, false)] // ранний прогноз — тоже
+	[InlineData(QuotaLevel.Reset, true, false)]
+	[InlineData(QuotaLevel.Critical, false, false)] // звук выключен в настройках
+	public void KnocksOnlyWhenAlmostUsedUp(QuotaLevel level, bool enabled, bool knocks) =>
+		Assert.Equal(knocks, QuotaAlarm.Knocks(new QuotaAlert("Claude", Session(91), level), enabled));
+
 	[Fact]
 	public void SessionAndWeekWarnSeparately()
 	{

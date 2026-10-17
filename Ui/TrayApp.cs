@@ -252,6 +252,11 @@ internal sealed class TrayApp
 
 			_toast.Say(message, Anchor(), title, Views.Brush(brush), Toast.Long, () => OpenPopover(settings: false));
 
+			if (QuotaAlarm.Knocks(alert, Store.Current.LowSound))
+			{
+				Sound.Play(Sound.Low);
+			}
+
 			// Тост живёт секунды: по журналу видно, был ли он, если человек отошёл от экрана.
 			Journal.Add($"toast: {title}: {message}");
 		}
@@ -289,7 +294,7 @@ internal sealed class TrayApp
 
 			if (SessionAlarm.Chimes(alert, Store.Current.WaitingSound, alert.Session is { Pid: { } pid, Cwd: { } cwd } && HostWindow.InFront(pid, cwd)))
 			{
-				Sound.Play();
+				Sound.Play(Sound.Chime);
 			}
 		}
 	}

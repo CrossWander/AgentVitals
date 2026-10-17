@@ -95,6 +95,7 @@
     <x:String x:Key="langCacheSaved">кеш заощадив {0}</x:String>
     <x:String x:Key="langLevelImportant">Квота: «важливо» з</x:String>
     <x:String x:Key="langLevelCritical">Квота: «критично» з</x:String>
+    <x:String x:Key="langLowSound">Звук, коли квоту майже вичерпано</x:String>
     <x:String x:Key="langSessionToasts">Повідомляти про кінець ходу й питання</x:String>
     <x:String x:Key="langWaitingSound">Звук, коли агент чекає дозволу</x:String>
     <x:String x:Key="langTurnLonger">ПРО КІНЕЦЬ ХОДУ, ЯКЩО ВІН ДОВШИЙ</x:String>
