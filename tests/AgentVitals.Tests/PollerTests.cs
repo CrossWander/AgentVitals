@@ -20,7 +20,7 @@ public class PollerTests
 
 	[Fact]
 	public void ExpiredTokenRechecksOnNextTick() =>
-		Assert.Equal(_now, Poller.Schedule(new TokenExpiredException("claude"), 60, _now));
+		Assert.Equal(_now, Poller.Schedule(new SignInException("claude"), 60, _now));
 
 	[Fact]
 	public void RateLimitWaitsUntilAllowed() =>
@@ -95,7 +95,7 @@ public class PollerTests
 		await state.FetchAsync(http, _now);
 		Assert.True(Poller.Offline([state]));
 
-		answer = new TokenExpiredException("fake"); // сервер ответил: сеть есть, повтор не поможет
+		answer = new SignInException("fake"); // сервер ответил: сеть есть, повтор не поможет
 		await state.FetchAsync(http, _now);
 		Assert.False(Poller.Offline([state]));
 
@@ -160,7 +160,7 @@ public class PollerTests
 	public async Task ExpiredSignInHasNoTightest() // старые проценты при истёкшем входе ничего не говорят — серое
 	{
 		using var http = new HttpClient();
-		var state = new ProviderState(new Fake(() => throw new TokenExpiredException("fake")))
+		var state = new ProviderState(new Fake(() => throw new SignInException("fake")))
 		{
 			Snapshot = new("Max", null, [new(WindowKind.Session, null, 40, null, Limiting: true)], null),
 		};
@@ -206,7 +206,7 @@ public class PollerTests
 		using var http = new HttpClient();
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
-		var state = new ProviderState(new Fake(() => throw new TokenExpiredException("fake"), credentials));
+		var state = new ProviderState(new Fake(() => throw new SignInException("fake"), credentials));
 
 		await state.FetchAsync(http, _now);
 		Assert.Equal(DateTime.MaxValue, state.NextFetch(60));
@@ -226,12 +226,30 @@ public class PollerTests
 		{
 			File.SetLastWriteTimeUtc(credentials, DateTime.UtcNow.AddMinutes(1));
 
-			throw new TokenExpiredException("fake");
+			throw new SignInException("fake");
 		}, credentials));
 
 		await state.FetchAsync(http, _now);
 
 		Assert.Equal(_now, state.NextFetch(60));
+	}
+
+	[Fact]
+	public void NoSubscriptionIsAskedAgainNextDay() => // подписку могли оформить, пока программа работает; вход git от этого не меняется
+		Assert.Equal(_now.AddDays(1), Poller.Schedule(new SignInException("git", SignInProblem.NoSubscription), 60, _now));
+
+	[Fact]
+	public async Task NoSubscriptionDoesNotWaitForNewCredentials()
+	{
+		using var temp = new TempDirectory();
+		var credentials = temp.File("auth.json");
+		File.WriteAllText(credentials, "{}");
+		var state = new ProviderState(new Fake(() => throw new SignInException("git", SignInProblem.NoSubscription), credentials));
+		using var http = new HttpClient();
+
+		await state.FetchAsync(http, _now);
+
+		Assert.Equal(_now.AddDays(1), state.NextFetch(60));
 	}
 
 	[Fact]
@@ -258,7 +276,7 @@ public class PollerTests
 		using var temp = new TempDirectory();
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
-		var state = new ProviderState(new Fake(() => throw new TokenExpiredException("git", "langErrorNoCopilot"), credentials, confirmFirst: true));
+		var state = new ProviderState(new Fake(() => throw new SignInException("git", SignInProblem.NoSubscription), credentials, confirmFirst: true));
 		using var http = new HttpClient();
 
 		await state.FetchAsync(http, _now);
@@ -274,7 +292,7 @@ public class PollerTests
 		var credentials = temp.File("auth.json");
 		File.WriteAllText(credentials, "{}");
 		var calls = 0;
-		var state = new ProviderState(new Fake(() => ++calls == 1 ? _snapshot : throw new TokenExpiredException("git", "langErrorGitHub"), credentials, confirmFirst: true));
+		var state = new ProviderState(new Fake(() => ++calls == 1 ? _snapshot : throw new SignInException("git", SignInProblem.Rejected), credentials, confirmFirst: true));
 		using var http = new HttpClient();
 
 		await state.FetchAsync(http, _now);

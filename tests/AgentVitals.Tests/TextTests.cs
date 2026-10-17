@@ -32,10 +32,10 @@ public class TextTests
 		Assert.Equal("agent_mode", Text.Title(new QuotaWindow(WindowKind.MonthFeature, "agent_mode", 0, null, Limiting: true)));
 
 	[Fact]
-	public void RejectionSpeaksForItsAgent() // «нет Copilot» — не «вход истёк, запустите git»
+	public void RejectionSpeaksForItsAgent() // «нет Copilot» — не «вход истёк, запустите git»; в тестах своих строк агента нет — общая
 	{
-		Assert.Equal("langErrorNoCopilot", Text.Error(new TokenExpiredException("git", "langErrorNoCopilot")));
-		Assert.Equal("langErrorExpired", Text.Error(new TokenExpiredException("claude")));
+		Assert.Equal("langErrorNoSubscription", Text.Error(new SignInException("git", SignInProblem.NoSubscription), "Copilot"));
+		Assert.Equal("langErrorExpired", Text.Error(new SignInException("claude"), "Claude"));
 	}
 
 	[Theory]

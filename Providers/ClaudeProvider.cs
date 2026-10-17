@@ -57,7 +57,7 @@ internal sealed class ClaudeProvider : IProvider
 		// «Диспетчере учётных данных» — берём тот, что действует дольше.
 		var file = File.Exists(Credentials) ? await SharedFile.ReadAllTextAsync(Credentials, cancellation) : null;
 		var vault = OperatingSystem.IsWindows() ? FromVault(target => CredentialManager.Read(target)?.Secret) : null;
-		var oauth = Pick(file, vault) ?? throw new TokenExpiredException(Cli);
+		var oauth = Pick(file, vault) ?? throw new SignInException(Cli);
 
 		var token = (string?)oauth["accessToken"];
 		var expires = DateTimeOffset.FromUnixTimeMilliseconds((long?)oauth["expiresAt"] ?? 0);
@@ -65,7 +65,7 @@ internal sealed class ClaudeProvider : IProvider
 		// Истёкший токен сервер всё равно отклонит — незачем тратить на это запрос.
 		if (string.IsNullOrEmpty(token) || expires <= DateTimeOffset.Now)
 		{
-			throw new TokenExpiredException(Cli);
+			throw new SignInException(Cli);
 		}
 
 		using var request = new HttpRequestMessage(HttpMethod.Get, _url);

@@ -36,7 +36,7 @@ internal sealed class GeminiProvider : IProvider
 	{
 		if ((string?)JsonNode.Parse(await SharedFile.ReadAllTextAsync(Credentials, cancellation))?["access_token"] is not { Length: > 0 } token)
 		{
-			throw new TokenExpiredException(Cli);
+			throw new SignInException(Cli);
 		}
 
 		var load = await PostAsync(http, token, "loadCodeAssist", new JsonObject

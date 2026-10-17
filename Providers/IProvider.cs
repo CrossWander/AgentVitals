@@ -40,7 +40,7 @@ internal interface IProvider
 	/// <param name="http">Общий HTTP-клиент программы.</param>
 	/// <param name="cancellation">Отмена запроса.</param>
 	/// <returns>Снимок квот.</returns>
-	/// <exception cref="TokenExpiredException">Вход истёк или отклонён сервером.</exception>
+	/// <exception cref="SignInException">Вход истёк или отклонён сервером.</exception>
 	/// <exception cref="RateLimitedException">Сервер просит подождать.</exception>
 	Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation);
 }

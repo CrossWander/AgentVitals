@@ -23,6 +23,20 @@ public class LangTests
 		}
 	}
 
+	[Fact]
+	public void EverySignInProblemHasText() // у агента своей строки может не быть — тогда общая, и она должна быть
+	{
+		foreach (var file in Directory.GetFiles(Path.Combine(Root(), "Lang"), "*.axaml"))
+		{
+			var text = File.ReadAllText(file);
+
+			foreach (var problem in Enum.GetValues<SignInProblem>())
+			{
+				Assert.Contains($"x:Key=\"langError{problem}\"", text, StringComparison.Ordinal);
+			}
+		}
+	}
+
 	private static string Root()
 	{
 		var folder = new DirectoryInfo(AppContext.BaseDirectory);

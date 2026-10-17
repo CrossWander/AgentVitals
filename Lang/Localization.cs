@@ -49,5 +49,8 @@ internal static class Localization
 	public static string Get(string key) =>
 		_strings is not null && _strings.TryGetResource(key, null, out var value) && value is string text ? text : key;
 
+	/// <summary>Есть ли такая строка: у агента бывает своя, а нет — берётся общая.</summary>
+	public static bool Has(string key) => _strings is not null && _strings.TryGetResource(key, null, out var value) && value is string;
+
 	public static string Format(string key, params object?[] arguments) => string.Format(Culture, Get(key), arguments);
 }

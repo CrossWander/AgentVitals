@@ -95,9 +95,9 @@ public class CursorProviderTests
 		using var http = new HttpClient(new Answer(HttpStatusCode.Unauthorized));
 		var token = Jwt("auth0|user_01ABC");
 
-		var error = await Assert.ThrowsAsync<TokenExpiredException>(() => CursorProvider.AskAsync(http, token, null, CancellationToken.None));
+		var error = await Assert.ThrowsAsync<SignInException>(() => CursorProvider.AskAsync(http, token, null, CancellationToken.None));
 
-		Assert.Equal("langErrorCursor", error.Text);
+		Assert.Equal(SignInProblem.Rejected, error.Problem);
 		Assert.DoesNotContain(token, error.ToString());
 	}
 }

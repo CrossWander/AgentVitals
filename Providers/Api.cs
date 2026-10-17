@@ -32,7 +32,7 @@ internal static class Api
 
 		if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
 		{
-			throw new TokenExpiredException(cli);
+			throw new SignInException(cli);
 		}
 
 		if (response.StatusCode == HttpStatusCode.TooManyRequests)

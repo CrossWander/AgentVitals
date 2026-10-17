@@ -61,7 +61,7 @@ internal sealed class CopilotProvider : IProvider
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) =>
 		CredentialManager.Read(Target) is { } login
 			? await AskAsync(http, login.Secret, cancellation)
-			: throw new TokenExpiredException(Cli, "langErrorGitHub");
+			: throw new SignInException(Cli, SignInProblem.Missing);
 
 	/// <summary>Один GET с токеном на самом запросе — не в общем клиенте: в другие запросы он не попадёт, а при
 	/// редиректе .NET заголовок входа не переносит.</summary>
@@ -77,15 +77,15 @@ internal sealed class CopilotProvider : IProvider
 	/// запросов — ждать, как 429. null — не отказ.</summary>
 	internal static Exception? Refusal(HttpResponseMessage response) => response.StatusCode switch
 	{
-		HttpStatusCode.Unauthorized => new TokenExpiredException(_cli, "langErrorGitHub"),
+		HttpStatusCode.Unauthorized => new SignInException(_cli, SignInProblem.Rejected),
 		HttpStatusCode.Forbidden when response.Headers.TryGetValues("X-RateLimit-Remaining", out var left) && left.FirstOrDefault() == "0" =>
 			new RateLimitedException(Api.RetryAt(response.Headers.RetryAfter, DateTime.UtcNow)),
-		HttpStatusCode.Forbidden or HttpStatusCode.NotFound => new TokenExpiredException(_cli, "langErrorNoCopilot"),
+		HttpStatusCode.Forbidden or HttpStatusCode.NotFound => new SignInException(_cli, SignInProblem.NoSubscription),
 		_ => null,
 	};
 
 	/// <summary>Окно на каждый ограниченный снимок квоты. Ни окна, ни платного плана — Copilot у аккаунта нет.</summary>
-	/// <exception cref="TokenExpiredException">GitHub не подтвердил Copilot.</exception>
+	/// <exception cref="SignInException">GitHub не подтвердил Copilot.</exception>
 	internal static Snapshot Parse(JsonNode user)
 	{
 		// Дата без времени — полночь UTC: так GitHub и сбрасывает.
@@ -105,7 +105,7 @@ internal sealed class CopilotProvider : IProvider
 
 		if (windows.Count == 0 && (free || sku.Length == 0))
 		{
-			throw new TokenExpiredException(_cli, "langErrorNoCopilot");
+			throw new SignInException(_cli, SignInProblem.NoSubscription);
 		}
 
 		return new(free ? "Free" : Quota.PlanName((string?)user["copilot_plan"]), (string?)user["login"], windows, null);

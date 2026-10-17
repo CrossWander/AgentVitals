@@ -92,8 +92,8 @@ public class CopilotProviderTests
 
 	[Fact]
 	public void FreeWithoutQuotasIsNoCopilot() =>
-		Assert.Equal("langErrorNoCopilot", Assert.Throws<TokenExpiredException>(() => CopilotProvider.Parse(JsonNode.Parse(
-			"""{"access_type_sku":"free_limited_copilot","quota_snapshots":{"chat":{"entitlement":0,"remaining":0,"percent_remaining":0,"unlimited":false}}}""")!)).Text);
+		Assert.Equal(SignInProblem.NoSubscription, Assert.Throws<SignInException>(() => CopilotProvider.Parse(JsonNode.Parse(
+			"""{"access_type_sku":"free_limited_copilot","quota_snapshots":{"chat":{"entitlement":0,"remaining":0,"percent_remaining":0,"unlimited":false}}}""")!)).Problem);
 
 	[Fact]
 	public void PaidWithoutQuotasIsEmptyNotError() // безлимит: только строка тарифа
@@ -106,14 +106,14 @@ public class CopilotProviderTests
 	}
 
 	[Theory]
-	[InlineData(HttpStatusCode.Unauthorized, "langErrorGitHub")]
-	[InlineData(HttpStatusCode.Forbidden, "langErrorNoCopilot")]
-	[InlineData(HttpStatusCode.NotFound, "langErrorNoCopilot")]
-	public void RefusalSaysWhy(HttpStatusCode status, string text)
+	[InlineData(HttpStatusCode.Unauthorized, SignInProblem.Rejected)]
+	[InlineData(HttpStatusCode.Forbidden, SignInProblem.NoSubscription)]
+	[InlineData(HttpStatusCode.NotFound, SignInProblem.NoSubscription)]
+	public void RefusalSaysWhy(HttpStatusCode status, SignInProblem problem)
 	{
 		using var response = new HttpResponseMessage(status);
 
-		Assert.Equal(text, Assert.IsType<TokenExpiredException>(CopilotProvider.Refusal(response)).Text);
+		Assert.Equal(problem, Assert.IsType<SignInException>(CopilotProvider.Refusal(response)).Problem);
 	}
 
 	[Fact]
@@ -152,9 +152,9 @@ public class CopilotProviderTests
 	{
 		using var http = new HttpClient(new Answer(HttpStatusCode.Unauthorized));
 
-		var error = await Assert.ThrowsAsync<TokenExpiredException>(() => CopilotProvider.AskAsync(http, "gho_secret", CancellationToken.None));
+		var error = await Assert.ThrowsAsync<SignInException>(() => CopilotProvider.AskAsync(http, "gho_secret", CancellationToken.None));
 
-		Assert.Equal("langErrorGitHub", error.Text);
+		Assert.Equal(SignInProblem.Rejected, error.Problem);
 		Assert.DoesNotContain("gho_secret", error.ToString());
 	}
 }

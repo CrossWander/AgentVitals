@@ -86,7 +86,8 @@ internal sealed class ProviderState(IProvider provider)
 		Error = error is RateLimitedException limited && started + Poller.Backoff(_refusals) is var longer && longer > limited.Until
 			? new RateLimitedException(longer)
 			: error;
-		_rejected = error is TokenExpiredException ? credentials : null;
+		// «Нет подписки» — не про вход: его переспрашивают раз в сутки, а не ждут, пока вход перепишут.
+		_rejected = error is SignInException { Problem: not SignInProblem.NoSubscription } ? credentials : null;
 	}
 
 	/// <summary>Дочитать логи агента. Статистика вторична: её сбой не должен ронять тик опроса — он async void.</summary>
@@ -160,7 +161,7 @@ internal sealed class ProviderState(IProvider provider)
 
 	/// <summary>Сколько израсходовано в самом узком окне; null — не известно. Истёкший вход — тоже null: старые
 	/// проценты уже ничего не говорят о том, можно ли работать.</summary>
-	public double? Tightest(DateTime now) => Error is TokenExpiredException ? null : Quota.Bottleneck(Windows(now))?.Used;
+	public double? Tightest(DateTime now) => Error is SignInException ? null : Quota.Bottleneck(Windows(now))?.Used;
 }
 
 /// <summary>Расписание запросов к провайдерам и их статус-страницам.</summary>
@@ -264,7 +265,9 @@ internal sealed class Poller
 
 		// Срок токена проверяется локально: тик ничего не стоит, а как только Claude Code
 		// обновит вход, данные вернутся на следующем тике.
-		TokenExpiredException => now,
+		// Подписку могли оформить, пока программа работает, а вход git от этого не меняется.
+		SignInException { Problem: SignInProblem.NoSubscription } => now.AddDays(1),
+		SignInException => now,
 		RateLimitedException limited => limited.Until,
 		_ => now.AddMinutes(5),
 	};

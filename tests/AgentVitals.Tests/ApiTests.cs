@@ -14,10 +14,10 @@ public class ApiTests
 		using var http = new HttpClient(new Answer(HttpStatusCode.NotFound));
 		using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/");
 
-		var error = await Assert.ThrowsAsync<TokenExpiredException>(() => Api.SendAsync(http, request, "git", CancellationToken.None,
-			response => response.StatusCode == HttpStatusCode.NotFound ? new TokenExpiredException("git", "langErrorNoCopilot") : null));
+		var error = await Assert.ThrowsAsync<SignInException>(() => Api.SendAsync(http, request, "git", CancellationToken.None,
+			response => response.StatusCode == HttpStatusCode.NotFound ? new SignInException("git", SignInProblem.NoSubscription) : null));
 
-		Assert.Equal("langErrorNoCopilot", error.Text);
+		Assert.Equal(SignInProblem.NoSubscription, error.Problem);
 	}
 
 	[Fact]
@@ -26,8 +26,8 @@ public class ApiTests
 		using var http = new HttpClient(new Answer(HttpStatusCode.Forbidden));
 		using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/");
 
-		var error = await Assert.ThrowsAsync<TokenExpiredException>(() => Api.SendAsync(http, request, "claude", CancellationToken.None));
+		var error = await Assert.ThrowsAsync<SignInException>(() => Api.SendAsync(http, request, "claude", CancellationToken.None));
 
-		Assert.Equal("langErrorExpired", error.Text);
+		Assert.Equal(SignInProblem.Expired, error.Problem);
 	}
 }

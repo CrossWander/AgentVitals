@@ -40,7 +40,7 @@ internal sealed class CodexProvider : IProvider
 
 		if ((string?)tokens?["access_token"] is not { Length: > 0 } token)
 		{
-			throw new TokenExpiredException(Cli);
+			throw new SignInException(Cli);
 		}
 
 		using var request = new HttpRequestMessage(HttpMethod.Get, _url);

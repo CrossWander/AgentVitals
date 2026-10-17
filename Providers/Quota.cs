@@ -75,13 +75,30 @@ public enum Health
 	Critical,
 }
 
-/// <summary>Вход истёк или отклонён: обновить его может только сам CLI агента (у Copilot — git).</summary>
-/// <param name="text">Ключ строки с тем, что сказать человеку; {0} в ней — команда CLI. Токена в сообщении нет никогда.</param>
-internal sealed class TokenExpiredException(string cli, string text = "langErrorExpired") : Exception($"{cli}: {text}")
+/// <summary>Что не так со входом агента.</summary>
+public enum SignInProblem
+{
+	/// <summary>Вход истёк: обновит его сам CLI агента.</summary>
+	Expired,
+
+	/// <summary>Входа нет вовсе.</summary>
+	Missing,
+
+	/// <summary>Сервер вход не принял.</summary>
+	Rejected,
+
+	/// <summary>Вход есть, а самого агента у аккаунта нет — как Copilot у аккаунта GitHub без него.</summary>
+	NoSubscription,
+}
+
+/// <summary>Со входом агента что-то не так; что сказать человеку, решает интерфейс по причине и агенту.</summary>
+/// <param name="cli">Чем обновляют вход: команда CLI агента, у Copilot — git.</param>
+/// <remarks>Токена в сообщении нет никогда: оно уходит в журнал.</remarks>
+internal sealed class SignInException(string cli, SignInProblem problem = SignInProblem.Expired) : Exception($"{cli}: sign-in {problem}")
 {
 	public string Cli { get; } = cli;
 
-	public string Text { get; } = text;
+	public SignInProblem Problem { get; } = problem;
 }
 
 /// <summary>Сервер просит подождать до указанного момента.</summary>

@@ -53,7 +53,7 @@ internal sealed class CursorProvider : IProvider
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) =>
 		Sqlite.Item(Credentials, "cursorAuth/accessToken") is { Length: > 0 } token
 			? await AskAsync(http, token, Sqlite.Item(Credentials, "cursorAuth/cachedEmail"), cancellation)
-			: throw new TokenExpiredException(Cli, "langErrorCursor");
+			: throw new SignInException(Cli, SignInProblem.Missing);
 
 	/// <summary>Кто вошёл: последняя часть sub из JWT после «|». Чужие символы в cookie не пускаем — тогда null.</summary>
 	internal static string? UserId(string token) =>
@@ -108,5 +108,5 @@ internal sealed class CursorProvider : IProvider
 
 	// 401 и 403 — cookie не приняли: войти в Cursor заново.
 	private static Exception? Refusal(HttpResponseMessage response) =>
-		response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden ? new TokenExpiredException(_cli, "langErrorCursor") : null;
+		response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden ? new SignInException(_cli, SignInProblem.Rejected) : null;
 }

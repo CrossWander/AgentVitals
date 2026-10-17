@@ -11,7 +11,7 @@ internal static class Text
 	/// <summary>Заголовок окна. У квоты функции — перевод её имени, а неизвестное имя — как есть.</summary>
 	public static string Title(QuotaWindow window) =>
 		window.Kind == WindowKind.MonthFeature
-			? Localization.Get($"langFeature_{window.Label}") is var name && name != $"langFeature_{window.Label}" ? name : window.Label ?? ""
+			? Localization.Has($"langFeature_{window.Label}") ? Localization.Get($"langFeature_{window.Label}") : window.Label ?? ""
 			: Localization.Format($"langWindow{window.Kind}", window.Label);
 
 	/// <summary>«сброс через 1 ч 12 мин», дальше суток — «сброс пт 10:00», а дальше недели — «сброс 1 нояб.».</summary>
@@ -46,9 +46,13 @@ internal static class Text
 		: now - time > TimeSpan.FromDays(1) ? Localization.Format("langUpdatedAt", time.ToLocalTime().ToString("ddd HH:mm", Localization.Culture))
 		: Localization.Format("langUpdatedAgo", Span(now - time));
 
-	public static string Error(Exception error) => error switch
+	/// <param name="agent">Чей отказ: у агента бывает своя строка — «Нет входа GitHub…» у Copilot, а нет — общая.</param>
+	public static string Error(Exception error, string agent) => error switch
 	{
-		TokenExpiredException expired => Localization.Format(expired.Text, expired.Cli),
+		SignInException refused => Localization.Format(
+			Localization.Has($"langError{refused.Problem}{agent}") ? $"langError{refused.Problem}{agent}" : $"langError{refused.Problem}",
+			refused.Cli,
+			agent),
 		RateLimitedException limited => Localization.Format("langErrorRateLimited", limited.Until.ToLocalTime().ToString("HH:mm", Localization.Culture)),
 		HttpRequestException or TaskCanceledException => Localization.Get("langErrorNetwork"),
 		_ => Localization.Get("langErrorParse"),

@@ -73,9 +73,9 @@ _Avoid_: burn rate, forecast
 Paid use past the plan, with its spent amount and monthly limit.
 _Avoid_: spend, overage
 
-**Sign-in expired**:
-The agent's sign-in no longer works; data comes back once the agent's own CLI renews it — for Copilot, git.
-_Avoid_: logged out, unauthorized
+**Sign-in problem**:
+Why an agent gives no data although it is installed: the sign-in **expired** (data comes back once the agent's own CLI renews it — for Copilot, git), is **missing**, was **rejected** by the server, or the account has **no subscription** to the agent, which is asked again once a day.
+_Avoid_: logged out, unauthorized, token expired
 
 ### Live sessions
 

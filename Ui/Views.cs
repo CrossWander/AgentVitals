@@ -230,7 +230,7 @@ internal static class Views
 			info,
 			Text.Ago(state.Updated, now),
 			cards,
-			state.Error is { } error ? Text.Error(error) : "",
+			state.Error is { } error ? Text.Error(error, state.Provider.Name) : "",
 			state.Provider.Dashboard,
 			state.Provider.Usage is null ? null : Usage(state.Days),
 			state.Provider.Status is { } page ? Text.Status(state.Status, page.Name) : "",
