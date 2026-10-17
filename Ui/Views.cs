@@ -421,7 +421,7 @@ internal static class Views
 		var fill = extra.Limit is { } limit && limit > 0 ? (double)(extra.Used / limit * 100) : 0;
 
 		return new(
-			Localization.Get("langExtra").ToUpper(Localization.Culture),
+			Localization.Get(extra.Team ? "langExtraTeam" : "langExtra").ToUpper(Localization.Culture),
 			Shape("IconCoin"),
 			Brush("IconExtra"),
 			"",

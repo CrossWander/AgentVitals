@@ -12,6 +12,7 @@
     <x:String x:Key="langFeature_completions">Подсказки</x:String>
     <x:String x:Key="langFeature_premium_interactions">Премиум-запросы</x:String>
     <x:String x:Key="langExtra">Доп. расход</x:String>
+    <x:String x:Key="langExtraTeam">Командный пул</x:String>
     <x:String x:Key="langExtraOf">из {0}</x:String>
     <x:String x:Key="langExtraSpent">потрачено</x:String>
     <x:String x:Key="langResetsIn">сброс через {0}</x:String>

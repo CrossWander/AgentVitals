@@ -42,6 +42,25 @@ internal static partial class CredentialManager
 		}
 	}
 
+	/// <summary>Когда запись переписали; пароль при этом не расшифровывается — лишней его копии в памяти нет.</summary>
+	/// <returns>null — не Windows или записи нет.</returns>
+	public static DateTime? Written(string target)
+	{
+		if (!OperatingSystem.IsWindows() || !CredRead(target, _generic, 0, out var pointer))
+		{
+			return null;
+		}
+
+		try
+		{
+			return DateTime.FromFileTimeUtc(Marshal.PtrToStructure<Credential>(pointer).Written);
+		}
+		finally
+		{
+			CredFree(pointer);
+		}
+	}
+
 	/// <summary>Пароль из байтов записи: обычно UTF-8, а с нулевыми байтами — UTF-16LE. Пусто — null.</summary>
 	internal static string? Decode(ReadOnlySpan<byte> blob) =>
 		blob.IsEmpty ? null

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -124,6 +125,26 @@ public class CopilotProviderTests
 
 		Assert.IsType<RateLimitedException>(CopilotProvider.Refusal(response));
 	}
+
+	[Fact]
+	public void ExhaustedRateLimitWaitsUntilGitHubResets() // GitHub говорит, когда лимит вернётся, — не гадать пять минут
+	{
+		var reset = DateTimeOffset.UtcNow.AddMinutes(17);
+		using var response = new HttpResponseMessage(HttpStatusCode.Forbidden);
+		response.Headers.Add("X-RateLimit-Remaining", "0");
+		response.Headers.Add("X-RateLimit-Reset", reset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture));
+
+		var until = Assert.IsType<RateLimitedException>(CopilotProvider.Refusal(response)).Until;
+
+		Assert.Equal(reset.ToUnixTimeSeconds(), new DateTimeOffset(until, TimeSpan.Zero).ToUnixTimeSeconds());
+	}
+
+	[Theory]
+	[InlineData("""{"entitlement":200,"remaining":-20,"percent_remaining":-10,"unlimited":false}""")]
+	[InlineData("""{"entitlement":200,"remaining":-20,"unlimited":false}""")]
+	public void OverageGoesPastAHundred(string quota) =>
+		Assert.Equal(110, CopilotProvider.Parse(JsonNode.Parse(
+			"{\"access_type_sku\":\"copilot_pro\",\"quota_snapshots\":{\"premium_interactions\":" + quota + "}}")!).Windows[0].Used, 1);
 
 	[Fact]
 	public void OtherAnswersAreNotRefusals()

@@ -67,7 +67,7 @@ session toasts, their two sounds, start with Windows and the Claude Code hooks f
 | Codex | `GET chatgpt.com/backend-api/wham/usage` with `~/.codex/auth.json`; the account email from its `id_token` | working |
 | Gemini | `cloudcode-pa.googleapis.com` quota calls with `~/.gemini/oauth_creds.json` | not verified |
 | Copilot | `GET api.github.com/copilot_internal/user` with the GitHub sign-in git keeps in Windows Credential Manager (`git:https://github.com`) | working |
-| Cursor | `GET cursor.com/api/usage-summary` with the sign-in Cursor keeps in its `state.vscdb` (read-only) | not verified |
+| Cursor | `GET cursor.com/api/usage-summary` with the sign-in Cursor keeps in its `state.vscdb` (read-only): the plan with its Auto and API shares, and the spend past it — yours, or the team pool | not verified |
 
 An agent whose credential file is missing is simply not shown. Copilot shows up only after GitHub has
 confirmed it once: Copilot Chat comes with VS Code, so its folder alone says nothing.

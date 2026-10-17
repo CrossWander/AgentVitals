@@ -20,6 +20,20 @@ internal sealed class CursorProvider : IProvider
 	private const string _url = "https://cursor.com/api/usage-summary";
 	private const string _cli = "cursor";
 
+	/// <summary>Свой клиент: cookie сессии — только cursor.com. Общий при переадресации стирает лишь Authorization и
+	/// понёс бы cookie дальше, а Set-Cookie от Cursor копил бы у себя.</summary>
+	internal static SocketsHttpHandler Handler { get; } = new()
+	{
+		AllowAutoRedirect = false,
+		UseCookies = false,
+	};
+
+	// После Handler: статические поля создаются по порядку в файле.
+	private static readonly HttpClient _http = new(Handler)
+	{
+		Timeout = TimeSpan.FromSeconds(15),
+	};
+
 	public string Name => "Cursor";
 
 	public string Cli => _cli;
@@ -52,7 +66,7 @@ internal sealed class CursorProvider : IProvider
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) =>
 		Sqlite.Item(Credentials, "cursorAuth/accessToken") is { Length: > 0 } token
-			? await AskAsync(http, token, Sqlite.Item(Credentials, "cursorAuth/cachedEmail"), cancellation)
+			? await AskAsync(_http, token, Sqlite.Item(Credentials, "cursorAuth/cachedEmail"), cancellation)
 			: throw new SignInException(Cli, SignInProblem.Missing);
 
 	/// <summary>Кто вошёл: последняя часть sub из JWT после «|». Чужие символы в cookie не пускаем — тогда null.</summary>
@@ -98,12 +112,39 @@ internal sealed class CursorProvider : IProvider
 			}
 		}
 
-		if (windows.Count == 0 && (bool?)usage["isUnlimited"] != true)
+		var extra = Extra(usage);
+
+		if (windows.Count == 0 && extra is null && (bool?)usage["isUnlimited"] != true)
 		{
 			throw new JsonException("no plan usage in the Cursor answer");
 		}
 
-		return new(Quota.PlanName((string?)usage["membershipType"]), email, windows, null);
+		return new(Quota.PlanName((string?)usage["membershipType"]), email, windows, extra);
+	}
+
+	/// <summary>Расход сверх плана: свой, а без своего потолка — общий пул команды. Не проверено: Cursor считает в
+	/// центах — так понимает CodexBar, ClaudeBar об этом лишь догадывается.</summary>
+	private static ExtraUsage? Extra(JsonNode usage)
+	{
+		var own = Spend(usage["individualUsage"]?["onDemand"]);
+
+		return own is { Limit: > 0 } ? own
+			: (string?)usage["limitType"] == "team" && Spend(usage["teamUsage"]?["onDemand"]) is { } team ? team with { Team = true }
+			: own;
+	}
+
+	/// <summary>Расход в долларах; выключен, или потолка нет и ничего не потрачено, — карточки нет.</summary>
+	private static ExtraUsage? Spend(JsonNode? demand)
+	{
+		if ((bool?)demand?["enabled"] != true)
+		{
+			return null;
+		}
+
+		var used = ((decimal?)demand["used"] ?? 0) / 100;
+		decimal? limit = (decimal?)demand["limit"] is { } cents and > 0 ? cents / 100 : null;
+
+		return limit is null && used == 0 ? null : new(used, limit, "USD");
 	}
 
 	// 401 и 403 — cookie не приняли: войти в Cursor заново.

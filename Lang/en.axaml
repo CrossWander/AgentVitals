@@ -12,6 +12,7 @@
     <x:String x:Key="langFeature_completions">Completions</x:String>
     <x:String x:Key="langFeature_premium_interactions">Premium requests</x:String>
     <x:String x:Key="langExtra">Extra usage</x:String>
+    <x:String x:Key="langExtraTeam">Team pool</x:String>
     <x:String x:Key="langExtraOf">of {0}</x:String>
     <x:String x:Key="langExtraSpent">spent</x:String>
     <x:String x:Key="langResetsIn">resets in {0}</x:String>

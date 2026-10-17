@@ -52,7 +52,7 @@ internal sealed class CopilotProvider : IProvider
 	public bool Installed => OperatingSystem.IsWindows() && _signs.Any(Directory.Exists);
 
 	/// <summary>Git перезаписал вход — пора спросить снова; сам токен для этого не хранится.</summary>
-	public DateTime SignedIn => CredentialManager.Read(Target)?.Written ?? DateTime.MinValue;
+	public DateTime SignedIn => CredentialManager.Written(Target) ?? DateTime.MinValue;
 
 	// Copilot Chat встроен в VS Code, так что папка-признак есть почти у каждого: вкладка — только после ответа GitHub.
 	public bool ConfirmFirst => true;
@@ -79,10 +79,19 @@ internal sealed class CopilotProvider : IProvider
 	{
 		HttpStatusCode.Unauthorized => new SignInException(_cli, SignInProblem.Rejected),
 		HttpStatusCode.Forbidden when response.Headers.TryGetValues("X-RateLimit-Remaining", out var left) && left.FirstOrDefault() == "0" =>
-			new RateLimitedException(Api.RetryAt(response.Headers.RetryAfter, DateTime.UtcNow)),
+			new RateLimitedException(Reset(response) ?? Api.RetryAt(response.Headers.RetryAfter, DateTime.UtcNow)),
 		HttpStatusCode.Forbidden or HttpStatusCode.NotFound => new SignInException(_cli, SignInProblem.NoSubscription),
 		_ => null,
 	};
+
+	/// <summary>Когда GitHub вернёт лимит запросов: X-RateLimit-Reset в секундах Unix; нет или уже прошёл — null.</summary>
+	private static DateTime? Reset(HttpResponseMessage response) =>
+		response.Headers.TryGetValues("X-RateLimit-Reset", out var values)
+		&& long.TryParse(values.FirstOrDefault(), NumberStyles.None, CultureInfo.InvariantCulture, out var seconds)
+		&& DateTimeOffset.FromUnixTimeSeconds(seconds).UtcDateTime is var at
+		&& at > DateTime.UtcNow
+			? at
+			: null;
 
 	/// <summary>Окно на каждый ограниченный снимок квоты. Ни окна, ни платного плана — Copilot у аккаунта нет.</summary>
 	/// <exception cref="SignInException">GitHub не подтвердил Copilot.</exception>

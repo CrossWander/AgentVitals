@@ -360,6 +360,14 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void TeamPoolCardSaysSo() // командный пул Cursor — не свой расход
+	{
+		var state = new ProviderState(new GeminiProvider()) { Snapshot = new("Team", null, [], new ExtraUsage(300m, 1000m, "USD", Team: true)) };
+
+		Assert.Equal("LANGEXTRATEAM", Assert.Single(Views.Provider(state, DateTime.UtcNow, _levels).Cards).Title);
+	}
+
+	[Fact]
 	public void FeatureWindowGetsACard()
 	{
 		var state = new ProviderState(new GeminiProvider())

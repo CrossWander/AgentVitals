@@ -74,6 +74,56 @@ public class CursorProviderTests
 	[Fact]
 	public void NoPlanIsAParseError() => Assert.Throws<JsonException>(() => Plan("""{ "enabled": false }"""));
 
+	// Ответ с одним планом и расходом сверх него; team — командный пул, только при limitType "team".
+	private static Snapshot Spend(string onDemand, string? team = null) => CursorProvider.Parse(JsonNode.Parse($$"""
+		{ "billingCycleEnd": "2026-03-06T03:34:49.000Z", "membershipType": "pro", "limitType": "{{(team is null ? "user" : "team")}}", "isUnlimited": false,
+		  "individualUsage": { "plan": { "enabled": true, "used": 10, "limit": 2000 }, "onDemand": {{onDemand}} }
+		  {{(team is null ? "" : ", \"teamUsage\": { \"onDemand\": " + team + " }")}} }
+		""")!, null);
+
+	[Fact]
+	public void ReadsOnDemandSpendInDollars() => // центы, как считает CodexBar: лимит Pro 2000 — это $20
+		Assert.Equal(new ExtraUsage(12.34m, 50m, "USD"), Spend("""{ "enabled": true, "used": 1234, "limit": 5000 }""").Extra);
+
+	[Fact]
+	public void OnDemandWithoutLimitShowsSpendOnly() =>
+		Assert.Equal(new ExtraUsage(5m, null, "USD"), Spend("""{ "enabled": true, "used": 500, "limit": null }""").Extra);
+
+	[Fact]
+	public void UntouchedOnDemandWithoutLimitIsNoCard() => Assert.Null(Spend("""{ "enabled": true, "used": 0, "limit": null }""").Extra);
+
+	[Fact]
+	public void DisabledOnDemandIsNoCard() => Assert.Null(CursorProvider.Parse(JsonNode.Parse(_usage)!, null).Extra);
+
+	[Fact]
+	public void TeamPoolWhenThereIsNoPersonalCap() =>
+		Assert.Equal(new ExtraUsage(300m, 1000m, "USD", Team: true),
+			Spend("""{ "enabled": false, "used": 0, "limit": null }""", team: """{ "enabled": true, "used": 30000, "limit": 100000 }""").Extra);
+
+	[Fact]
+	public void PersonalCapWinsOverTeamPool() =>
+		Assert.Equal(new ExtraUsage(1m, 20m, "USD"),
+			Spend("""{ "enabled": true, "used": 100, "limit": 2000 }""", team: """{ "enabled": true, "used": 30000, "limit": 100000 }""").Extra);
+
+	[Fact]
+	public void OnDemandAloneIsNotAParseError() // плана нет, а расход сверх него — есть
+	{
+		var snapshot = CursorProvider.Parse(JsonNode.Parse("""
+			{ "billingCycleEnd": "2026-03-06T03:34:49.000Z", "isUnlimited": false,
+			  "individualUsage": { "plan": { "enabled": false }, "onDemand": { "enabled": true, "used": 700, "limit": 1000 } } }
+			""")!, null);
+
+		Assert.Empty(snapshot.Windows);
+		Assert.Equal(new ExtraUsage(7m, 10m, "USD"), snapshot.Extra);
+	}
+
+	[Fact]
+	public void SessionCookieStaysWithCursor() // .NET при переадресации стирает только Authorization — cookie понёс бы дальше
+	{
+		Assert.False(CursorProvider.Handler.AllowAutoRedirect);
+		Assert.False(CursorProvider.Handler.UseCookies); // и чужие Set-Cookie не копятся в общем клиенте
+	}
+
 	[Fact]
 	public async Task SendsTheSessionCookie()
 	{

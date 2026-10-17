@@ -52,8 +52,8 @@ internal sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, 
 	public QuotaWindow At(DateTime now) => ResetsAt?.UtcDateTime <= now ? this with { Used = 0 } : this;
 }
 
-/// <summary>Расход сверх тарифа в деньгах; Limit null — потолка нет.</summary>
-internal sealed record ExtraUsage(decimal Used, decimal? Limit, string Currency);
+/// <summary>Расход сверх тарифа в деньгах; Limit null — потолка нет. Team — общий пул команды (Cursor), а не свой расход.</summary>
+internal sealed record ExtraUsage(decimal Used, decimal? Limit, string Currency, bool Team = false);
 
 /// <summary>Квоты одного провайдера на момент запроса.</summary>
 internal sealed record Snapshot(string Plan, string? Account, IReadOnlyList<QuotaWindow> Windows, ExtraUsage? Extra);

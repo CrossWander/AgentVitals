@@ -70,7 +70,7 @@ The moment a quota window would be exhausted if used as fast as so far; told onl
 _Avoid_: burn rate, forecast
 
 **Extra usage**:
-Paid use past the plan, with its spent amount and monthly limit.
+Paid use past the plan, with its spent amount and monthly limit; for Cursor, the on-demand spend, or the team's shared pool when there is no personal limit.
 _Avoid_: spend, overage
 
 **Sign-in problem**:

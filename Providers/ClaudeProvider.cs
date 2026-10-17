@@ -46,8 +46,8 @@ internal sealed class ClaudeProvider : IProvider
 	public DateTime SignedIn => new[]
 	{
 		File.GetLastWriteTimeUtc(Credentials),
-		CredentialManager.Read(Vault)?.Written ?? DateTime.MinValue,
-		CredentialManager.Read(Vault + "#m")?.Written ?? DateTime.MinValue,
+		CredentialManager.Written(Vault) ?? DateTime.MinValue,
+		CredentialManager.Written(Vault + "#m") ?? DateTime.MinValue,
 	}.Max();
 
 	/// <inheritdoc/>
