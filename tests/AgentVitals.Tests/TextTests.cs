@@ -28,6 +28,10 @@ public class TextTests
 	}
 
 	[Fact]
+	public void FeatureTitleFallsBackToItsName() => // перевода нет — имя функции как есть
+		Assert.Equal("agent_mode", Text.Title(new QuotaWindow(WindowKind.MonthFeature, "agent_mode", 0, null, Limiting: true)));
+
+	[Fact]
 	public void MissingCostIsADash() => Assert.Equal("—", Text.Cost(null));
 
 	[Theory]

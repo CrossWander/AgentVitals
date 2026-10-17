@@ -8,7 +8,11 @@ namespace AgentVitals;
 /// <summary>Подписи на языке интерфейса: из ключа, данных и текущего времени.</summary>
 internal static class Text
 {
-	public static string Title(QuotaWindow window) => Localization.Format($"langWindow{window.Kind}", window.Label);
+	/// <summary>Заголовок окна. У квоты функции — перевод её имени, а неизвестное имя — как есть.</summary>
+	public static string Title(QuotaWindow window) =>
+		window.Kind == WindowKind.MonthFeature
+			? Localization.Get($"langFeature_{window.Label}") is var name && name != $"langFeature_{window.Label}" ? name : window.Label ?? ""
+			: Localization.Format($"langWindow{window.Kind}", window.Label);
 
 	/// <summary>«сброс через 1 ч 12 мин», а дальше суток — «сброс пт 10:00».</summary>
 	public static string Until(DateTimeOffset? resets, DateTime now)

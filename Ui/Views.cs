@@ -380,7 +380,7 @@ internal static class Views
 		{
 			WindowKind.Session => ("IconBolt", "IconSession"),
 			WindowKind.Week or WindowKind.Day or WindowKind.Month => ("IconCalendar", "IconWeek"),
-			WindowKind.WeekModel or WindowKind.Model => ("IconSpark", "IconModel"),
+			WindowKind.WeekModel or WindowKind.Model or WindowKind.MonthFeature => ("IconSpark", "IconModel"),
 		};
 
 		var pace = Quota.Expected(window, now);

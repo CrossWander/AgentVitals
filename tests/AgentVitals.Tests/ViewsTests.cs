@@ -351,4 +351,18 @@ public class ViewsTests
 
 		Assert.Equal([0, 7, 14, 21, 28], Views.AxisX(days).Select(tick => tick.Index));
 	}
+
+	[Fact]
+	public void FeatureWindowGetsACard()
+	{
+		var state = new ProviderState(new GeminiProvider())
+		{
+			Snapshot = new("Free", "octocat", [new(WindowKind.MonthFeature, "chat", 30, DateTime.UtcNow.AddDays(10), Limiting: true)], null),
+		};
+
+		var card = Assert.Single(Views.Provider(state, DateTime.UtcNow, _levels).Cards);
+
+		Assert.Equal("CHAT", card.Title);
+		Assert.True(card.HasPace); // 30 дней — темп известен
+	}
 }

@@ -18,6 +18,9 @@ public enum WindowKind
 	/// <summary>Окно на 30 дней — например, единственный лимит бесплатного плана Codex.</summary>
 	Month,
 
+	/// <summary>Месячная квота одной функции (Label — её сырое имя: chat, completions…; перевод — при показе).</summary>
+	MonthFeature,
+
 	/// <summary>Недельный лимит одной модели (Label — её имя).</summary>
 	WeekModel,
 
@@ -39,7 +42,8 @@ internal sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, 
 		WindowKind.Session => TimeSpan.FromHours(5),
 		WindowKind.Day => TimeSpan.FromDays(1),
 		WindowKind.Week or WindowKind.WeekModel => TimeSpan.FromDays(7),
-		WindowKind.Month => TimeSpan.FromDays(30),
+		// ponytail: месяц — 30 дней; в 31-дневном метки темпа в первые сутки нет, в феврале она чуть отстаёт.
+		WindowKind.Month or WindowKind.MonthFeature => TimeSpan.FromDays(30),
 		WindowKind.Model => null,
 	};
 

@@ -42,6 +42,19 @@ public class QuotaTests
 	}
 
 	[Fact]
+	public void FeatureWindowLastsAMonth() => Assert.Equal(TimeSpan.FromDays(30), QuotaWindow.LengthOf(WindowKind.MonthFeature));
+
+	[Fact]
+	public void LongMonthHasNoPaceYet() // сброс через 31 день: месяц у нас — 30 дней, метки и прогноза пока нет
+	{
+		var now = new DateTime(2026, 10, 17, 12, 0, 0, DateTimeKind.Utc);
+		var window = new QuotaWindow(WindowKind.MonthFeature, "chat", 10, now.AddDays(31), Limiting: true);
+
+		Assert.Null(Quota.Expected(window, now));
+		Assert.Null(Quota.Runout(window, now));
+	}
+
+	[Fact]
 	public void NoRunoutWithoutReset() => Assert.Null(Quota.Runout(Window(95), DateTime.UtcNow));
 
 	[Fact]

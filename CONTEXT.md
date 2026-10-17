@@ -31,6 +31,9 @@ The seven-day quota window, either for all models or for one model family.
 **Model window**:
 A quota window of one Gemini model family whose length is not told.
 
+**Feature window**:
+A monthly quota window of one feature of an agent — Copilot's chat, completions or premium requests, Cursor's Auto or API share.
+
 **Limiting window**:
 A quota window that stops all work when it runs out, such as the session window; a week window for one model family is not.
 _Avoid_: blocking window

@@ -8,6 +8,9 @@
     <x:String x:Key="langWindowMonth">Месяц</x:String>
     <x:String x:Key="langWindowWeekModel">Неделя · {0}</x:String>
     <x:String x:Key="langWindowModel">{0}</x:String>
+    <x:String x:Key="langFeature_chat">Чат</x:String>
+    <x:String x:Key="langFeature_completions">Подсказки</x:String>
+    <x:String x:Key="langFeature_premium_interactions">Премиум-запросы</x:String>
     <x:String x:Key="langExtra">Доп. расход</x:String>
     <x:String x:Key="langExtraOf">из {0}</x:String>
     <x:String x:Key="langExtraSpent">потрачено</x:String>
