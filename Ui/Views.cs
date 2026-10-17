@@ -71,11 +71,16 @@ internal sealed record ProviderView(
 	public bool HasError => Error.Length > 0;
 }
 
+/// <param name="Prompt">Первый запрос сессии; null — ещё не известен или экран показывают другим.</param>
+/// <param name="Namesake">В той же папке идёт другая сессия агента: у обеих вместо ветки — запрос, иначе строк не различить.</param>
 /// <param name="Session">Сама сессия: по щелчку на строке поднимается окно, где она идёт.</param>
-internal sealed record SessionView(string Folder, string Branch, string State, IBrush Dot, Session Session)
+internal sealed record SessionView(string Folder, string Branch, string? Prompt, bool Namesake, string State, IBrush Dot, Session Session)
 {
-	/// <summary>Подсказка над строкой: длинные имя папки и ветка в строке обрезаны троеточием.</summary>
-	public string Tip => Branch.Length > 0 ? $"{Folder}\n{Branch}" : Folder;
+	/// <summary>Вторая подпись строки: ветка, а у тёзок — первый запрос.</summary>
+	public string Detail => Namesake && Prompt is not null ? Prompt : Branch;
+
+	/// <summary>Подсказка над строкой: длинные имя папки, ветка и запрос в строке обрезаны троеточием.</summary>
+	public string Tip => string.Join("\n", new[] { Folder, Branch, Prompt }.Where(text => !string.IsNullOrEmpty(text)));
 }
 
 /// <summary>Что откладывать по высоте столбиков графика.</summary>
@@ -141,7 +146,7 @@ internal static class Views
 	/// <param name="sessions">Живые сессии всех агентов.</param>
 	/// <param name="now">Момент снимка: от него «обновлено N мин назад» и «сброс через».</param>
 	/// <param name="levels">Пороги из настроек.</param>
-	/// <param name="hide">Показывают экран: почты аккаунтов не видно.</param>
+	/// <param name="hide">Показывают экран: почты аккаунтов и запросов сессий не видно.</param>
 	public static Vitals Build(IReadOnlyList<ProviderState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false)
 	{
 		// Значок и карточка по наведению — по худшему агенту; шапка окна — по выбранной вкладке.
@@ -196,7 +201,7 @@ internal static class Views
 	};
 
 	/// <param name="hooks">Подключены ли hooks агента; null — у агента их нет.</param>
-	/// <param name="hide">Показывают экран: почты аккаунта не видно.</param>
+	/// <param name="hide">Показывают экран: почты аккаунта и запросов сессий не видно.</param>
 	internal static ProviderView Provider(ProviderState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null, bool hide = false)
 	{
 		List<CardView> cards = [];
@@ -229,7 +234,14 @@ internal static class Views
 			Brush(Level(state.Status?.Health ?? Health.Unknown)),
 			state.Provider.Status?.Url,
 			target is null ? "" : Localization.Format("langSessions", target.Title.ToUpper(Localization.Culture)),
-			target is null ? null : [.. own.Select(session => new SessionView(session.Folder, session.Branch ?? "", Text.Session(session, now), Brush(Dot(session.State)), session))],
+			target is null ? null : [.. own.Select(session => new SessionView(
+				session.Folder,
+				session.Branch ?? "",
+				hide ? null : session.Prompt,
+				own.Count(other => other.Folder == session.Folder) > 1,
+				Text.Session(session, now),
+				Brush(Dot(session.State)),
+				session))],
 			target is null ? ""
 				: hooks != HookLink.On ? Localization.Format("langHooksHint", target.Title)
 				: own.Count == 0 ? Localization.Get("langNoSessions")

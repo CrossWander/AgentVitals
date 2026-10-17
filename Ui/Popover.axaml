@@ -257,7 +257,7 @@
                                                     <TextBlock Grid.Column="1" Margin="9,0" TextTrimming="CharacterEllipsis" VerticalAlignment="Center">
                                                         <Run Text="{Binding Folder}" FontWeight="SemiBold"/>
                                                         <Run Text="  " FontSize="11"/>
-                                                        <Run Text="{Binding Branch}" FontSize="11" Foreground="{DynamicResource TextFaint}"/>
+                                                        <Run Text="{Binding Detail}" FontSize="11" Foreground="{DynamicResource TextFaint}"/>
                                                     </TextBlock>
                                                     <TextBlock Grid.Column="2" Classes="caption" Text="{Binding State}" VerticalAlignment="Center"/>
                                                 </Grid>

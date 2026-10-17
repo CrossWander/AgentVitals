@@ -133,10 +133,31 @@ public class ViewsTests
 		Assert.Equal("https://claude.ai/settings/usage", Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Dashboard);
 
 	[Theory]
-	[InlineData("feature/APP-1234", "APP-1234-retry-failed-payments-in-checkout\nfeature/APP-1234")]
-	[InlineData("", "APP-1234-retry-failed-payments-in-checkout")]
-	public void SessionTipShowsTheWholeName(string branch, string tip) => // в строке длинное имя обрезано троеточием
-		Assert.Equal(tip, new SessionView("APP-1234-retry-failed-payments-in-checkout", branch, "", Avalonia.Media.Brushes.Gray, new Session("s", SessionState.Idle, null, "repo", null)).Tip);
+	[InlineData("feature/APP-1234", null, "APP-1234-retry-failed-payments-in-checkout\nfeature/APP-1234")]
+	[InlineData("", null, "APP-1234-retry-failed-payments-in-checkout")]
+	[InlineData("main", "почини тесты", "APP-1234-retry-failed-payments-in-checkout\nmain\nпочини тесты")]
+	public void SessionTipShowsTheWholeName(string branch, string? prompt, string tip) => // в строке длинное имя обрезано троеточием
+		Assert.Equal(tip, new SessionView("APP-1234-retry-failed-payments-in-checkout", branch, prompt, false, "", Avalonia.Media.Brushes.Gray, new Session("s", SessionState.Idle, null, "repo", null)).Tip);
+
+	[Fact]
+	public void NamesakesShowTheirFirstPrompt() // две сессии в одной папке на одной ветке иначе не различить
+	{
+		Session[] sessions =
+		[
+			new("a", SessionState.Waiting, null, "ProjectsComfy", "master", Prompt: "почини тесты"),
+			new("b", SessionState.Working, null, "ProjectsComfy", "master"), // начата до обновления — запроса ещё нет
+			new("c", SessionState.Idle, null, "api", "main", Prompt: "добавь метод"),
+			new("d", SessionState.Idle, null, "api", null, Agent: "Codex", Prompt: "проверь"), // у Codex своя вкладка
+		];
+
+		var rows = Views.Build([new(new ClaudeProvider())], Hooks(), sessions, DateTime.UtcNow, _levels).Providers[0].Sessions!;
+		Assert.Equal(["почини тесты", "master", "main"], rows.Select(row => row.Detail));
+
+		// Показывают экран — запросов не видно и в подсказке.
+		var hidden = Views.Build([new(new ClaudeProvider())], Hooks(), sessions, DateTime.UtcNow, _levels, hide: true).Providers[0].Sessions!;
+		Assert.Equal(["master", "master", "main"], hidden.Select(row => row.Detail));
+		Assert.Equal("ProjectsComfy\nmaster", hidden[0].Tip);
+	}
 
 	[Fact]
 	public void SessionRowKnowsItsSession() // щелчок по строке поднимает окно, где идёт эта сессия

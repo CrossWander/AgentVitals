@@ -45,7 +45,7 @@ scrolls.
 | Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears); a toast when one changes |
 | After sleep | Asks again as soon as the PC wakes; a window whose reset time has passed shows 0% instead of stale numbers |
 | Updates | Checks GitHub at start and once a day and toasts a new version once; **Update** in settings downloads it, checks its SHA-256 and swaps the exe in place → [more](#updates) |
-| Screen sharing | The eye at the end of the plan line hides the account email, in the window and the hover card |
+| Screen sharing | The eye at the end of the plan line hides the account email and session prompts, in the window and the hover card |
 | Languages and themes | English, Ukrainian and Russian; light, dark or as in Windows |
 | Keyboard | Esc closes the window, F5 or Ctrl+R refreshes, Ctrl+1…3 switch the agent tabs |
 
@@ -123,6 +123,9 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
   finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
   in settings.
 - The list keeps one height — about four sessions — and scrolls past that, with a thin scroll bar.
+- Two sessions in the same folder show the start of their first prompt instead of the branch, so
+  you can tell them apart; hovering a row shows the folder, branch and prompt in full. The eye
+  next to the plan line hides the prompts along with the email.
 - A click on a session there, or on its toast, brings up the window the session runs in — the
   terminal, VS Code or another IDE — so you can answer right away. AgentVitals finds it from the
   Claude Code process up through its parents; when one program holds several windows, such as

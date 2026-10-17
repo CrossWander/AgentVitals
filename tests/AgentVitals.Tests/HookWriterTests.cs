@@ -48,6 +48,31 @@ public class HookWriterTests
 		Assert.Equal("Codex", session.Agent);
 	}
 
+	private static void Prompt(TempDirectory temp, string text, DateTime at) =>
+		HookWriter.Apply(new JsonObject { ["session_id"] = "s1", ["hook_event_name"] = "UserPromptSubmit", ["cwd"] = @"C:\x", ["prompt"] = text }, temp.Path, at.Ticks);
+
+	[Fact]
+	public void SessionKeepsItsFirstPrompt() // по нему различают сессии в одной папке; «да» и «продолжай» потом — не название
+	{
+		using var temp = new TempDirectory();
+		var now = DateTime.UtcNow;
+		Prompt(temp, "  Почини\n\nтесты   в pdu  ", now.AddMinutes(-3));
+		HookWriter.Apply(new JsonObject { ["session_id"] = "s1", ["hook_event_name"] = "Stop", ["cwd"] = @"C:\x" }, temp.Path, now.AddMinutes(-2).Ticks);
+		Prompt(temp, "да", now.AddMinutes(-1));
+
+		Assert.Equal("Почини тесты в pdu", Assert.Single(SessionWatcher.Read(temp.Path, now)).Prompt);
+	}
+
+	[Fact]
+	public void LongPromptIsCut() // вставленный лог в тысячу строк не нужен ни строке, ни подсказке
+	{
+		using var temp = new TempDirectory();
+		Prompt(temp, new string('a', 5000), DateTime.UtcNow);
+
+		var prompt = HookWriter.Read(temp.File("s1.json"))!.Prompt!;
+		Assert.Equal((120, '…'), (prompt.Length, prompt[^1]));
+	}
+
 	[Fact]
 	public void CodexKeepsNoTranscript() // прерывание Codex сообщает сам — журнал читать незачем
 	{

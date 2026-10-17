@@ -13,6 +13,9 @@ internal static class HookWriter
 {
 	private static readonly long _sameMoment = TimeSpan.FromMilliseconds(50).Ticks;
 
+	// Для подписи сессии хватает начала запроса; вставленный лог целиком незачем носить в каждом событии.
+	private const int _promptLength = 120;
+
 	internal static readonly JsonSerializerOptions Json = new()
 	{
 		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -82,7 +85,10 @@ internal static class HookWriter
 					Transcript: agent == "Claude" ? (string?)payload["transcript_path"] : null,
 					Turn: Turn(hookEvent, state.Value, recorded, at),
 					Pid: pid,
-					Agent: agent);
+					Agent: agent,
+
+					// Первый запрос, а не последний: «да» и «продолжай» сессию не называют.
+					Prompt: recorded?.Prompt ?? (hookEvent == "UserPromptSubmit" ? Clip((string?)payload["prompt"]) : null));
 
 			if (Stale(recorded, session))
 			{
@@ -167,6 +173,14 @@ internal static class HookWriter
 		// Ход без запроса или сессия, начатая до подключения hooks, — отсчёт с первого события.
 		: recorded is { State: not SessionState.Idle, Turn: { } turn } ? turn
 		: at;
+
+	/// <summary>Запрос одной строкой, не длиннее 120 знаков; пустой — null.</summary>
+	internal static string? Clip(string? prompt)
+	{
+		var text = string.Join(' ', (prompt ?? "").Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+		return text.Length == 0 ? null : text.Length > _promptLength ? text[..(_promptLength - 1)] + "…" : text;
+	}
 
 	/// <summary>Событие Claude Code или Codex → состояние: имена у них общие, Interrupt — только у Codex.</summary>
 	internal static SessionState? Map(string? hookEvent, string? notificationType) => hookEvent switch

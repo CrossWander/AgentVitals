@@ -54,8 +54,8 @@
     <x:String x:Key="langLiveTool">{0} is working: {1} · {2}</x:String>
     <x:String x:Key="langLiveWaiting">{0} is waiting for permission · {1}</x:String>
     <x:String x:Key="langDashboard">Dashboard</x:String>
-    <x:String x:Key="langHidePrivate">Hide the account email while you share the screen</x:String>
-    <x:String x:Key="langShowPrivate">Show the account email</x:String>
+    <x:String x:Key="langHidePrivate">Hide the account email and session prompts while you share the screen</x:String>
+    <x:String x:Key="langShowPrivate">Show the account email and session prompts</x:String>
     <x:String x:Key="langToday">TODAY</x:String>
     <x:String x:Key="langCostTitle">COST</x:String>
     <x:String x:Key="langTokensTitle">TOKENS</x:String>

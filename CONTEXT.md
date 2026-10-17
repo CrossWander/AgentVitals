@@ -79,6 +79,14 @@ _Avoid_: chat, conversation
 **Session state**:
 Idle, Working or Waiting; Waiting means the session asks for permission and stands still until answered.
 
+**First prompt**:
+The first thing the person asked in a live session, on one line; when two live sessions of an agent share a folder name, it tells their rows apart instead of the branch.
+_Avoid_: title, name
+
+**Hidden**:
+The eye's state for sharing the screen: account emails and first prompts are not shown.
+_Avoid_: private mode, incognito
+
 **Turn**:
 One stretch of the agent working on a prompt, from the prompt to the stop.
 _Avoid_: run, request

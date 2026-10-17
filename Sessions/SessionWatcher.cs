@@ -89,7 +89,8 @@ internal static class SessionWatcher
 				session.State == SessionState.Idle ? session.Time - turn : null,
 				session.Pid,
 				session.Cwd,
-				session.Agent ?? "Claude"));
+				session.Agent ?? "Claude",
+				session.Prompt));
 		}
 
 		return sessions;

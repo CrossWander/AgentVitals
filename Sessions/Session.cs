@@ -20,7 +20,8 @@ public enum SessionState
 /// <remarks>Turn — тики UTC начала хода; после Stop остаётся, чтобы трей узнал, сколько ход занял.</remarks>
 /// <remarks>Pid — процесс Claude Code: умер он — сессия кончилась, даже если SessionEnd не пришёл.</remarks>
 /// <remarks>Agent — чья сессия («Claude», «Codex»); в файлах до Codex поля нет — это Claude.</remarks>
-internal sealed record SessionRecord(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false, string? Transcript = null, long? Turn = null, int? Pid = null, string? Agent = null)
+/// <remarks>Prompt — первый запрос сессии одной строкой: по нему различают сессии в одной папке.</remarks>
+internal sealed record SessionRecord(SessionState State, string? Tool, string Cwd, long Utc, bool Ended = false, string? Transcript = null, long? Turn = null, int? Pid = null, string? Agent = null, string? Prompt = null)
 {
 	// Только для чтения в коде: в файле время хранится одним полем utc.
 	[JsonIgnore]
@@ -31,7 +32,8 @@ internal sealed record SessionRecord(SessionState State, string? Tool, string Cw
 /// <remarks>TurnStarted — начало идущего хода; TurnDuration — сколько занял закончившийся (null — прерван или неизвестно).</remarks>
 /// <remarks>Pid и Cwd — процесс Claude Code и полный путь папки: по ним находится окно, где идёт сессия.</remarks>
 /// <remarks>Agent — имя провайдера: по нему сессия попадает на свою вкладку и в подпись тоста.</remarks>
-internal sealed record Session(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? TurnStarted = null, TimeSpan? TurnDuration = null, int? Pid = null, string? Cwd = null, string Agent = "Claude");
+/// <remarks>Prompt — первый запрос; null — сессия начата до обновления или запроса ещё не было.</remarks>
+internal sealed record Session(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? TurnStarted = null, TimeSpan? TurnDuration = null, int? Pid = null, string? Cwd = null, string Agent = "Claude", string? Prompt = null);
 
 /// <summary>О чём сказать тостом: ход закончился или сессия ждёт разрешения.</summary>
 internal sealed record SessionAlert(Session Session, bool Waiting);
