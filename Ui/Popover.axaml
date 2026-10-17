@@ -106,6 +106,9 @@
 
                         <TextBlock Name="ErrorLine" Classes="error"/>
 
+                        <!-- Окно — высотой с самую высокую вкладку: у агента без статистики и сессий здесь место -->
+                        <TextBlock Name="BareHint" Classes="caption" TextWrapping="Wrap"/>
+
                         <!-- Статистика из локальных логов агента: сегодня и 30 дней. Нет читателя логов — блока нет -->
                         <StackPanel Name="UsageBlock" Spacing="8" x:DataType="local:UsageView">
                             <TextBlock Classes="label" Text="{DynamicResource langToday}"/>

@@ -7,12 +7,16 @@ A tray companion for people who code with AI agents: how much of each agent's qu
 ### Agents and quotas
 
 **Agent**:
-A coding assistant with its own CLI and sign-in whose quotas are watched: Claude Code, Codex or Gemini CLI.
+A coding assistant with its own CLI and sign-in whose quotas are watched: Claude Code, Codex, Gemini CLI, GitHub Copilot or Cursor. Gemini, Copilot and Cursor have no statistics and no live sessions.
 _Avoid_: tool, client, account
 
 **Installed**:
-An agent is installed when its sign-in file is on the computer; only installed agents are shown and asked.
+An agent is installed when there are signs of it on the computer — usually its sign-in file; installed agents are asked.
 _Avoid_: available, enabled
+
+**Visible**:
+An installed agent that has a tab: at once for most agents, but Copilot only after GitHub has confirmed it once, since its signs are on almost every computer with VS Code.
+_Avoid_: shown, enabled
 
 **Plan**:
 What the person pays the agent's maker for, such as Pro or Max.
@@ -30,6 +34,9 @@ The seven-day quota window, either for all models or for one model family.
 
 **Model window**:
 A quota window of one Gemini model family whose length is not told.
+
+**Feature window**:
+A monthly quota window of one feature of an agent — Copilot's chat, completions or premium requests, Cursor's Auto or API share.
 
 **Limiting window**:
 A quota window that stops all work when it runs out, such as the session window; a week window for one model family is not.
@@ -63,12 +70,12 @@ The moment a quota window would be exhausted if used as fast as so far; told onl
 _Avoid_: burn rate, forecast
 
 **Extra usage**:
-Paid use past the plan, with its spent amount and monthly limit.
+Paid use past the plan, with its spent amount and monthly limit; for Cursor, the on-demand spend, or the team's shared pool when there is no personal limit.
 _Avoid_: spend, overage
 
-**Sign-in expired**:
-The agent's sign-in no longer works; data comes back once the agent's own CLI renews it.
-_Avoid_: logged out, unauthorized
+**Sign-in problem**:
+Why an agent gives no data although it is installed: the sign-in **expired** (data comes back once the agent's own CLI renews it — for Copilot, git), is **missing**, was **rejected** by the server, or the account has **no subscription** to the agent, which is asked again once a day.
+_Avoid_: logged out, unauthorized, token expired
 
 ### Live sessions
 

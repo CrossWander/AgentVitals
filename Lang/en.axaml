@@ -8,7 +8,11 @@
     <x:String x:Key="langWindowMonth">Month</x:String>
     <x:String x:Key="langWindowWeekModel">Week · {0}</x:String>
     <x:String x:Key="langWindowModel">{0}</x:String>
+    <x:String x:Key="langFeature_chat">Chat</x:String>
+    <x:String x:Key="langFeature_completions">Completions</x:String>
+    <x:String x:Key="langFeature_premium_interactions">Premium requests</x:String>
     <x:String x:Key="langExtra">Extra usage</x:String>
+    <x:String x:Key="langExtraTeam">Team pool</x:String>
     <x:String x:Key="langExtraOf">of {0}</x:String>
     <x:String x:Key="langExtraSpent">spent</x:String>
     <x:String x:Key="langResetsIn">resets in {0}</x:String>
@@ -35,8 +39,14 @@
     <x:String x:Key="langHealthCritical">CRITICAL</x:String>
     <x:String x:Key="langHealthUnknown">NO DATA</x:String>
     <x:String x:Key="langHealthExhausted">USED UP</x:String>
-    <x:String x:Key="langNoAgents">No agents found. Install Claude Code, Codex or Gemini CLI.</x:String>
+    <x:String x:Key="langNoAgents">No agents found. Install Claude Code, Codex, Gemini CLI or Cursor; for Copilot, sign in to GitHub through git.</x:String>
     <x:String x:Key="langErrorExpired">Sign-in expired. The data comes back after your first request in {0}</x:String>
+    <x:String x:Key="langErrorMissing">No {1} sign-in. Sign in to {1} and the data will appear</x:String>
+    <x:String x:Key="langErrorMissingCopilot">No GitHub sign-in. Sign in through git — for example, git fetch in any GitHub repository — and the data will appear</x:String>
+    <x:String x:Key="langErrorRejected">{1} rejected the sign-in. Sign in to {1} again</x:String>
+    <x:String x:Key="langErrorRejectedCopilot">No GitHub sign-in. Sign in through git — for example, git fetch in any GitHub repository — and the data will appear</x:String>
+    <x:String x:Key="langErrorNoSubscription">This account has no {1}</x:String>
+    <x:String x:Key="langErrorNoSubscriptionCopilot">This GitHub account has no Copilot</x:String>
     <x:String x:Key="langErrorRateLimited">The server asks to check less often, retrying at {0}</x:String>
     <x:String x:Key="langErrorNetwork">No connection</x:String>
     <x:String x:Key="langErrorParse">Could not read the response</x:String>
@@ -49,6 +59,7 @@
     <x:String x:Key="langSessionWorkingTool">working: {0}</x:String>
     <x:String x:Key="langSessionWaiting">waiting for permission</x:String>
     <x:String x:Key="langNoSessions">No active sessions</x:String>
+    <x:String x:Key="langNoStats">{0} has no daily statistics or live sessions — only quotas</x:String>
     <x:String x:Key="langHooksHint">Connect {0} in settings to see live sessions</x:String>
     <x:String x:Key="langLiveWorking">{0} is working · {1}</x:String>
     <x:String x:Key="langLiveTool">{0} is working: {1} · {2}</x:String>

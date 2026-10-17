@@ -8,9 +8,13 @@ namespace AgentVitals;
 /// <summary>Подписи на языке интерфейса: из ключа, данных и текущего времени.</summary>
 internal static class Text
 {
-	public static string Title(QuotaWindow window) => Localization.Format($"langWindow{window.Kind}", window.Label);
+	/// <summary>Заголовок окна. У квоты функции — перевод её имени, а неизвестное имя — как есть.</summary>
+	public static string Title(QuotaWindow window) =>
+		window.Kind == WindowKind.MonthFeature
+			? Localization.Has($"langFeature_{window.Label}") ? Localization.Get($"langFeature_{window.Label}") : window.Label ?? ""
+			: Localization.Format($"langWindow{window.Kind}", window.Label);
 
-	/// <summary>«сброс через 1 ч 12 мин», а дальше суток — «сброс пт 10:00».</summary>
+	/// <summary>«сброс через 1 ч 12 мин», дальше суток — «сброс пт 10:00», а дальше недели — «сброс 1 нояб.».</summary>
 	public static string Until(DateTimeOffset? resets, DateTime now)
 	{
 		if (resets is not { } at)
@@ -21,9 +25,13 @@ internal static class Text
 		var left = at.UtcDateTime - now;
 
 		return left <= TimeSpan.Zero ? Localization.Get("langResetDone")
-			: left > TimeSpan.FromDays(1) ? Localization.Format("langResetsAt", at.LocalDateTime.ToString("ddd HH:mm", Localization.Culture))
+			: left > TimeSpan.FromDays(1) ? Localization.Format("langResetsAt", at.LocalDateTime.ToString(ResetPattern(left), Localization.Culture))
 			: Localization.Format("langResetsIn", Span(left));
 	}
+
+	/// <summary>Как назвать далёкий сброс: в пределах недели — днём недели, а дальше — датой: у месячного окна
+	/// «вс 02:00» читалось бы как ближайшее воскресенье.</summary>
+	internal static string ResetPattern(TimeSpan left) => left > TimeSpan.FromDays(7) ? "d MMM" : "ddd HH:mm";
 
 	/// <param name="least">Меньше скольких минут не показывать: сброс через полминуты — «1 мин», а день без работы — «0 мин».</param>
 	public static string Span(TimeSpan span, int least = 1) =>
@@ -38,9 +46,13 @@ internal static class Text
 		: now - time > TimeSpan.FromDays(1) ? Localization.Format("langUpdatedAt", time.ToLocalTime().ToString("ddd HH:mm", Localization.Culture))
 		: Localization.Format("langUpdatedAgo", Span(now - time));
 
-	public static string Error(Exception error) => error switch
+	/// <param name="agent">Чей отказ: у агента бывает своя строка — «Нет входа GitHub…» у Copilot, а нет — общая.</param>
+	public static string Error(Exception error, string agent) => error switch
 	{
-		TokenExpiredException expired => Localization.Format("langErrorExpired", expired.Cli),
+		SignInException refused => Localization.Format(
+			Localization.Has($"langError{refused.Problem}{agent}") ? $"langError{refused.Problem}{agent}" : $"langError{refused.Problem}",
+			refused.Cli,
+			agent),
 		RateLimitedException limited => Localization.Format("langErrorRateLimited", limited.Until.ToLocalTime().ToString("HH:mm", Localization.Culture)),
 		HttpRequestException or TaskCanceledException => Localization.Get("langErrorNetwork"),
 		_ => Localization.Get("langErrorParse"),

@@ -18,6 +18,9 @@ public enum WindowKind
 	/// <summary>Окно на 30 дней — например, единственный лимит бесплатного плана Codex.</summary>
 	Month,
 
+	/// <summary>Месячная квота одной функции (Label — её сырое имя: chat, completions…; перевод — при показе).</summary>
+	MonthFeature,
+
 	/// <summary>Недельный лимит одной модели (Label — её имя).</summary>
 	WeekModel,
 
@@ -39,7 +42,8 @@ internal sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, 
 		WindowKind.Session => TimeSpan.FromHours(5),
 		WindowKind.Day => TimeSpan.FromDays(1),
 		WindowKind.Week or WindowKind.WeekModel => TimeSpan.FromDays(7),
-		WindowKind.Month => TimeSpan.FromDays(30),
+		// ponytail: месяц — 30 дней; в 31-дневном метки темпа в первые сутки нет, в феврале она чуть отстаёт.
+		WindowKind.Month or WindowKind.MonthFeature => TimeSpan.FromDays(30),
 		WindowKind.Model => null,
 	};
 
@@ -48,8 +52,8 @@ internal sealed record QuotaWindow(WindowKind Kind, string? Label, double Used, 
 	public QuotaWindow At(DateTime now) => ResetsAt?.UtcDateTime <= now ? this with { Used = 0 } : this;
 }
 
-/// <summary>Расход сверх тарифа в деньгах; Limit null — потолка нет.</summary>
-internal sealed record ExtraUsage(decimal Used, decimal? Limit, string Currency);
+/// <summary>Расход сверх тарифа в деньгах; Limit null — потолка нет. Team — общий пул команды (Cursor), а не свой расход.</summary>
+internal sealed record ExtraUsage(decimal Used, decimal? Limit, string Currency, bool Team = false);
 
 /// <summary>Квоты одного провайдера на момент запроса.</summary>
 internal sealed record Snapshot(string Plan, string? Account, IReadOnlyList<QuotaWindow> Windows, ExtraUsage? Extra);
@@ -71,10 +75,30 @@ public enum Health
 	Critical,
 }
 
-/// <summary>Вход истёк: обновить его может только сам CLI агента.</summary>
-internal sealed class TokenExpiredException(string cli) : Exception($"{cli}: sign-in expired")
+/// <summary>Что не так со входом агента.</summary>
+public enum SignInProblem
+{
+	/// <summary>Вход истёк: обновит его сам CLI агента.</summary>
+	Expired,
+
+	/// <summary>Входа нет вовсе.</summary>
+	Missing,
+
+	/// <summary>Сервер вход не принял.</summary>
+	Rejected,
+
+	/// <summary>Вход есть, а самого агента у аккаунта нет — как Copilot у аккаунта GitHub без него.</summary>
+	NoSubscription,
+}
+
+/// <summary>Со входом агента что-то не так; что сказать человеку, решает интерфейс по причине и агенту.</summary>
+/// <param name="cli">Чем обновляют вход: команда CLI агента, у Copilot — git.</param>
+/// <remarks>Токена в сообщении нет никогда: оно уходит в журнал.</remarks>
+internal sealed class SignInException(string cli, SignInProblem problem = SignInProblem.Expired) : Exception($"{cli}: sign-in {problem}")
 {
 	public string Cli { get; } = cli;
+
+	public SignInProblem Problem { get; } = problem;
 }
 
 /// <summary>Сервер просит подождать до указанного момента.</summary>

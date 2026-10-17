@@ -8,7 +8,11 @@
     <x:String x:Key="langWindowMonth">Месяц</x:String>
     <x:String x:Key="langWindowWeekModel">Неделя · {0}</x:String>
     <x:String x:Key="langWindowModel">{0}</x:String>
+    <x:String x:Key="langFeature_chat">Чат</x:String>
+    <x:String x:Key="langFeature_completions">Подсказки</x:String>
+    <x:String x:Key="langFeature_premium_interactions">Премиум-запросы</x:String>
     <x:String x:Key="langExtra">Доп. расход</x:String>
+    <x:String x:Key="langExtraTeam">Командный пул</x:String>
     <x:String x:Key="langExtraOf">из {0}</x:String>
     <x:String x:Key="langExtraSpent">потрачено</x:String>
     <x:String x:Key="langResetsIn">сброс через {0}</x:String>
@@ -35,8 +39,14 @@
     <x:String x:Key="langHealthCritical">КРИТИЧНО</x:String>
     <x:String x:Key="langHealthUnknown">НЕТ ДАННЫХ</x:String>
     <x:String x:Key="langHealthExhausted">ИСЧЕРПАНО</x:String>
-    <x:String x:Key="langNoAgents">Агенты не найдены. Установи Claude Code, Codex или Gemini CLI.</x:String>
+    <x:String x:Key="langNoAgents">Агенты не найдены. Установи Claude Code, Codex, Gemini CLI или Cursor; для Copilot войди в GitHub через git.</x:String>
     <x:String x:Key="langErrorExpired">Вход истёк. Данные вернутся после первого запроса в {0}</x:String>
+    <x:String x:Key="langErrorMissing">Нет входа в {1}. Войдите в {1} — и данные появятся</x:String>
+    <x:String x:Key="langErrorMissingCopilot">Нет входа GitHub. Войдите через git — например, git fetch в любом репозитории с GitHub — и данные появятся</x:String>
+    <x:String x:Key="langErrorRejected">{1} отклонил вход. Войдите в {1} заново</x:String>
+    <x:String x:Key="langErrorRejectedCopilot">Нет входа GitHub. Войдите через git — например, git fetch в любом репозитории с GitHub — и данные появятся</x:String>
+    <x:String x:Key="langErrorNoSubscription">У этого аккаунта нет {1}</x:String>
+    <x:String x:Key="langErrorNoSubscriptionCopilot">У этого аккаунта GitHub нет Copilot</x:String>
     <x:String x:Key="langErrorRateLimited">Сервер просит спрашивать реже, повтор в {0}</x:String>
     <x:String x:Key="langErrorNetwork">Нет связи</x:String>
     <x:String x:Key="langErrorParse">Не удалось разобрать ответ</x:String>
@@ -49,6 +59,7 @@
     <x:String x:Key="langSessionWorkingTool">работает: {0}</x:String>
     <x:String x:Key="langSessionWaiting">ждёт разрешения</x:String>
     <x:String x:Key="langNoSessions">Активных сессий нет</x:String>
+    <x:String x:Key="langNoStats">У {0} нет статистики по дням и живых сессий — только квоты</x:String>
     <x:String x:Key="langHooksHint">Подключи {0} в настройках, чтобы видеть живые сессии</x:String>
     <x:String x:Key="langLiveWorking">{0} работает · {1}</x:String>
     <x:String x:Key="langLiveTool">{0} работает: {1} · {2}</x:String>

@@ -69,6 +69,9 @@ internal sealed record ProviderView(
 	public IReadOnlyList<CardView> LimitingCards => [.. Cards.Where(card => card.Limiting)];
 
 	public bool HasError => Error.Length > 0;
+
+	/// <summary>Ни статистики, ни сессий — как у Copilot: на их месте строка, почему там пусто.</summary>
+	public bool Bare => Usage is null && Sessions is null;
 }
 
 /// <param name="Prompt">Первый запрос сессии; null — ещё не известен или экран показывают другим.</param>
@@ -227,7 +230,7 @@ internal static class Views
 			info,
 			Text.Ago(state.Updated, now),
 			cards,
-			state.Error is { } error ? Text.Error(error) : "",
+			state.Error is { } error ? Text.Error(error, state.Provider.Name) : "",
 			state.Provider.Dashboard,
 			state.Provider.Usage is null ? null : Usage(state.Days),
 			state.Provider.Status is { } page ? Text.Status(state.Status, page.Name) : "",
@@ -380,7 +383,7 @@ internal static class Views
 		{
 			WindowKind.Session => ("IconBolt", "IconSession"),
 			WindowKind.Week or WindowKind.Day or WindowKind.Month => ("IconCalendar", "IconWeek"),
-			WindowKind.WeekModel or WindowKind.Model => ("IconSpark", "IconModel"),
+			WindowKind.WeekModel or WindowKind.Model or WindowKind.MonthFeature => ("IconSpark", "IconModel"),
 		};
 
 		var pace = Quota.Expected(window, now);
@@ -418,7 +421,7 @@ internal static class Views
 		var fill = extra.Limit is { } limit && limit > 0 ? (double)(extra.Used / limit * 100) : 0;
 
 		return new(
-			Localization.Get("langExtra").ToUpper(Localization.Culture),
+			Localization.Get(extra.Team ? "langExtraTeam" : "langExtra").ToUpper(Localization.Culture),
 			Shape("IconCoin"),
 			Brush("IconExtra"),
 			"",

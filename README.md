@@ -47,7 +47,7 @@ scrolls.
 | Updates | Checks GitHub at start and once a day and toasts a new version once; **Update** in settings downloads it, checks its SHA-256 and swaps the exe in place → [more](#updates) |
 | Screen sharing | The eye at the end of the plan line hides the account email and session prompts, in the window and the hover card |
 | Languages and themes | English, Ukrainian and Russian; light, dark or as in Windows |
-| Keyboard | Esc closes the window, F5 or Ctrl+R refreshes, Ctrl+1…3 switch the agent tabs |
+| Keyboard | Esc closes the window, F5 or Ctrl+R refreshes, Ctrl+1, Ctrl+2… switch the agent tabs in their order |
 
 ## Settings
 
@@ -66,8 +66,14 @@ session toasts, their two sounds, start with Windows and the Claude Code hooks f
 | Claude | `GET api.anthropic.com/api/oauth/usage` with the Claude Code token from `~/.claude/.credentials.json` | working |
 | Codex | `GET chatgpt.com/backend-api/wham/usage` with `~/.codex/auth.json`; the account email from its `id_token` | working |
 | Gemini | `cloudcode-pa.googleapis.com` quota calls with `~/.gemini/oauth_creds.json` | not verified |
+| Copilot | `GET api.github.com/copilot_internal/user` with the GitHub sign-in git keeps in Windows Credential Manager (`git:https://github.com`) | working |
+| Cursor | `GET cursor.com/api/usage-summary` with the sign-in Cursor keeps in its `state.vscdb` (read-only): the plan with its Auto and API shares, and the spend past it — yours, or the team pool | not verified |
 
-An agent whose credential file is missing is simply not shown.
+An agent whose credential file is missing is simply not shown. Copilot shows up only after GitHub has
+confirmed it once: Copilot Chat comes with VS Code, so its folder alone says nothing.
+
+If Claude Code keeps its sign-in in Windows Credential Manager, AgentVitals reads it from there too and
+takes whichever of the two lasts longer (not verified).
 
 ## Quotas and alerts
 
@@ -191,9 +197,14 @@ says so and links to the release.
 
 - **The token is only ever read.** AgentVitals never refreshes it: Claude Code does that itself, and
   a refresh token spent by someone else would sign Claude Code out.
+- **The GitHub token stays with git.** For Copilot, AgentVitals reads the sign-in that git already keeps in
+  Windows Credential Manager, fresh before each check, and sends it to one address only:
+  `api.github.com/copilot_internal/user`. It is never written, logged or shown, and nothing is ever written to
+  Credential Manager.
 - **No tokens are spent.** The quota endpoint is not a model call, so checking it costs nothing
   from your limits.
-- **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com, status.openai.com,
+- **Where it connects:** the quota endpoints in [Providers](#providers), status.claude.com, status.openai.com, www.githubstatus.com,
+  cursor.com and status.cursor.com,
   Anthropic's and OpenAI's pricing pages once a day, and GitHub: `api.github.com` for the release check (can be
   turned off) and the release download, only when you press **Update**. Nothing else — no account
   of its own, no telemetry.

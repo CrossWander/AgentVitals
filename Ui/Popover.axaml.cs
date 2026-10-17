@@ -29,6 +29,11 @@ internal partial class Popover : TrayWindow
 		InitializeComponent();
 
 		Settings.Back += () => ShowSettings(false);
+
+		// Окно прижато к значку и растёт вверх: вкладка ниже соседней — у Copilot нет статистики и сессий — сдвигала
+		// бы верх и вкладки под мышью на полэкрана. Поэтому окно не становится ниже, чем уже было.
+		// ponytail: самая высокая вкладка, открытая впервые, ещё раз поднимет окно; потом — ни скачка.
+		Resized += (_, e) => MinHeight = Math.Max(MinHeight, Math.Min(e.ClientSize.Height, MaxHeight));
 	}
 
 	public event Action? RefreshRequested;
@@ -42,6 +47,10 @@ internal partial class Popover : TrayWindow
 	public void Open(PixelRect anchor, bool settings)
 	{
 		ShowSettings(settings);
+
+		// Другой экран бывает ниже: MinHeight сильнее MaxHeight, а середина окна и так прокручивается.
+		Placement.Fit(this, anchor);
+		MinHeight = Math.Min(MinHeight, MaxHeight);
 		ShowAt(anchor);
 		Activate();
 	}
@@ -89,6 +98,8 @@ internal partial class Popover : TrayWindow
 		// набор агентов, иначе щелчок по вкладке, попавший на пересоздание, теряется.
 		if (!Tabs.Children.Select(tab => tab.Tag as string).SequenceEqual(names))
 		{
+			// Другой набор агентов — другая самая высокая вкладка.
+			MinHeight = 0;
 			Tabs.Children.Clear();
 
 			foreach (var name in names)
@@ -151,6 +162,8 @@ internal partial class Popover : TrayWindow
 		ToolTip.SetTip(PrivateButton, Localization.Get(Store.Current.Private ? "langShowPrivate" : "langHidePrivate"));
 		ErrorLine.Text = provider?.Error;
 		ErrorLine.IsVisible = provider?.HasError == true;
+		BareHint.Text = provider is null ? null : Localization.Format("langNoStats", provider.Name);
+		BareHint.IsVisible = provider?.Bare == true;
 		DashboardButton.IsVisible = provider?.Dashboard is not null;
 		StatusLine.DataContext = provider;
 		StatusLine.IsVisible = provider?.StatusUrl is not null;

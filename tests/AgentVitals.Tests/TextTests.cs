@@ -28,6 +28,23 @@ public class TextTests
 	}
 
 	[Fact]
+	public void FeatureTitleFallsBackToItsName() => // перевода нет — имя функции как есть
+		Assert.Equal("agent_mode", Text.Title(new QuotaWindow(WindowKind.MonthFeature, "agent_mode", 0, null, Limiting: true)));
+
+	[Fact]
+	public void RejectionSpeaksForItsAgent() // «нет Copilot» — не «вход истёк, запустите git»; в тестах своих строк агента нет — общая
+	{
+		Assert.Equal("langErrorNoSubscription", Text.Error(new SignInException("git", SignInProblem.NoSubscription), "Copilot"));
+		Assert.Equal("langErrorExpired", Text.Error(new SignInException("claude"), "Claude"));
+	}
+
+	[Theory]
+	[InlineData(2, "ddd HH:mm")]
+	[InlineData(7, "ddd HH:mm")] // неделя сразу после сброса — ещё день недели
+	[InlineData(15, "d MMM")] // месяц: «вс 02:00» читалось бы как ближайшее воскресенье
+	public void FarResetShowsTheDate(double days, string pattern) => Assert.Equal(pattern, Text.ResetPattern(System.TimeSpan.FromDays(days)));
+
+	[Fact]
 	public void MissingCostIsADash() => Assert.Equal("—", Text.Cost(null));
 
 	[Theory]

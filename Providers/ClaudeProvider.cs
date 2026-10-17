@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -20,6 +21,14 @@ internal sealed class ClaudeProvider : IProvider
 
 	private static readonly string _account = Path.Combine(Paths.Home, ".claude.json");
 
+	/// <summary>Запись входа в «Диспетчере учётных данных» — в режиме Claude Code 2.1.300+, где вход хранится там, а
+	/// .credentials.json остаётся запасным. Имя и куски — по реверсу pitboard; на живом режиме не проверено.</summary>
+	/// <remarks>С CLAUDE_CONFIG_DIR к имени добавляется хвост от папки; AgentVitals читает только ~/.claude.</remarks>
+	internal const string Vault = "Claude Code-credentials/claude-code-user";
+
+	// Длинный вход Claude Code режет на куски не длиннее этого.
+	private const int _piece = 2400;
+
 	public string Name => "Claude";
 
 	public string Cli => "claude";
@@ -32,12 +41,23 @@ internal sealed class ClaudeProvider : IProvider
 
 	public IStatusPage? Status { get; } = new StatusPage("Anthropic", "https://status.claude.com");
 
+	/// <summary>Вход переписан — в файле или в «Диспетчере»: в новом режиме файл не трогают, а после отказа надо
+	/// заметить свежую запись.</summary>
+	public DateTime SignedIn => new[]
+	{
+		File.GetLastWriteTimeUtc(Credentials),
+		CredentialManager.Written(Vault) ?? DateTime.MinValue,
+		CredentialManager.Written(Vault + "#m") ?? DateTime.MinValue,
+	}.Max();
+
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{
-		// Файл перечитывается каждый раз: Claude Code меняет токен, не спрашивая нас.
-		var oauth = JsonNode.Parse(await SharedFile.ReadAllTextAsync(Credentials, cancellation))?["claudeAiOauth"]
-			?? throw new TokenExpiredException(Cli);
+		// Вход перечитывается каждый раз: Claude Code меняет токен, не спрашивая нас. Он бывает и в файле, и в
+		// «Диспетчере учётных данных» — берём тот, что действует дольше.
+		var file = File.Exists(Credentials) ? await SharedFile.ReadAllTextAsync(Credentials, cancellation) : null;
+		var vault = OperatingSystem.IsWindows() ? FromVault(target => CredentialManager.Read(target)?.Secret) : null;
+		var oauth = Pick(file, vault) ?? throw new SignInException(Cli);
 
 		var token = (string?)oauth["accessToken"];
 		var expires = DateTimeOffset.FromUnixTimeMilliseconds((long?)oauth["expiresAt"] ?? 0);
@@ -45,7 +65,7 @@ internal sealed class ClaudeProvider : IProvider
 		// Истёкший токен сервер всё равно отклонит — незачем тратить на это запрос.
 		if (string.IsNullOrEmpty(token) || expires <= DateTimeOffset.Now)
 		{
-			throw new TokenExpiredException(Cli);
+			throw new SignInException(Cli);
 		}
 
 		using var request = new HttpRequestMessage(HttpMethod.Get, _url);
@@ -56,6 +76,67 @@ internal sealed class ClaudeProvider : IProvider
 
 		return Parse(usage, Quota.PlanName((string?)oauth["subscriptionType"]), await ReadAccountAsync(cancellation));
 	}
+
+	/// <summary>Вход из «Диспетчера»: целиком или из кусков #0…#(n−1), если есть #m с их числом n и длиной l.
+	/// Кусок пропал, длина не сошлась — записи нет. #p (недописанные куски) не читаем.</summary>
+	/// <param name="read">Пароль записи по имени; null — записи нет.</param>
+	internal static string? FromVault(Func<string, string?> read)
+	{
+		if (read(Vault + "#m") is not { } meta)
+		{
+			return read(Vault);
+		}
+
+		try
+		{
+			var counts = JsonNode.Parse(meta);
+			var count = (int?)counts?["n"] ?? 0;
+			var length = (int?)counts?["l"] ?? 0;
+
+			if (count is <= 0 or > 256 || length <= 0 || length > count * _piece)
+			{
+				return null;
+			}
+
+			var joined = new StringBuilder(length);
+
+			for (var index = 0; index < count; index++)
+			{
+				if (read($"{Vault}#{index}") is not { } piece)
+				{
+					return null;
+				}
+
+				joined.Append(piece);
+			}
+
+			return joined.Length == length ? Encoding.UTF8.GetString(Convert.FromBase64String(joined.ToString())) : null;
+		}
+		catch (Exception exception) when (exception is JsonException or FormatException or InvalidOperationException)
+		{
+			return null;
+		}
+	}
+
+	/// <summary>Вход из файла или из «Диспетчера» — у кого expiresAt позже: устаревший файл в новом режиме не мешает,
+	/// и старая запись после выключения режима — тоже. Нечитаемая запись — как её нет; файл — как прежде.</summary>
+	internal static JsonNode? Pick(string? file, string? vault)
+	{
+		var fromFile = file is null ? null : JsonNode.Parse(file)?["claudeAiOauth"];
+		JsonNode? fromVault = null;
+
+		try
+		{
+			fromVault = vault is null ? null : JsonNode.Parse(vault)?["claudeAiOauth"];
+		}
+		catch (JsonException)
+		{
+		}
+
+		return Expires(fromVault) > Expires(fromFile) ? fromVault : fromFile ?? fromVault;
+	}
+
+	private static long Expires(JsonNode? oauth) => oauth is null ? long.MinValue : (long?)oauth["expiresAt"] ?? 0;
 
 	/// <summary>Разобрать ответ /api/oauth/usage: окна из limits[], без них — из five_hour и seven_day.</summary>
 	internal static Snapshot Parse(JsonNode usage, string plan, string? account)
