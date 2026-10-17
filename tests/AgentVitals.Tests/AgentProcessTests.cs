@@ -21,7 +21,7 @@ public class AgentProcessTests
 			[1] = (0, "explorer.exe"),
 		};
 
-		Assert.Equal(3, AgentProcess.Ancestor(processes, 10, "Claude"));
+		Assert.Equal(3, AgentProcess.Ancestor(processes, 10, HookTarget.Claude.Processes));
 	}
 
 	[Fact]
@@ -34,7 +34,7 @@ public class AgentProcessTests
 			[1] = (0, "explorer.exe"),
 		};
 
-		Assert.Null(AgentProcess.Ancestor(processes, 10, "Claude"));
+		Assert.Null(AgentProcess.Ancestor(processes, 10, HookTarget.Claude.Processes));
 	}
 
 	[Fact]
@@ -46,7 +46,7 @@ public class AgentProcessTests
 			[5] = (10, "cmd.exe"),
 		};
 
-		Assert.Null(AgentProcess.Ancestor(processes, 10, "Claude"));
+		Assert.Null(AgentProcess.Ancestor(processes, 10, HookTarget.Claude.Processes));
 	}
 
 	[Fact]
@@ -61,7 +61,7 @@ public class AgentProcessTests
 			[1] = (0, "WindowsTerminal.exe"),
 		};
 
-		Assert.Equal(3, AgentProcess.Ancestor(processes, 10, "Codex"));
+		Assert.Equal(3, AgentProcess.Ancestor(processes, 10, HookTarget.Codex.Processes));
 	}
 
 	[Fact]

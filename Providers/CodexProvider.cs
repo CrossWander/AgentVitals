@@ -33,6 +33,8 @@ internal sealed class CodexProvider : IProvider
 
 	public IStatusPage? Status { get; } = new OpenAiStatus();
 
+	public HookTarget? Hooks => HookTarget.Codex;
+
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{

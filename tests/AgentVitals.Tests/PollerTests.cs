@@ -373,6 +373,8 @@ public class PollerTests
 
 		public IStatusPage? Status => status;
 
+		public HookTarget? Hooks => null;
+
 		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => Task.FromResult(answer());
 	}
 
@@ -389,6 +391,8 @@ public class PollerTests
 		public IUsageLog? Usage => log;
 
 		public IStatusPage? Status => null;
+
+		public HookTarget? Hooks => null;
 
 		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation) => throw new NotSupportedException();
 	}

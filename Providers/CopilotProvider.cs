@@ -47,6 +47,8 @@ internal sealed class CopilotProvider : IProvider
 
 	public IStatusPage? Status { get; } = new GitHubStatus();
 
+	public HookTarget? Hooks => null;
+
 	/// <summary>Спрашивать, когда есть клиент Copilot: без входа git ответом будет «Нет входа GitHub», и следующий
 	/// вопрос — только когда вход появится. «Диспетчер учётных данных» есть лишь у Windows.</summary>
 	public bool Installed => OperatingSystem.IsWindows() && _signs.Any(Directory.Exists);

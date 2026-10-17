@@ -48,6 +48,8 @@ internal sealed class CursorProvider : IProvider
 
 	public IStatusPage? Status { get; } = new StatusPage("Cursor", "https://status.cursor.com");
 
+	public HookTarget? Hooks => null;
+
 	// winsqlite3 есть только у Windows.
 	public bool Installed => OperatingSystem.IsWindows() && File.Exists(Credentials);
 

@@ -24,6 +24,21 @@ public class HookInstallerTests
 
 	private static HookTarget Codex(string file) => HookTarget.Codex with { File = file };
 
+	[Theory]
+	[InlineData("codex", "Codex")]
+	[InlineData(null, "Claude")] // так Claude Code звал hook до Codex — подключённые раньше hooks работают как были
+	[InlineData("", "Claude")]
+	public void HookArgumentFindsItsAgent(string? key, string agent) => Assert.Equal(agent, HookTarget.For(key).Agent);
+
+	[Fact]
+	public void ProvidersCarryTheirHooks() // сессии — часть контракта агента, как расход и статус
+	{
+		IProvider[] agents = [new ClaudeProvider(), new CodexProvider(), new GeminiProvider(), new CopilotProvider(), new CursorProvider()];
+
+		Assert.Equal(HookTarget.All, agents.Select(agent => agent.Hooks).OfType<HookTarget>());
+		Assert.All(agents, agent => Assert.True(agent.Hooks is null || agent.Hooks.Agent == agent.Name));
+	}
+
 	[Fact]
 	public void CodexGetsAQuotedCommandLine() // Codex запускает строку через cmd.exe /C — путь в кавычках
 	{

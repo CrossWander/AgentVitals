@@ -26,13 +26,14 @@ internal static class HookWriter
 	};
 
 	/// <summary>Прочитать событие и записать состояние; не бросает никогда.</summary>
-	/// <param name="agent">Чей hook: «Claude» или «Codex».</param>
-	public static void Run(Stream input, string directory, long at, int? pid = null, string agent = "Claude")
+	/// <param name="agent">Чей hook — HookTarget.Agent.</param>
+	/// <param name="transcript">Запомнить журнал сессии — HookTarget.Transcript.</param>
+	public static void Run(Stream input, string directory, long at, int? pid = null, string agent = "Claude", bool transcript = true)
 	{
 		try
 		{
 			using var reader = new StreamReader(input, Encoding.UTF8);
-			Apply(JsonNode.Parse(reader.ReadToEnd()), directory, at, pid, agent);
+			Apply(JsonNode.Parse(reader.ReadToEnd()), directory, at, pid, agent, transcript);
 		}
 		catch (Exception)
 		{
@@ -41,7 +42,7 @@ internal static class HookWriter
 		}
 	}
 
-	internal static void Apply(JsonNode? payload, string directory, long at, int? pid = null, string agent = "Claude")
+	internal static void Apply(JsonNode? payload, string directory, long at, int? pid = null, string agent = "Claude", bool transcript = true)
 	{
 		if (payload is null
 			|| (string?)payload["session_id"] is not { Length: > 0 } id
@@ -82,7 +83,7 @@ internal static class HookWriter
 					at,
 
 					// Журнал нужен, чтобы заметить Esc, о котором hooks Claude Code молчат; у Codex для него есть Interrupt.
-					Transcript: agent == "Claude" ? (string?)payload["transcript_path"] : null,
+					Transcript: transcript ? (string?)payload["transcript_path"] : null,
 					Turn: Turn(hookEvent, state.Value, recorded, at),
 					Pid: pid,
 					Agent: agent,

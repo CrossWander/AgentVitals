@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Nodes;
 
 namespace AgentVitals;
@@ -11,6 +12,8 @@ internal sealed record HookEvent(string Name, string? Matcher = null, bool Async
 /// <summary>
 /// Куда и в каком виде подключаются hooks одного агента. Agent — имя провайдера: им помечаются сессии;
 /// Title — имя программы в подписях. Make строит запись hook для exe; Exe узнаёт свою запись и отдаёт путь из неё.
+/// Key — слово после «hook» в команде; Processes — имена exe агента, предка процесса hook;
+/// Transcript — hooks молчат о прерывании, и его ищут в журнале сессии.
 /// </summary>
 internal sealed record HookTarget(
 	string Agent,
@@ -18,7 +21,10 @@ internal sealed record HookTarget(
 	string File,
 	IReadOnlyList<HookEvent> Events,
 	Func<string, JsonObject> Make,
-	Func<JsonObject, string?> Exe)
+	Func<JsonObject, string?> Exe,
+	string Key,
+	IReadOnlySet<string> Processes,
+	bool Transcript)
 {
 	private const string _codexArgs = "hook codex";
 
@@ -44,7 +50,14 @@ internal sealed record HookTarget(
 		exe => new JsonObject { ["type"] = "command", ["command"] = exe, ["args"] = new JsonArray("hook") },
 		hook => hook["args"] is JsonArray { Count: 1 } args && (string?)args[0] == "hook" && IsAgentVitals((string?)hook["command"])
 			? (string?)hook["command"]
-			: null);
+			: null,
+		"",
+
+		// node.exe — Claude Code, поставленный через npm; родной установщик даёт claude.exe.
+		new HashSet<string>(["claude.exe", "node.exe"], StringComparer.OrdinalIgnoreCase),
+
+		// О прерывании клавишей Esc hooks Claude Code молчат.
+		Transcript: true);
 
 	// Codex запускает строку через cmd.exe /C — путь в кавычках. SubagentStop не подключён: у субагента session_id
 	// родителя, и его конец сбросил бы главную сессию посреди хода. Interrupt и SessionEnd у Codex синхронные,
@@ -69,10 +82,20 @@ internal sealed record HookTarget(
 			&& command[..^(_codexArgs.Length + 1)].Trim().Trim('"') is var exe
 			&& IsAgentVitals(exe)
 				? exe
-				: null);
+				: null,
+		"codex",
+
+		// codex.exe при любой установке: из npm node лишь запускает его.
+		new HashSet<string>(["codex.exe"], StringComparer.OrdinalIgnoreCase),
+
+		// Прерывание Codex сообщает сам — событием Interrupt.
+		Transcript: false);
 
 	/// <summary>Агенты, к которым подключаются hooks; у Gemini их нет.</summary>
 	public static IReadOnlyList<HookTarget> All { get; } = [Claude, Codex];
+
+	/// <summary>Чей hook по слову после «hook»: без слова и с незнакомым — Claude, так его звали до Codex.</summary>
+	public static HookTarget For(string? key) => All.FirstOrDefault(target => target.Key == key) ?? All.First(target => target.Key.Length == 0);
 
 	// Путь к программе мог смениться, имя — нет.
 	private static bool IsAgentVitals(string? path) =>

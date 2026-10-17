@@ -36,6 +36,9 @@ internal interface IProvider
 	/// <summary>Страница здоровья сервиса агента; null — у агента её нет.</summary>
 	IStatusPage? Status { get; }
 
+	/// <summary>Куда подключаются hooks живых сессий агента; null — сессий агента программа не видит.</summary>
+	HookTarget? Hooks { get; }
+
 	/// <summary>Получить текущие квоты агента.</summary>
 	/// <param name="http">Общий HTTP-клиент программы.</param>
 	/// <param name="cancellation">Отмена запроса.</param>

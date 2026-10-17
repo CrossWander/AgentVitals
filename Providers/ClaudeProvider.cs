@@ -41,6 +41,8 @@ internal sealed class ClaudeProvider : IProvider
 
 	public IStatusPage? Status { get; } = new StatusPage("Anthropic", "https://status.claude.com");
 
+	public HookTarget? Hooks => HookTarget.Claude;
+
 	/// <summary>Вход переписан — в файле или в «Диспетчере»: в новом режиме файл не трогают, а после отказа надо
 	/// заметить свежую запись.</summary>
 	public DateTime SignedIn => new[]

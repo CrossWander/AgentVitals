@@ -222,7 +222,7 @@ internal static class Views
 		var info = string.Join(" · ", new[] { state.Snapshot?.Plan, hide ? null : state.Snapshot?.Account }.Where(text => !string.IsNullOrEmpty(text)));
 
 		var badge = Badge([state], now, levels);
-		var target = hooks is null ? null : HookTarget.All.FirstOrDefault(target => target.Agent == state.Provider.Name);
+		var target = hooks is null ? null : state.Provider.Hooks;
 		List<Session> own = [.. (sessions ?? []).Where(session => session.Agent == state.Provider.Name)];
 
 		return new(

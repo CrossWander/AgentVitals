@@ -31,6 +31,8 @@ internal sealed class GeminiProvider : IProvider
 	// Своей статус-страницы у Gemini CLI нет, только общая Google Cloud: пока не показываем.
 	public IStatusPage? Status => null;
 
+	public HookTarget? Hooks => null;
+
 	/// <inheritdoc/>
 	public async Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 	{
