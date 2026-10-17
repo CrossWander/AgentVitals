@@ -353,6 +353,13 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void AgentWithoutStatisticsOrSessionsIsBare() // на месте статистики — строка, почему её нет
+	{
+		Assert.True(Views.Provider(new ProviderState(new CopilotProvider()), DateTime.UtcNow, _levels).Bare);
+		Assert.False(Views.Provider(new ProviderState(new ClaudeProvider()), DateTime.UtcNow, _levels).Bare);
+	}
+
+	[Fact]
 	public void FeatureWindowGetsACard()
 	{
 		var state = new ProviderState(new GeminiProvider())

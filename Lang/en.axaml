@@ -55,6 +55,7 @@
     <x:String x:Key="langSessionWorkingTool">working: {0}</x:String>
     <x:String x:Key="langSessionWaiting">waiting for permission</x:String>
     <x:String x:Key="langNoSessions">No active sessions</x:String>
+    <x:String x:Key="langNoStats">{0} has no daily statistics or live sessions — only quotas</x:String>
     <x:String x:Key="langHooksHint">Connect {0} in settings to see live sessions</x:String>
     <x:String x:Key="langLiveWorking">{0} is working · {1}</x:String>
     <x:String x:Key="langLiveTool">{0} is working: {1} · {2}</x:String>

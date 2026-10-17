@@ -55,6 +55,7 @@
     <x:String x:Key="langSessionWorkingTool">работает: {0}</x:String>
     <x:String x:Key="langSessionWaiting">ждёт разрешения</x:String>
     <x:String x:Key="langNoSessions">Активных сессий нет</x:String>
+    <x:String x:Key="langNoStats">У {0} нет статистики по дням и живых сессий — только квоты</x:String>
     <x:String x:Key="langHooksHint">Подключи {0} в настройках, чтобы видеть живые сессии</x:String>
     <x:String x:Key="langLiveWorking">{0} работает · {1}</x:String>
     <x:String x:Key="langLiveTool">{0} работает: {1} · {2}</x:String>

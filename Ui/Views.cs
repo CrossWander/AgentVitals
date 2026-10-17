@@ -69,6 +69,9 @@ internal sealed record ProviderView(
 	public IReadOnlyList<CardView> LimitingCards => [.. Cards.Where(card => card.Limiting)];
 
 	public bool HasError => Error.Length > 0;
+
+	/// <summary>Ни статистики, ни сессий — как у Copilot: на их месте строка, почему там пусто.</summary>
+	public bool Bare => Usage is null && Sessions is null;
 }
 
 /// <param name="Prompt">Первый запрос сессии; null — ещё не известен или экран показывают другим.</param>

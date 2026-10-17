@@ -55,6 +55,7 @@
     <x:String x:Key="langSessionWorkingTool">працює: {0}</x:String>
     <x:String x:Key="langSessionWaiting">чекає дозволу</x:String>
     <x:String x:Key="langNoSessions">Активних сесій немає</x:String>
+    <x:String x:Key="langNoStats">У {0} немає статистики за днями й живих сесій — лише квоти</x:String>
     <x:String x:Key="langHooksHint">Підключи {0} у налаштуваннях, щоб бачити живі сесії</x:String>
     <x:String x:Key="langLiveWorking">{0} працює · {1}</x:String>
     <x:String x:Key="langLiveTool">{0} працює: {1} · {2}</x:String>
