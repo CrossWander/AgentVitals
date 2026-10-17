@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace AgentVitals.Platform;
 
-/// <summary>Процесс агента (Claude Code, Codex), запустивший hook, и проверка, что он ещё жив.</summary>
+/// <summary>Процесс агента, запустивший hook, и проверка, что он ещё жив.</summary>
 public static unsafe partial class AgentProcess
 {
 	private const uint _snapProcess = 0x2;

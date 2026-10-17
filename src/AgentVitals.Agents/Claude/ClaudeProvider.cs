@@ -82,8 +82,11 @@ internal sealed class ClaudeProvider : IProvider
 
 		var usage = await Api.SendAsync(http, request, Cli, cancellation);
 
-		return Parse(usage, Quota.PlanName((string?)oauth["subscriptionType"]), await ReadAccountAsync(cancellation));
+		return Parse(usage, Plan((string?)oauth["subscriptionType"]), await ReadAccountAsync(cancellation));
 	}
+
+	/// <summary>Тариф Claude для показа: «claude_max» → «Max».</summary>
+	internal static string Plan(string? subscription) => Quota.PlanName(subscription?.Replace("claude_", "", StringComparison.OrdinalIgnoreCase));
 
 	/// <summary>Вход из «Диспетчера»: целиком или из кусков #0…#(n−1), если есть #m с их числом n и длиной l.
 	/// Кусок пропал, длина не сошлась — записи нет. #p (недописанные куски) не читаем.</summary>

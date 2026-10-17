@@ -41,5 +41,5 @@ internal static class CodexHooks
 		new HashSet<string>(["codex.exe"], StringComparer.OrdinalIgnoreCase),
 
 		// Прерывание Codex сообщает сам — событием Interrupt.
-		Transcript: false);
+		Interrupted: null);
 }

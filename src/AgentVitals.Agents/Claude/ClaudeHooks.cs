@@ -38,6 +38,6 @@ internal static class ClaudeHooks
 		// node.exe — Claude Code, поставленный через npm; родной установщик даёт claude.exe.
 		new HashSet<string>(["claude.exe", "node.exe"], StringComparer.OrdinalIgnoreCase),
 
-		// О прерывании клавишей Esc hooks Claude Code молчат.
-		Transcript: true);
+		// О прерывании клавишей Esc hooks Claude Code молчат — оно видно только в журнале сессии.
+		Interrupted: ClaudeTranscript.Interrupted);
 }

@@ -236,8 +236,9 @@ The code is four projects in `src\`, and each one knows only those before it:
 
 - `AgentVitals.Platform` — Windows calls, files, the log and sounds;
 - `AgentVitals.Core` — quotas, usage, status pages and live sessions: the model and the contract every agent fills in,
-  with no UI and no agent names;
-- `AgentVitals.Agents` — a folder per agent with its quotas, usage log, status page and hooks;
+  with no UI;
+- `AgentVitals.Agents` — a folder per agent with what is particular to it: quotas, usage log and price page, status
+  page, hooks and session transcript;
 - `AgentVitals` — the tray app: windows, strings, polling, settings and updates.
 
 `release\` is a build folder and stays out of git. Publishing a release on GitHub runs

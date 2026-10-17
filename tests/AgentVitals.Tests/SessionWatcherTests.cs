@@ -31,7 +31,7 @@ public class SessionWatcherTests
 		Write(temp, "old", SessionState.Idle, _now.AddHours(-2));
 		Write(temp, "live", SessionState.Working, _now.AddMinutes(-1));
 
-		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now));
+		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now, AgentCatalog.Hooks));
 
 		Assert.Equal("live", session.Id);
 		Assert.Equal(SessionState.Working, session.State);
@@ -46,7 +46,7 @@ public class SessionWatcherTests
 		File.WriteAllText(temp.File("gone.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Working, null, @"C:\x", now.Ticks, Pid: Exited()), HookWriter.Json));
 		File.WriteAllText(temp.File("live.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Working, null, @"C:\x", now.Ticks, Pid: Environment.ProcessId), HookWriter.Json));
 
-		Assert.Equal("live", Assert.Single(SessionWatcher.Read(temp.Path, now)).Id);
+		Assert.Equal("live", Assert.Single(SessionWatcher.Read(temp.Path, now, AgentCatalog.Hooks)).Id);
 		Assert.False(File.Exists(temp.File("gone.json")));
 	}
 
@@ -57,7 +57,7 @@ public class SessionWatcherTests
 		var now = DateTime.UtcNow;
 		File.WriteAllText(temp.File("live.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Waiting, null, @"C:\x", now.Ticks, Pid: Environment.ProcessId), HookWriter.Json));
 
-		var session = Assert.Single(SessionWatcher.Read(temp.Path, now));
+		var session = Assert.Single(SessionWatcher.Read(temp.Path, now, AgentCatalog.Hooks));
 		Assert.Equal((Environment.ProcessId, @"C:\x"), (session.Pid, session.Cwd));
 	}
 
@@ -75,7 +75,7 @@ public class SessionWatcherTests
 		using var temp = new TempDirectory();
 		File.WriteAllText(temp.File("legacy.json"), $$"""{ "state": "working", "cwd": "C:\\x", "at": {{_now.AddHours(3).Ticks}} }""");
 
-		Assert.Empty(SessionWatcher.Read(temp.Path, _now));
+		Assert.Empty(SessionWatcher.Read(temp.Path, _now, AgentCatalog.Hooks));
 		Assert.False(File.Exists(temp.File("legacy.json")));
 	}
 
@@ -102,7 +102,7 @@ public class SessionWatcherTests
 
 		File.WriteAllText(sessions.File("s.json"), JsonSerializer.Serialize(new SessionRecord(state, null, @"C:\nowhere", hook.Ticks, Transcript: transcript), HookWriter.Json));
 
-		return Assert.Single(SessionWatcher.Read(sessions.Path, _now)).State;
+		return Assert.Single(SessionWatcher.Read(sessions.Path, _now, AgentCatalog.Hooks)).State;
 	}
 
 	[Theory]
@@ -122,7 +122,7 @@ public class SessionWatcherTests
 		var turn = _now.AddMinutes(-3);
 		File.WriteAllText(temp.File("s.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Working, null, @"C:\x", _now.AddMinutes(-1).Ticks, Turn: turn.Ticks), HookWriter.Json));
 
-		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now));
+		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now, AgentCatalog.Hooks));
 
 		Assert.Equal(turn, session.TurnStarted);
 		Assert.Null(session.TurnDuration);
@@ -134,7 +134,7 @@ public class SessionWatcherTests
 		using var temp = new TempDirectory();
 		File.WriteAllText(temp.File("s.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Idle, null, @"C:\x", _now.AddMinutes(-1).Ticks, Turn: _now.AddMinutes(-13).Ticks), HookWriter.Json));
 
-		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now));
+		var session = Assert.Single(SessionWatcher.Read(temp.Path, _now, AgentCatalog.Hooks));
 
 		Assert.Equal(TimeSpan.FromMinutes(12), session.TurnDuration);
 		Assert.Null(session.TurnStarted);
@@ -161,7 +161,7 @@ public class SessionWatcherTests
 		File.WriteAllText(temp.File("fresh.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Idle, null, "C:\\x", _now.AddSeconds(-30).Ticks, Ended: true), HookWriter.Json));
 		File.WriteAllText(temp.File("old.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Idle, null, "C:\\x", _now.AddMinutes(-2).Ticks, Ended: true), HookWriter.Json));
 
-		Assert.Empty(SessionWatcher.Read(temp.Path, _now));
+		Assert.Empty(SessionWatcher.Read(temp.Path, _now, AgentCatalog.Hooks));
 		Assert.True(File.Exists(temp.File("fresh.json")));
 		Assert.False(File.Exists(temp.File("old.json")));
 	}

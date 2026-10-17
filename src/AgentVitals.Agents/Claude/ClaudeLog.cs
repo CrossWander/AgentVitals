@@ -33,7 +33,7 @@ internal sealed class ClaudeLog(string projects, string pricesFile) : IUsageLog
 	};
 
 	private readonly LogTail _tail = new();
-	private readonly PriceSource _prices = new(PriceList.Url, pricesFile, PriceList.Parse);
+	private readonly PriceSource _prices = new(ClaudePrices.Url, pricesFile, ClaudePrices.Parse);
 
 	// Пока идёт ответ, Claude Code пишет его несколько раз с одним id: последняя копия — полная.
 	// По этой же причине повторное чтение файла ничего не удваивает.

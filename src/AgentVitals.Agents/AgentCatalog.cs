@@ -18,6 +18,7 @@ public static class AgentCatalog
 		[new ClaudeProvider(), new CodexProvider(), new GeminiProvider(), new CopilotProvider(), new CursorProvider()];
 
 	/// <summary>Агенты, к которым подключаются hooks живых сессий.</summary>
+	/// <remarks>Режим hook строит всех агентов на каждое событие: их конструкторы не читают файлов и не бросают.</remarks>
 	public static IReadOnlyList<HookTarget> Hooks { get; } = [.. All().Select(agent => agent.Hooks).OfType<HookTarget>()];
 
 	/// <summary>Чей hook по слову после «hook»: без слова и с незнакомым — Claude, так его звали до Codex.</summary>

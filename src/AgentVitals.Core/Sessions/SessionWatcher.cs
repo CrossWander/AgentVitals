@@ -14,8 +14,6 @@ namespace AgentVitals.Core.Sessions;
 public static class SessionWatcher
 {
 	private const string _branchPrefix = "ref: refs/heads/";
-	private const string _interrupted = "[Request interrupted by user";
-	private const int _tail = 8192;
 
 	// Ход, который «работает» дольше четверти часа, оборван: Stop не пришёл. Вопрос о разрешении
 	// человек может оставить на обед. Простаивающая сессия старше часа — закрытый терминал.
@@ -26,7 +24,8 @@ public static class SessionWatcher
 	// Отметка о закрытии нужна, пока могут финишировать async-hooks, запущенные перед выходом.
 	private static readonly TimeSpan _endedForgotten = TimeSpan.FromMinutes(1);
 
-	public static IReadOnlyList<Session> Read(string directory, DateTime now)
+	/// <param name="agents">Hooks агентов: кто как узнаёт прерывание по своему журналу сессии.</param>
+	public static IReadOnlyList<Session> Read(string directory, DateTime now, IReadOnlyList<HookTarget> agents)
 	{
 		if (!Directory.Exists(directory))
 		{
@@ -63,8 +62,12 @@ public static class SessionWatcher
 			}
 
 			var state = Effective(session.State, age);
+			var agent = session.Agent ?? "Claude";
 
-			if (state != SessionState.Idle && Interrupted(session.Transcript, session.Time))
+			if (state != SessionState.Idle
+				&& session.Transcript is { Length: > 0 } transcript
+				&& agents.FirstOrDefault(target => target.Agent == agent)?.Interrupted is { } interrupted
+				&& interrupted(transcript, session.Time))
 			{
 				state = SessionState.Idle;
 			}
@@ -90,7 +93,7 @@ public static class SessionWatcher
 				session.State == SessionState.Idle ? session.Time - turn : null,
 				session.Pid,
 				session.Cwd,
-				session.Agent ?? "Claude",
+				agent,
 				session.Prompt));
 		}
 
@@ -103,65 +106,6 @@ public static class SessionWatcher
 		SessionState.Waiting when age > _waitingStale => SessionState.Idle,
 		_ => state,
 	};
-
-	/// <summary>
-	/// Ход прерван клавишей Esc после последнего события hook. Stop в этом случае не приходит, зато в журнал
-	/// сессии последней репликой ложится отметка прерывания; «…for tool use» — Esc на вопросе о разрешении.
-	/// </summary>
-	internal static bool Interrupted(string? transcript, DateTime since)
-	{
-		if (string.IsNullOrEmpty(transcript))
-		{
-			return false;
-		}
-
-		try
-		{
-			// Хватает хвоста: отметка короткая и стоит в самом конце, за ней — только служебные записи.
-			using var stream = SharedFile.Open(transcript);
-			var start = Math.Max(0, stream.Length - _tail);
-			var buffer = new byte[stream.Length - start];
-			stream.Position = start;
-			stream.ReadExactly(buffer);
-			var lines = Encoding.UTF8.GetString(buffer).Split('\n');
-
-			// Первая строка хвоста обрезана, если читали не с начала файла.
-			for (var index = lines.Length - 1; index >= (start > 0 ? 1 : 0); index--)
-			{
-				var entry = Parse(lines[index]) as JsonObject;
-				var type = (string?)entry?["type"];
-
-				if (entry is null || type is not ("user" or "assistant"))
-				{
-					continue;
-				}
-
-				return type == "user"
-					&& entry["message"]?["content"] is JsonArray content
-					&& content.OfType<JsonObject>().Any(item => ((string?)item["text"])?.StartsWith(_interrupted, StringComparison.Ordinal) == true)
-					&& DateTimeOffset.TryParse((string?)entry["timestamp"], CultureInfo.InvariantCulture, out var at)
-					&& at.UtcDateTime >= since;
-			}
-		}
-		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
-		{
-			// нет журнала или он не того вида — остаётся то, что сказали hooks
-		}
-
-		return false;
-	}
-
-	private static JsonNode? Parse(string line)
-	{
-		try
-		{
-			return JsonNode.Parse(line);
-		}
-		catch (JsonException)
-		{
-			return null;
-		}
-	}
 
 	public static SessionState Overall(IEnumerable<Session> sessions) =>
 		sessions

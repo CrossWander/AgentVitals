@@ -33,7 +33,7 @@ internal sealed class CodexLog(string home, string pricesFile) : IUsageLog
 	};
 
 	private readonly LogTail _tail = new();
-	private readonly PriceSource _prices = new(PriceList.OpenAiUrl, pricesFile, PriceList.ParseOpenAi);
+	private readonly PriceSource _prices = new(OpenAiPrices.Url, pricesFile, OpenAiPrices.Parse);
 
 	// Ответ — по response_id: запись на ответ одна, а повторное чтение файла ничего не удваивает.
 	private readonly Dictionary<string, UsageRecord> _records = [];

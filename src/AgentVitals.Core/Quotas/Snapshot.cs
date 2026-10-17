@@ -75,7 +75,6 @@ public enum Health
 	Critical,
 }
 
-
 public static class Quota
 {
 	/// <summary>Окно, которое ограничивает сильнее всех: среди блокирующих всё, а если таких нет — среди всех.</summary>
@@ -119,10 +118,7 @@ public static class Quota
 	public static Pace Pace(double used, double expected) =>
 		used > expected + 5 ? Quotas.Pace.Ahead : used < expected - 5 ? Quotas.Pace.Spare : Quotas.Pace.Even;
 
-	/// <summary>Тариф для показа: «claude_max» → «Max», «team» → «Team».</summary>
+	/// <summary>Тариф для показа: «team» → «Team», «pro_plus» → «Pro Plus».</summary>
 	public static string PlanName(string? subscription) =>
-		string.IsNullOrEmpty(subscription)
-			? ""
-			: CultureInfo.InvariantCulture.TextInfo.ToTitleCase(
-				subscription.Replace("claude_", "", StringComparison.OrdinalIgnoreCase).Replace('_', ' '));
+		string.IsNullOrEmpty(subscription) ? "" : CultureInfo.InvariantCulture.TextInfo.ToTitleCase(subscription.Replace('_', ' '));
 }

@@ -192,4 +192,10 @@ public class ClaudeProviderTests
 		Assert.Equal("file", (string?)ClaudeProvider.Pick(Login("file", 1), "not json")!["accessToken"]);
 		Assert.Null(ClaudeProvider.Pick(null, null));
 	}
+
+	[Theory]
+	[InlineData("claude_max", "Max")] // приставка — Claude, а не тарифа: её знает он сам, а не общий код
+	[InlineData("pro", "Pro")]
+	[InlineData(null, "")]
+	public void NamesItsPlanWithoutThePrefix(string? subscription, string expected) => Assert.Equal(expected, ClaudeProvider.Plan(subscription));
 }

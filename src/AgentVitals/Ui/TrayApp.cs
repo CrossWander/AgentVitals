@@ -210,7 +210,7 @@ internal sealed class TrayApp
 			_darkTaskbar = Tray.DarkTaskbar;
 		}
 
-		var sessions = SessionWatcher.Read(Paths.Sessions, DateTime.UtcNow);
+		var sessions = SessionWatcher.Read(Paths.Sessions, DateTime.UtcNow, AgentCatalog.Hooks);
 
 		if (!sessions.SequenceEqual(_sessions))
 		{

@@ -6,6 +6,8 @@
     <ApplicationIcon>app.ico</ApplicationIcon>
     <AssemblyName>AgentVitals</AssemblyName>
     <RootNamespace>AgentVitals</RootNamespace>
+    <!-- Значок трея и курсор — через указатели. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
