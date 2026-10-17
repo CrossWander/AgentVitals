@@ -43,6 +43,10 @@ internal static unsafe partial class HostWindow
 		return true;
 	}
 
+	/// <summary>Окно, где идёт сессия, сейчас активно — человек смотрит на неё.</summary>
+	public static bool InFront(int pid, string path) =>
+		OperatingSystem.IsWindows() && Find(pid, path) is { } window && window == GetForegroundWindow();
+
 	/// <summary>Окно, где идёт сессия; null — не нашлось.</summary>
 	internal static nint? Find(int pid, string path)
 	{

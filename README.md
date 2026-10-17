@@ -122,7 +122,7 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
 - A running turn shows how long it has been going (*working · 3 min*). A toast says when Claude
   finishes a turn longer than 5 minutes or asks for permission; both can be tuned or switched off
   in settings. *Play a sound when an agent asks for permission* adds a soft two-note chime to the
-  permission toast only — off by default.
+  permission toast only — off by default, and silent while the session's window is the active one.
 - The list keeps one height — about four sessions — and scrolls past that, with a thin scroll bar.
 - Two sessions in the same folder show the start of their first prompt instead of the branch, so
   you can tell them apart; hovering a row shows the folder, branch and prompt in full. The eye

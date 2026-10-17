@@ -56,5 +56,6 @@ internal static class SessionAlarm
 	}
 
 	/// <summary>Звук — только к вопросу о разрешении, когда он включён: агент стоит, пока не ответят. Конец хода — тихий тост.</summary>
-	public static bool Chimes(SessionAlert alert, bool enabled) => enabled && alert.Waiting;
+	/// <param name="inFront">Окно сессии сейчас активно: вопрос и так перед глазами — тост остаётся, звука нет.</param>
+	public static bool Chimes(SessionAlert alert, bool enabled, bool inFront) => enabled && alert.Waiting && !inFront;
 }
