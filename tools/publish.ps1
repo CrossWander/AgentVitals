@@ -41,7 +41,7 @@ if (Test-Path $output) {
 }
 
 $arguments = @(
-    'publish', (Join-Path $root 'AgentVitals.csproj')
+    'publish', (Join-Path $root 'src\AgentVitals\AgentVitals.csproj')
     '-c', 'Release'
     '-r', 'win-x64'
     '-o', $output

@@ -11,7 +11,7 @@ public class LangTests
 	[Fact]
 	public void NoAgentsHintNamesEveryAgent() // только Copilot, а входа git нет: подсказка не должна звать ставить Claude
 	{
-		var files = Directory.GetFiles(Path.Combine(Root(), "Lang"), "*.axaml");
+		var files = Directory.GetFiles(Lang(), "*.axaml");
 		Assert.Equal(3, files.Length);
 
 		foreach (var file in files)
@@ -26,7 +26,7 @@ public class LangTests
 	[Fact]
 	public void EverySignInProblemHasText() // у агента своей строки может не быть — тогда общая, и она должна быть
 	{
-		foreach (var file in Directory.GetFiles(Path.Combine(Root(), "Lang"), "*.axaml"))
+		foreach (var file in Directory.GetFiles(Lang(), "*.axaml"))
 		{
 			var text = File.ReadAllText(file);
 
@@ -36,6 +36,8 @@ public class LangTests
 			}
 		}
 	}
+
+	private static string Lang() => Path.Combine(Root(), "src", "AgentVitals", "Lang");
 
 	private static string Root()
 	{

@@ -232,6 +232,14 @@ Requires the .NET 10 SDK.
     powershell -File tools\publish.ps1 -SelfContained
     powershell -File tools\make-icons.ps1         # redraw app.ico and app.png
 
+The code is four projects in `src\`, and each one knows only those before it:
+
+- `AgentVitals.Platform` — Windows calls, files, the log and sounds;
+- `AgentVitals.Core` — quotas, usage, status pages and live sessions: the model and the contract every agent fills in,
+  with no UI and no agent names;
+- `AgentVitals.Agents` — a folder per agent with its quotas, usage log, status page and hooks;
+- `AgentVitals` — the tray app: windows, strings, polling, settings and updates.
+
 `release\` is a build folder and stays out of git. Publishing a release on GitHub runs
 [`release.yml`](.github/workflows/release.yml): it tests the tagged sources, builds the exe with
 `tools\publish.ps1` and attaches it to that release.

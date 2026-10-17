@@ -77,7 +77,7 @@ public class HookWriterTests
 	public void CodexKeepsNoTranscript() // прерывание Codex сообщает сам — журнал читать незачем
 	{
 		using var temp = new TempDirectory();
-		var codex = HookTarget.Codex;
+		var codex = CodexHooks.Target;
 		HookWriter.Apply(new JsonObject { ["session_id"] = "c1", ["hook_event_name"] = "PreToolUse", ["tool_name"] = "Bash", ["cwd"] = @"C:\x", ["transcript_path"] = @"C:\x\rollout.jsonl" }, temp.Path, 100, pid: 7, agent: codex.Agent, transcript: codex.Transcript);
 
 		var record = HookWriter.Read(temp.File("c1.json"))!;
@@ -88,7 +88,7 @@ public class HookWriterTests
 	public void ClaudeKeepsItsTranscript() // о прерывании Esc hooks Claude Code молчат — его видно только в журнале
 	{
 		using var temp = new TempDirectory();
-		var claude = HookTarget.Claude;
+		var claude = ClaudeHooks.Target;
 		HookWriter.Apply(new JsonObject { ["session_id"] = "c1", ["hook_event_name"] = "PreToolUse", ["cwd"] = @"C:\x", ["transcript_path"] = @"C:\x\c1.jsonl" }, temp.Path, 100, agent: claude.Agent, transcript: claude.Transcript);
 
 		Assert.Equal(@"C:\x\c1.jsonl", HookWriter.Read(temp.File("c1.json"))!.Transcript);

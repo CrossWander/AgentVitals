@@ -1,0 +1,21 @@
+<Project>
+
+  <!-- Общее для всех проектов программы и для тестов. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <!-- Switch по enum без «_»: забытое значение — ошибка сборки, а неименованное число и так бросит исключение. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CS8509</WarningsAsErrors>
+    <NoWarn>$(NoWarn);CS8524</NoWarn>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Сборка релиза на GitHub берёт версию из тега; эта — для сборок у себя. Одна на все сборки:
+         по ней и номер в настройках, и User-Agent запросов агентов. -->
+    <Version>1.3.0</Version>
+    <Authors>Dykalo Pavlo</Authors>
+    <Copyright>© 2026 Dykalo Pavlo</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Product>AgentVitals</Product>
+  </PropertyGroup>
+
+</Project>

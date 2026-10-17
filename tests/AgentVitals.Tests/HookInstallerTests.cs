@@ -20,23 +20,21 @@ public class HookInstallerTests
 		}
 		""";
 
-	private static HookTarget Claude(string file) => HookTarget.Claude with { File = file };
+	private static HookTarget Claude(string file) => ClaudeHooks.Target with { File = file };
 
-	private static HookTarget Codex(string file) => HookTarget.Codex with { File = file };
+	private static HookTarget Codex(string file) => CodexHooks.Target with { File = file };
 
 	[Theory]
 	[InlineData("codex", "Codex")]
 	[InlineData(null, "Claude")] // так Claude Code звал hook до Codex — подключённые раньше hooks работают как были
 	[InlineData("", "Claude")]
-	public void HookArgumentFindsItsAgent(string? key, string agent) => Assert.Equal(agent, HookTarget.For(key).Agent);
+	public void HookArgumentFindsItsAgent(string? key, string agent) => Assert.Equal(agent, AgentCatalog.Hook(key).Agent);
 
 	[Fact]
 	public void ProvidersCarryTheirHooks() // сессии — часть контракта агента, как расход и статус
 	{
-		IProvider[] agents = [new ClaudeProvider(), new CodexProvider(), new GeminiProvider(), new CopilotProvider(), new CursorProvider()];
-
-		Assert.Equal(HookTarget.All, agents.Select(agent => agent.Hooks).OfType<HookTarget>());
-		Assert.All(agents, agent => Assert.True(agent.Hooks is null || agent.Hooks.Agent == agent.Name));
+		Assert.Equal(["Claude", "Codex"], AgentCatalog.Hooks.Select(target => target.Agent));
+		Assert.All(AgentCatalog.All(), agent => Assert.True(agent.Hooks is null || agent.Hooks.Agent == agent.Name));
 	}
 
 	[Fact]
@@ -81,9 +79,9 @@ public class HookInstallerTests
 		var claude = new JsonObject { ["type"] = "command", ["command"] = _exe, ["args"] = new JsonArray("hook") };
 		var codex = new JsonObject { ["type"] = "command", ["command"] = $"\"{_exe}\" hook codex" };
 
-		Assert.Null(HookTarget.Codex.Exe(claude));
-		Assert.Null(HookTarget.Claude.Exe(codex));
-		Assert.Equal(_exe, HookTarget.Codex.Exe(codex));
+		Assert.Null(CodexHooks.Target.Exe(claude));
+		Assert.Null(ClaudeHooks.Target.Exe(codex));
+		Assert.Equal(_exe, CodexHooks.Target.Exe(codex));
 	}
 
 	[Fact]

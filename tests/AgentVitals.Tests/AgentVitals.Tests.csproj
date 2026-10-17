@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../AgentVitals.csproj" />
+    <ProjectReference Include="../../src/AgentVitals/AgentVitals.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Вызовы ОС, файлы, журнал и звуки. Ни от чего в программе не зависит: здесь же лягут версии для других ОС. -->
+  <ItemGroup>
+    <EmbeddedResource Include="chime.wav" LogicalName="chime.wav" />
+    <EmbeddedResource Include="low.wav" LogicalName="low.wav" />
+    <InternalsVisibleTo Include="AgentVitals.Tests" />
+  </ItemGroup>
+
+</Project>

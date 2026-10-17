@@ -16,15 +16,15 @@ public class PollerTests
 	private static readonly Snapshot _snapshot = new("Max", null, [], null);
 
 	[Fact]
-	public void SuccessWaitsInterval() => Assert.Equal(_now.AddMinutes(2), Poller.Schedule(null, 120, _now));
+	public void SuccessWaitsInterval() => Assert.Equal(_now.AddMinutes(2), ProviderState.Schedule(null, 120, _now));
 
 	[Fact]
 	public void ExpiredTokenRechecksOnNextTick() =>
-		Assert.Equal(_now, Poller.Schedule(new SignInException("claude"), 60, _now));
+		Assert.Equal(_now, ProviderState.Schedule(new SignInException("claude"), 60, _now));
 
 	[Fact]
 	public void RateLimitWaitsUntilAllowed() =>
-		Assert.Equal(_now.AddMinutes(42), Poller.Schedule(new RateLimitedException(_now.AddMinutes(42)), 60, _now));
+		Assert.Equal(_now.AddMinutes(42), ProviderState.Schedule(new RateLimitedException(_now.AddMinutes(42)), 60, _now));
 
 	[Theory]
 	[InlineData(1, 5)]
@@ -32,7 +32,7 @@ public class PollerTests
 	[InlineData(3, 20)]
 	[InlineData(4, 30)]
 	[InlineData(9, 30)]
-	public void RefusalsInARowWaitLonger(int refusals, int minutes) => Assert.Equal(TimeSpan.FromMinutes(minutes), Poller.Backoff(refusals));
+	public void RefusalsInARowWaitLonger(int refusals, int minutes) => Assert.Equal(TimeSpan.FromMinutes(minutes), ProviderState.Backoff(refusals));
 
 	[Fact]
 	public async Task RepeatedRefusalWaitsLongerThanTheServerSays() // сервер всякий раз говорит «через ноль» — пауза растёт
@@ -79,7 +79,7 @@ public class PollerTests
 
 	[Fact]
 	public void BrokenCredentialsRetryInFiveMinutes() =>
-		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new JsonException("truncated"), 60, _now));
+		Assert.Equal(_now.AddMinutes(5), ProviderState.Schedule(new JsonException("truncated"), 60, _now));
 
 	[Fact]
 	public async Task WakeRetriesOnlyWhileTheNetworkIsDown() // после сна сеть поднимается не сразу
@@ -185,7 +185,7 @@ public class PollerTests
 
 	[Fact]
 	public void NetworkErrorRetriesInFiveMinutes() =>
-		Assert.Equal(_now.AddMinutes(5), Poller.Schedule(new HttpRequestException(), 60, _now));
+		Assert.Equal(_now.AddMinutes(5), ProviderState.Schedule(new HttpRequestException(), 60, _now));
 
 	[Fact]
 	public async Task NewIntervalAppliesAtOnce() // с 10 минут на минуту — без ожидания прежних 10 минут
@@ -236,7 +236,7 @@ public class PollerTests
 
 	[Fact]
 	public void NoSubscriptionIsAskedAgainNextDay() => // подписку могли оформить, пока программа работает; вход git от этого не меняется
-		Assert.Equal(_now.AddDays(1), Poller.Schedule(new SignInException("git", SignInProblem.NoSubscription), 60, _now));
+		Assert.Equal(_now.AddDays(1), ProviderState.Schedule(new SignInException("git", SignInProblem.NoSubscription), 60, _now));
 
 	[Fact]
 	public async Task NoSubscriptionDoesNotWaitForNewCredentials()
@@ -354,7 +354,7 @@ public class PollerTests
 	[InlineData(-5, 60)]
 	[InlineData(999_999, 86_400)]
 	public void ClampsHandEditedInterval(int seconds, int expected) =>
-		Assert.Equal(_now.AddSeconds(expected), Poller.Schedule(null, seconds, _now));
+		Assert.Equal(_now.AddSeconds(expected), ProviderState.Schedule(null, seconds, _now));
 
 	/// <summary>Агент, который отвечает тем, что вернёт или бросит answer.</summary>
 	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json", IStatusPage? status = null, bool confirmFirst = false) : IProvider
