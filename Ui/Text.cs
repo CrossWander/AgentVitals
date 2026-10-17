@@ -14,7 +14,7 @@ internal static class Text
 			? Localization.Get($"langFeature_{window.Label}") is var name && name != $"langFeature_{window.Label}" ? name : window.Label ?? ""
 			: Localization.Format($"langWindow{window.Kind}", window.Label);
 
-	/// <summary>«сброс через 1 ч 12 мин», а дальше суток — «сброс пт 10:00».</summary>
+	/// <summary>«сброс через 1 ч 12 мин», дальше суток — «сброс пт 10:00», а дальше недели — «сброс 1 нояб.».</summary>
 	public static string Until(DateTimeOffset? resets, DateTime now)
 	{
 		if (resets is not { } at)
@@ -25,9 +25,13 @@ internal static class Text
 		var left = at.UtcDateTime - now;
 
 		return left <= TimeSpan.Zero ? Localization.Get("langResetDone")
-			: left > TimeSpan.FromDays(1) ? Localization.Format("langResetsAt", at.LocalDateTime.ToString("ddd HH:mm", Localization.Culture))
+			: left > TimeSpan.FromDays(1) ? Localization.Format("langResetsAt", at.LocalDateTime.ToString(ResetPattern(left), Localization.Culture))
 			: Localization.Format("langResetsIn", Span(left));
 	}
+
+	/// <summary>Как назвать далёкий сброс: в пределах недели — днём недели, а дальше — датой: у месячного окна
+	/// «вс 02:00» читалось бы как ближайшее воскресенье.</summary>
+	internal static string ResetPattern(TimeSpan left) => left > TimeSpan.FromDays(7) ? "d MMM" : "ddd HH:mm";
 
 	/// <param name="least">Меньше скольких минут не показывать: сброс через полминуты — «1 мин», а день без работы — «0 мин».</param>
 	public static string Span(TimeSpan span, int least = 1) =>

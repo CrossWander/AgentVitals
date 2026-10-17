@@ -38,6 +38,12 @@ public class TextTests
 		Assert.Equal("langErrorExpired", Text.Error(new TokenExpiredException("claude")));
 	}
 
+	[Theory]
+	[InlineData(2, "ddd HH:mm")]
+	[InlineData(7, "ddd HH:mm")] // неделя сразу после сброса — ещё день недели
+	[InlineData(15, "d MMM")] // месяц: «вс 02:00» читалось бы как ближайшее воскресенье
+	public void FarResetShowsTheDate(double days, string pattern) => Assert.Equal(pattern, Text.ResetPattern(System.TimeSpan.FromDays(days)));
+
 	[Fact]
 	public void MissingCostIsADash() => Assert.Equal("—", Text.Cost(null));
 
