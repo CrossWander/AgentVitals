@@ -16,12 +16,18 @@ internal static class Api
 	private static readonly string _agent = $"AgentVitals/{typeof(Api).Assembly.GetName().Version?.ToString(3)}";
 
 	/// <summary>Отправить запрос и разобрать ответ; 401/403 — вход истёк, 429 — ждать.</summary>
-	public static async Task<JsonNode> SendAsync(HttpClient http, HttpRequestMessage request, string cli, CancellationToken cancellation)
+	/// <param name="refused">Свой разбор отказа — первым: у агента бывают свои 403 и 404. null из него — как у всех.</param>
+	public static async Task<JsonNode> SendAsync(HttpClient http, HttpRequestMessage request, string cli, CancellationToken cancellation, Func<HttpResponseMessage, Exception?>? refused = null)
 	{
 		request.Headers.Accept.ParseAdd("application/json");
 		request.Headers.UserAgent.ParseAdd(_agent);
 
 		using var response = await http.SendAsync(request, cancellation);
+
+		if (refused?.Invoke(response) is { } error)
+		{
+			throw error;
+		}
 
 		if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
 		{

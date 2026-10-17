@@ -44,7 +44,7 @@ internal static class Text
 
 	public static string Error(Exception error) => error switch
 	{
-		TokenExpiredException expired => Localization.Format("langErrorExpired", expired.Cli),
+		TokenExpiredException expired => Localization.Format(expired.Text, expired.Cli),
 		RateLimitedException limited => Localization.Format("langErrorRateLimited", limited.Until.ToLocalTime().ToString("HH:mm", Localization.Culture)),
 		HttpRequestException or TaskCanceledException => Localization.Get("langErrorNetwork"),
 		_ => Localization.Get("langErrorParse"),

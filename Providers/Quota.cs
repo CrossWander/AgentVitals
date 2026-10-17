@@ -75,10 +75,13 @@ public enum Health
 	Critical,
 }
 
-/// <summary>Вход истёк: обновить его может только сам CLI агента.</summary>
-internal sealed class TokenExpiredException(string cli) : Exception($"{cli}: sign-in expired")
+/// <summary>Вход истёк или отклонён: обновить его может только сам CLI агента (у Copilot — git).</summary>
+/// <param name="text">Ключ строки с тем, что сказать человеку; {0} в ней — команда CLI. Токена в сообщении нет никогда.</param>
+internal sealed class TokenExpiredException(string cli, string text = "langErrorExpired") : Exception($"{cli}: {text}")
 {
 	public string Cli { get; } = cli;
+
+	public string Text { get; } = text;
 }
 
 /// <summary>Сервер просит подождать до указанного момента.</summary>

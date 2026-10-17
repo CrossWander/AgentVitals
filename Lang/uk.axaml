@@ -40,6 +40,9 @@
     <x:String x:Key="langHealthExhausted">ВИЧЕРПАНО</x:String>
     <x:String x:Key="langNoAgents">Агентів не знайдено. Встанови Claude Code, Codex або Gemini CLI.</x:String>
     <x:String x:Key="langErrorExpired">Вхід минув. Дані повернуться після першого запиту в {0}</x:String>
+    <x:String x:Key="langErrorGitHub">Немає входу GitHub. Увійдіть через git — наприклад, git fetch у будь-якому репозиторії з GitHub — і дані з'являться</x:String>
+    <x:String x:Key="langErrorNoCopilot">У цього акаунта GitHub немає Copilot</x:String>
+    <x:String x:Key="langErrorCursor">Cursor відхилив вхід. Увійдіть у Cursor знову</x:String>
     <x:String x:Key="langErrorRateLimited">Сервер просить питати рідше, повтор о {0}</x:String>
     <x:String x:Key="langErrorNetwork">Немає зв'язку</x:String>
     <x:String x:Key="langErrorParse">Не вдалося розібрати відповідь</x:String>

@@ -40,6 +40,9 @@
     <x:String x:Key="langHealthExhausted">USED UP</x:String>
     <x:String x:Key="langNoAgents">No agents found. Install Claude Code, Codex or Gemini CLI.</x:String>
     <x:String x:Key="langErrorExpired">Sign-in expired. The data comes back after your first request in {0}</x:String>
+    <x:String x:Key="langErrorGitHub">No GitHub sign-in. Sign in through git — for example, git fetch in any GitHub repository — and the data will appear</x:String>
+    <x:String x:Key="langErrorNoCopilot">This GitHub account has no Copilot</x:String>
+    <x:String x:Key="langErrorCursor">Cursor rejected the sign-in. Sign in to Cursor again</x:String>
     <x:String x:Key="langErrorRateLimited">The server asks to check less often, retrying at {0}</x:String>
     <x:String x:Key="langErrorNetwork">No connection</x:String>
     <x:String x:Key="langErrorParse">Could not read the response</x:String>
