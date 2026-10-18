@@ -75,6 +75,107 @@ public class ViewsTests
 	public void HintSaysWhySessionsAreEmpty(HookLink hooks, string hint) =>
 		Assert.Equal(hint, Views.Build([new AgentState(new ClaudeAgent())], Hooks(claude: hooks), [], DateTime.UtcNow, _levels).Agents[0].SessionsHint);
 
+	private static readonly DateTime _now = new(2026, 10, 18, 12, 0, 0, DateTimeKind.Utc);
+
+	private static Account Signed(string key, string plan, string? email, double used = 40) =>
+		new(key, new Snapshot(plan, email, [new(WindowKind.Session, null, used, new DateTimeOffset(_now.AddHours(2)), Limiting: true)], null), _now.AddHours(-2), null);
+
+	/// <summary>Claude с аккаунтами в порядке появления; в работе — inUse.</summary>
+	private static AgentState Claude(string inUse, params Account[] accounts)
+	{
+		var state = new AgentState(new ClaudeAgent());
+		var current = accounts.Single(account => account.Key == inUse);
+		state.Recall(new(current.Snapshot, current.Updated, null, inUse, accounts), _now);
+
+		return state;
+	}
+
+	[Fact]
+	public void OneAccountLooksLike130() // карточки «Аккаунты» нет, строка тарифа — как раньше
+	{
+		var view = Views.Agent(Claude("A", Signed("A", "Max", "a@x.z")), _now, _levels);
+
+		Assert.Empty(view.Accounts);
+		Assert.Equal("Max · a@x.z", view.Info);
+	}
+
+	[Fact]
+	public void AccountInUseComesFirst() // остальные — в порядке появления, строки не прыгают
+	{
+		var view = Views.Agent(Claude("B", Signed("A", "Max", "a@x.z"), Signed("B", "Team", "b@x.z"), Signed("C", "Pro", "c@x.z")), _now, _levels);
+
+		Assert.Equal(["B", "A", "C"], view.Accounts.Select(account => account.Key));
+		Assert.Equal([true, false, false], view.Accounts.Select(account => account.InUse));
+		Assert.Equal("langAccountInUse", view.Accounts[0].Badge);
+	}
+
+	[Fact]
+	public void RememberedAccountShowsItsOwnCards()
+	{
+		var view = Views.Agent(Claude("B", Signed("A", "Max", "a@x.z", used: 70), Signed("B", "Team", "b@x.z", used: 10)), _now, _levels);
+		var remembered = view.Accounts.Single(account => account.Key == "A");
+
+		Assert.Equal("70", remembered.Cards[0].Value);
+		Assert.Equal("70", remembered.Meters[0].Value);
+		Assert.NotNull(remembered.Hint);
+		Assert.Null(view.Accounts[0].Hint);
+		Assert.Equal("10", view.Cards[0].Value); // сверху по умолчанию — аккаунт в работе
+	}
+
+	[Fact]
+	public void NamesUseEmailThenNumberUnderEye()
+	{
+		Account[] accounts = [Signed("A", "Max", "a@x.z"), Signed("B", "Team", "b@x.z")];
+
+		Assert.Equal(["a@x.z", "b@x.z"], Views.Names("Claude", accounts, new Dictionary<string, string>(), hide: false).Values);
+		Assert.Equal(["langAccountNumber", "langAccountNumber"], Views.Names("Claude", accounts, new Dictionary<string, string>(), hide: true).Values);
+	}
+
+	[Fact]
+	public void CustomNameStaysUnderEye() // глаз прячет почту, а не имя
+	{
+		var names = Views.Names("Claude", [Signed("A", "Max", "a@x.z")], new Dictionary<string, string> { ["Claude/A"] = "Личный" }, hide: true);
+
+		Assert.Equal("Личный", names["A"]);
+	}
+
+	[Fact]
+	public void SameEmailGetsPlan() // одна почта и в Team, и в личном тарифе
+	{
+		var names = Views.Names("Claude", [Signed("A", "Team", "a@x.z"), Signed("B", "Max", "a@x.z")], new Dictionary<string, string>(), hide: false);
+
+		Assert.Equal(["a@x.z · Team", "a@x.z · Max"], names.Values);
+	}
+
+	[Fact]
+	public void SameEmailAndPlanGetsNumber()
+	{
+		var names = Views.Names("Claude", [Signed("A", "Max", "a@x.z"), Signed("B", "Max", "a@x.z")], new Dictionary<string, string>(), hide: false);
+
+		Assert.Equal(["a@x.z · Max · 1", "a@x.z · Max · 2"], names.Values);
+	}
+
+	[Fact]
+	public void BusyBadgeNamesLastReset() // дальше суток — день и время, ближе — «через»
+	{
+		QuotaWindow Week(DateTime resets) => new(WindowKind.Week, null, 100, new DateTimeOffset(resets), Limiting: true);
+
+		Assert.Equal("langAccountBusyAt", Text.AccountBadge(Availability.Busy, Week(_now.AddDays(3)), _now));
+		Assert.Equal("langAccountBusyIn", Text.AccountBadge(Availability.Busy, Week(_now.AddMinutes(70)), _now));
+		Assert.Equal("langAccountBusy", Text.AccountBadge(Availability.Busy, new(WindowKind.Week, null, 100, null, Limiting: true), _now));
+		Assert.Equal("langAccountBack", Text.AccountBadge(Availability.Back, null, _now));
+		Assert.Equal("langAccountFree", Text.AccountBadge(Availability.Free, null, _now));
+	}
+
+	[Fact]
+	public void AgeIsShort()
+	{
+		Assert.Equal("langAgeNow", Text.Age(_now.AddSeconds(-30), _now));
+		Assert.Equal("langAgeAgo", Text.Age(_now.AddHours(-2), _now));
+		Assert.Equal("langAgeAt", Text.Age(_now.AddDays(-2), _now));
+		Assert.Equal("", Text.Age(null, _now));
+	}
+
 	private static Dictionary<string, HookLink> Hooks(HookLink claude = HookLink.On, HookLink codex = HookLink.On) =>
 		new() { ["Claude"] = claude, ["Codex"] = codex };
 

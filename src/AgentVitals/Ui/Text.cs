@@ -50,6 +50,43 @@ internal static class Text
 		: now - time > TimeSpan.FromDays(1) ? Localization.Format("langUpdatedAt", time.ToLocalTime().ToString("ddd HH:mm", Localization.Culture))
 		: Localization.Format("langUpdatedAgo", Span(now - time));
 
+	/// <summary>Возраст цифр в строке аккаунта: «сейчас», «2 ч назад», а старше суток — «пт 18:40».</summary>
+	public static string Age(DateTime? at, DateTime now) =>
+		at is not { } time ? ""
+		: now - time < TimeSpan.FromMinutes(1) ? Localization.Get("langAgeNow")
+		: now - time > TimeSpan.FromDays(1) ? Localization.Format("langAgeAt", time.ToLocalTime().ToString("ddd HH:mm", Localization.Culture))
+		: Localization.Format("langAgeAgo", Span(now - time));
+
+	/// <summary>Плашка запомненного аккаунта. Занят — какое окно его держит и до когда, в тех же словах, что сброс на
+	/// карточке: в пределах суток — «через», дальше — день и время.</summary>
+	/// <param name="blocker">Израсходованное окно, которое сбросится последним; есть только у занятого.</param>
+	public static string AccountBadge(Availability state, QuotaWindow? blocker, DateTime now) => state switch
+	{
+		Availability.Free => Localization.Get("langAccountFree"),
+		Availability.Back => Localization.Get("langAccountBack"),
+		Availability.Busy => Busy(blocker, now),
+	};
+
+	private static string Busy(QuotaWindow? blocker, DateTime now)
+	{
+		var title = blocker is null ? "" : Title(blocker) is { Length: > 0 } name ? char.ToLower(name[0], Localization.Culture) + name[1..] : "";
+
+		if (blocker?.ResetsAt is not { } at)
+		{
+			return Localization.Format("langAccountBusy", title);
+		}
+
+		var left = at.UtcDateTime - now;
+
+		return left > TimeSpan.FromDays(1)
+			? Localization.Format("langAccountBusyAt", title, at.LocalDateTime.ToString(ResetPattern(left), Localization.Culture))
+			: Localization.Format("langAccountBusyIn", title, Span(left));
+	}
+
+	/// <summary>Как переключиться на другой аккаунт агента: у Claude — «/login в Claude Code», у прочих — своя строка или общая.</summary>
+	public static string Login(string agent) =>
+		Localization.Has($"langLogin{agent}") ? Localization.Get($"langLogin{agent}") : Localization.Format("langLogin", agent);
+
 	/// <param name="agent">Чей отказ: у агента бывает своя строка — «Нет входа GitHub…» у Copilot, а нет — общая.</param>
 	public static string Error(Exception error, string agent) => error switch
 	{

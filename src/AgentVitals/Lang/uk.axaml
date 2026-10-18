@@ -150,4 +150,27 @@
     <x:String x:Key="langToastUpdateText">Оновити можна в налаштуваннях</x:String>
     <x:String x:Key="langToastUpdated">AgentVitals оновлено до {0}</x:String>
     <x:String x:Key="langToastUpdatedText">Клацни — що нового</x:String>
+    <x:String x:Key="langAccounts">АКАУНТИ · {0}</x:String>
+    <x:String x:Key="langAccountsClick">клацання — показати вгорі</x:String>
+    <x:String x:Key="langAccountsFoot">Перемкнутися: {0}. У запам’ятованих — останні цифри, свіжі — після входу.</x:String>
+    <x:String x:Key="langAccountInUse">● у роботі</x:String>
+    <x:String x:Key="langAccountBusyIn">{0} — через {1}</x:String>
+    <x:String x:Key="langAccountBusyAt">{0} — з {1}</x:String>
+    <x:String x:Key="langAccountBusy">{0} — 100%</x:String>
+    <x:String x:Key="langAccountBack">знову доступний</x:String>
+    <x:String x:Key="langAccountFree">вільний</x:String>
+    <x:String x:Key="langAccountShown">▲ показаний у картках вгорі</x:String>
+    <x:String x:Key="langAccountNumber">Акаунт {0}</x:String>
+    <x:String x:Key="langInUse">у роботі</x:String>
+    <x:String x:Key="langRemembered">запам’ятований</x:String>
+    <x:String x:Key="langUpdating">Цифри оновлюються…</x:String>
+    <x:String x:Key="langAgeUpdating">оновлюється…</x:String>
+    <x:String x:Key="langAgeNow">зараз</x:String>
+    <x:String x:Key="langAgeAgo">{0} тому</x:String>
+    <x:String x:Key="langAgeAt">{0}</x:String>
+    <x:String x:Key="langRememberedHint">Це останні цифри, які AgentVitals бачив у акаунта «{0}». Щоб працювати ним, перемкніться: {1}.</x:String>
+    <x:String x:Key="langLogin">вхід у {0}</x:String>
+    <x:String x:Key="langLoginClaude">/login у Claude Code</x:String>
+    <x:String x:Key="langLoginCodex">codex login</x:String>
+    <x:String x:Key="langTodayShared">СЬОГОДНІ — СПІЛЬНЕ НА ВСІ АКАУНТИ</x:String>
 </ResourceDictionary>

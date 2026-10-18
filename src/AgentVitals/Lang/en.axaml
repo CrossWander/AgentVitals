@@ -150,4 +150,27 @@
     <x:String x:Key="langToastUpdateText">Update it in settings</x:String>
     <x:String x:Key="langToastUpdated">AgentVitals updated to {0}</x:String>
     <x:String x:Key="langToastUpdatedText">Click to see what's new</x:String>
+    <x:String x:Key="langAccounts">ACCOUNTS · {0}</x:String>
+    <x:String x:Key="langAccountsClick">click to show above</x:String>
+    <x:String x:Key="langAccountsFoot">To switch: {0}. Remembered accounts show their last numbers; fresh ones come after you sign in.</x:String>
+    <x:String x:Key="langAccountInUse">● in use</x:String>
+    <x:String x:Key="langAccountBusyIn">{0} — in {1}</x:String>
+    <x:String x:Key="langAccountBusyAt">{0} — from {1}</x:String>
+    <x:String x:Key="langAccountBusy">{0} — 100%</x:String>
+    <x:String x:Key="langAccountBack">available again</x:String>
+    <x:String x:Key="langAccountFree">free</x:String>
+    <x:String x:Key="langAccountShown">▲ shown in the cards above</x:String>
+    <x:String x:Key="langAccountNumber">Account {0}</x:String>
+    <x:String x:Key="langInUse">in use</x:String>
+    <x:String x:Key="langRemembered">remembered</x:String>
+    <x:String x:Key="langUpdating">Updating the numbers…</x:String>
+    <x:String x:Key="langAgeUpdating">updating…</x:String>
+    <x:String x:Key="langAgeNow">now</x:String>
+    <x:String x:Key="langAgeAgo">{0} ago</x:String>
+    <x:String x:Key="langAgeAt">{0}</x:String>
+    <x:String x:Key="langRememberedHint">These are the last numbers AgentVitals saw for “{0}”. To work with it, switch: {1}.</x:String>
+    <x:String x:Key="langLogin">sign in to {0}</x:String>
+    <x:String x:Key="langLoginClaude">/login in Claude Code</x:String>
+    <x:String x:Key="langLoginCodex">codex login</x:String>
+    <x:String x:Key="langTodayShared">TODAY — ALL ACCOUNTS TOGETHER</x:String>
 </ResourceDictionary>
