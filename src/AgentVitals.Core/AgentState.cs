@@ -39,16 +39,19 @@ public sealed class AgentState(IAgent agent)
 
 	/// <summary>Сколько выждать после записи файла входа: CLI пишет вход и того, кто вошёл, не разом, а цифры не должны
 	/// лечь под имя прежнего аккаунта.</summary>
-	internal static readonly TimeSpan Settle = TimeSpan.FromSeconds(5);
+	public static readonly TimeSpan Settle = TimeSpan.FromSeconds(5);
 
 	public IAgent Agent { get; } = agent;
 
 	/// <summary>Агент установлен — его спрашивают. Проверяется раз в тик опроса, а не каждым читателем.</summary>
 	public bool Installed { get; private set; } = agent.Installed;
 
-	/// <summary>У агента есть вкладка: он установлен, а кому нужно подтверждение — уже ответил хотя бы раз
+	/// <summary>Пользователь выключил агента в окне «Агенты»: за ним не следят — ни запросов, ни вкладки, ни тостов.</summary>
+	public bool Off { get; set; }
+
+	/// <summary>У агента есть вкладка: он установлен, не выключен, а кому нужно подтверждение — уже ответил хотя бы раз
 	/// (в этом запуске или в quota.json). Подтверждённый не пропадает и после отказа: ошибка видна на вкладке.</summary>
-	public bool Visible => Installed && (!Agent.ConfirmFirst || Snapshot is not null);
+	public bool Visible => Installed && !Off && (!Agent.ConfirmFirst || Snapshot is not null);
 
 	public Snapshot? Snapshot { get; set; }
 

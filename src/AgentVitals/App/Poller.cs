@@ -34,10 +34,19 @@ internal sealed class Poller
 	// Тик попросили, пока шёл другой: null — никто, true — «Обновить», который не ждёт срока.
 	private bool? _again;
 
-	public IReadOnlyList<AgentState> Agents { get; } = [.. AgentCatalog.All().Select(agent => new AgentState(agent))];
+	// Состояния в порядке каталога; Agents — они же в порядке вкладок.
+	private readonly IReadOnlyList<AgentState> _catalog = [.. AgentCatalog.All().Select(agent => new AgentState(agent))];
 
-	/// <summary>Установленные агенты: только их спрашивают.</summary>
+	public Poller() => Apply();
+
+	/// <summary>Все агенты в порядке вкладок из настроек.</summary>
+	public IReadOnlyList<AgentState> Agents { get; private set; } = [];
+
+	/// <summary>Установленные агенты: их помнят в quota.json.</summary>
 	public IEnumerable<AgentState> Installed => Agents.Where(state => state.Installed);
+
+	/// <summary>Установленные и не выключенные: только их спрашивают.</summary>
+	public IEnumerable<AgentState> Watched => Installed.Where(state => !state.Off);
 
 	/// <summary>Агенты с вкладкой: их показывают, о них тосты, значок и статус-страницы.</summary>
 	public IEnumerable<AgentState> Visible => Installed.Where(state => state.Visible);
@@ -51,6 +60,45 @@ internal sealed class Poller
 
 	/// <summary>Прошёл тик: что-то могло обновиться, а относительное время в подписях — сдвинуться.</summary>
 	public event Action? Changed;
+
+	/// <summary>Сначала агенты из сохранённого порядка, незнакомые имена пропускаются, остальные — в порядке каталога.</summary>
+	internal static IReadOnlyList<AgentState> Arrange(IReadOnlyList<AgentState> agents, IReadOnlyList<string> order)
+	{
+		Dictionary<string, int> rank = [];
+
+		foreach (var name in order)
+		{
+			rank.TryAdd(name, rank.Count);
+		}
+
+		return [.. agents.OrderBy(state => rank.TryGetValue(state.Agent.Name, out var place) ? place : int.MaxValue)];
+	}
+
+	/// <summary>Порядок или выключенные агенты поменялись в окне «Агенты»: сразу, а включённый — спросить, если пора.</summary>
+	public void Reload()
+	{
+		Apply();
+		_ = TickAsync(force: false);
+	}
+
+	/// <summary>Забыть запомненный аккаунт агента и сохранить quota.json.</summary>
+	public void Forget(AgentState state, string key)
+	{
+		state.Forget(key);
+		Save();
+	}
+
+	private void Apply()
+	{
+		Agents = Arrange(_catalog, Store.Current.AgentOrder);
+
+		foreach (var state in Agents)
+		{
+			state.Off = Store.Current.SwitchedOff.Contains(state.Agent.Name);
+		}
+	}
+
+	private void Save() => QuotaMemory.Save(QuotaMemory.Location, Installed.ToDictionary(state => state.Agent.Name, state => state.Remember()));
 
 	public void Start()
 	{
@@ -68,10 +116,11 @@ internal sealed class Poller
 		_timer.Start();
 		_ = TickAsync(force: false);
 
-		// После сна вход истёк, пока CLI агента его не обновит: новый файл входа — сразу тик, а не через минуту.
+		// После сна вход истёк, пока CLI агента его не обновит: новый файл входа — тик, а не через минуту.
+		// Не сразу, а через Settle: после /login CLI дописывает, кто вошёл, уже после файла входа.
 		foreach (var file in Agents.Select(state => state.Agent.Credentials).OfType<string>())
 		{
-			_notices.Add(new FileNotice(file, () => Dispatcher.UIThread.Post(() => _ = TickAsync(force: false))));
+			_notices.Add(new FileNotice(file, () => Dispatcher.UIThread.Post(() => DispatcherTimer.RunOnce(() => _ = TickAsync(force: false), AgentState.Settle))));
 		}
 	}
 
@@ -120,12 +169,12 @@ internal sealed class Poller
 				state.CheckInstalled();
 			}
 
-			foreach (var state in Installed)
+			foreach (var state in Watched)
 			{
 				state.CheckAccount(now);
 			}
 
-			var due = Installed.Where(state => state.Due(Store.Current.IntervalSeconds, now, force)).ToList();
+			var due = Watched.Where(state => state.Due(Store.Current.IntervalSeconds, now, force)).ToList();
 
 			foreach (var state in due)
 			{
@@ -134,7 +183,7 @@ internal sealed class Poller
 
 			if (due.Count > 0)
 			{
-				QuotaMemory.Save(QuotaMemory.Location, Installed.ToDictionary(state => state.Agent.Name, state => state.Remember()));
+				Save();
 			}
 
 			// Статус — только у агентов с вкладкой: Copilot без подтверждения его не показывает.
@@ -144,7 +193,7 @@ internal sealed class Poller
 			}
 
 			// Статистика — после квот и статуса: первое чтение логов занимает секунды.
-			foreach (var state in Installed)
+			foreach (var state in Watched)
 			{
 				await state.ReadUsageAsync(_http, now);
 			}

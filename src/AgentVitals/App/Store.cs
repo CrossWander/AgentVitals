@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -51,6 +52,15 @@ internal static class Store
 		public string? UpdateAnnounced { get; set; }
 
 		public string? LastVersion { get; set; }
+
+		// Свои имена аккаунтов из окна «Агенты»: «Claude/<ключ аккаунта>» → имя; без имени — почта.
+		public Dictionary<string, string> AccountNames { get; set; } = [];
+
+		// Порядок вкладок по именам агентов; кого нет в списке — после, в порядке каталога.
+		public List<string> AgentOrder { get; set; } = [];
+
+		// Выключенные агенты: за ними не следят.
+		public List<string> SwitchedOff { get; set; } = [];
 
 		// В файле — два числа, как их правит человек; правилам — одной парой.
 		[JsonIgnore]
