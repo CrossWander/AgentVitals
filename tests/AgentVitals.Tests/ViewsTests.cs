@@ -168,6 +168,17 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void ChosenFallsBackToAccountInUse() // забытый или пропавший выбор — снова аккаунт в работе
+	{
+		var view = Views.Agent(Claude("B", Signed("A", "Max", "a@x.z"), Signed("B", "Team", "b@x.z")), _now, _levels);
+
+		Assert.Equal("A", Popover.Chosen(view, "A")?.Key);
+		Assert.Equal("B", Popover.Chosen(view, "gone")?.Key);
+		Assert.Equal("B", Popover.Chosen(view, null)?.Key);
+		Assert.Null(Popover.Chosen(Views.Agent(Claude("A", Signed("A", "Max", "a@x.z")), _now, _levels), "A"));
+	}
+
+	[Fact]
 	public void AgeIsShort()
 	{
 		Assert.Equal("langAgeNow", Text.Age(_now.AddSeconds(-30), _now));

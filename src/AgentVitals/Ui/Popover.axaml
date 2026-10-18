@@ -31,8 +31,15 @@
                         </Border>
                     </Grid>
 
-                    <!-- Вкладки агентов строятся в коде: их столько, сколько агентов установлено -->
-                    <StackPanel Name="Tabs" Orientation="Horizontal" Spacing="6"/>
+                    <!-- Вкладки агентов строятся в коде: их столько, сколько агентов установлено. Робот — окно «Агенты»:
+                         вне панели вкладок, чтобы Ctrl+N и пересоздание вкладок его не задевали -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Name="Tabs" Orientation="Horizontal" Spacing="6" ClipToBounds="True"/>
+                        <Button Grid.Column="1" Theme="{StaticResource Round}" Margin="6,0,0,0" VerticalAlignment="Center"
+                                ToolTip.Tip="{DynamicResource langAgents}" Click="OnAgents">
+                            <Path Classes="icon" Data="{StaticResource IconAgents}" Stroke="{Binding $parent[Button].Foreground}"/>
+                        </Button>
+                    </Grid>
 
                     <StackPanel Spacing="4">
                         <!-- Глаз прячет почту: показать экран, не показав лишнего. Поля кнопки не раздвигают строку -->
@@ -56,6 +63,12 @@
                     <StackPanel Spacing="12">
                         <TextBlock Classes="caption" Text="{DynamicResource langNoAgents}" TextWrapping="Wrap"
                                    IsVisible="{Binding NoAgents}"/>
+
+                        <!-- Выбран запомненный аккаунт: карточки ниже — его последние цифры, а не свежие -->
+                        <Border Name="HintBar" Background="{DynamicResource HintFill}" BorderBrush="{DynamicResource HintLine}"
+                                BorderThickness="1" CornerRadius="10" Padding="10,8" IsVisible="False">
+                            <TextBlock Name="HintText" Foreground="{DynamicResource HintText}" FontSize="12" TextWrapping="Wrap"/>
+                        </Border>
 
                         <!-- Одинокая карточка в последнем ряду — во всю ширину; на вкладке только квоты — все во всю ширину -->
                         <ItemsControl Name="Cards" Margin="-4,0">
@@ -106,12 +119,78 @@
 
                         <TextBlock Name="ErrorLine" Classes="error"/>
 
+                        <!-- Аккаунты агента, когда их два и больше: щелчок показывает аккаунт в карточках сверху.
+                             Видны до трёх строк, остальные прокручиваются внутри (высоту ставит код) -->
+                        <Border Name="AccountsCard" Classes="card" Padding="8" x:DataType="local:AgentView">
+                            <Border.Styles>
+                                <Style Selector="Border.account">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                </Style>
+                                <Style Selector="Border.account:pointerover">
+                                    <Setter Property="Background" Value="{DynamicResource CardHover}"/>
+                                </Style>
+                                <Style Selector="Border.account.picked">
+                                    <Setter Property="Background" Value="{DynamicResource AccountPick}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Blue}"/>
+                                </Style>
+                            </Border.Styles>
+                            <StackPanel Spacing="4">
+                                <Grid ColumnDefinitions="*,Auto" Margin="6,4,6,2">
+                                    <TextBlock Classes="label" Text="{Binding AccountsTitle}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Classes="faint" Text="{DynamicResource langAccountsClick}" VerticalAlignment="Center"/>
+                                </Grid>
+                                <ScrollViewer Name="AccountsScroll" HorizontalScrollBarVisibility="Disabled" Margin="0,0,-8,0" Padding="0,0,8,0">
+                                    <ItemsControl Name="AccountRows">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:AccountView">
+                                                <!-- Фон прозрачный, а не пустой: щелчок ловится во всю строку, а не только над буквами -->
+                                                <Border Classes="account" Classes.picked="{Binding Selected}" Margin="0,0,0,4" Padding="10,8"
+                                                        CornerRadius="10" BorderThickness="1" Cursor="Hand" PointerReleased="OnAccount">
+                                                    <StackPanel Spacing="6">
+                                                        <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                                                            <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="1" Margin="6,0" Text="{Binding Name}" FontSize="13" FontWeight="Bold"
+                                                                       MaxWidth="190" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="2" Classes="faint" Text="{Binding Line}" TextTrimming="CharacterEllipsis"
+                                                                       VerticalAlignment="Center"/>
+                                                            <Border Grid.Column="3" Classes="badge" Background="{Binding BadgeBrush}" Margin="6,0,0,0"
+                                                                    VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Badge}"/>
+                                                            </Border>
+                                                        </Grid>
+                                                        <ItemsControl ItemsSource="{Binding Meters}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="local:CardView">
+                                                                    <Grid ColumnDefinitions="64,*,40" Margin="0,1">
+                                                                        <TextBlock Classes="faint" Text="{Binding Title}" TextTrimming="CharacterEllipsis"
+                                                                                   VerticalAlignment="Center"/>
+                                                                        <ProgressBar Grid.Column="1" Theme="{StaticResource Meter}" Height="5"
+                                                                                     Value="{Binding Fill}" Foreground="{Binding Meter}" VerticalAlignment="Center"/>
+                                                                        <TextBlock Grid.Column="2" Text="{Binding Display}" FontSize="11" FontWeight="SemiBold"
+                                                                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                        <TextBlock Text="{DynamicResource langAccountShown}" IsVisible="{Binding Selected}"
+                                                                   FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Blue}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                                <TextBlock Classes="faint" Margin="6,2,6,4" Text="{Binding AccountsFoot}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Окно — высотой с самую высокую вкладку: у агента без статистики и сессий здесь место -->
                         <TextBlock Name="BareHint" Classes="caption" TextWrapping="Wrap"/>
 
                         <!-- Статистика из локальных логов агента: сегодня и 30 дней. Нет читателя логов — блока нет -->
                         <StackPanel Name="UsageBlock" Spacing="8" x:DataType="local:UsageView">
-                            <TextBlock Classes="label" Text="{DynamicResource langToday}"/>
+                            <TextBlock Name="TodayLabel" Classes="label"/>
                             <UniformGrid Columns="3" Margin="-4">
                                 <Border Classes="card" Margin="4">
                                     <StackPanel Spacing="3">
@@ -292,7 +371,7 @@
                         </StackPanel>
                     </Button>
                     <Button Grid.Column="3" Theme="{StaticResource Round}" Click="OnSettings">
-                        <Path Classes="icon" Data="{StaticResource IconSliders}" Stroke="{Binding $parent[Button].Foreground}"/>
+                        <Path Classes="icon" Data="{StaticResource IconGear}" Stroke="{Binding $parent[Button].Foreground}"/>
                     </Button>
                     <Button Grid.Column="4" Theme="{StaticResource Round}" Margin="8,0,0,0" Click="OnClose">
                         <Path Classes="icon" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}"/>

@@ -173,4 +173,8 @@
     <x:String x:Key="langLoginClaude">/login in Claude Code</x:String>
     <x:String x:Key="langLoginCodex">codex login</x:String>
     <x:String x:Key="langTodayShared">TODAY — ALL ACCOUNTS TOGETHER</x:String>
+    <x:String x:Key="langAgents">Agents</x:String>
+    <x:String x:Key="langAgentsMenu">Agents…</x:String>
+    <x:String x:Key="langAccountBackTitle">Account available again</x:String>
+    <x:String x:Key="langAccountBackText">{0} · {1} is available again — switch: {2}</x:String>
 </ResourceDictionary>

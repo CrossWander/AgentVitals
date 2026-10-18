@@ -319,7 +319,7 @@ internal static class Views
 			false,
 			Join(plan, pending ? Localization.Get("langAgeUpdating") : Text.Age(account.Updated, now)),
 			inUse ? Localization.Get("langAccountInUse") : Text.AccountBadge(availability, blocker, now),
-			Brush(!inUse && availability == Availability.Busy ? "Bad" : "Good"),
+			Brush(!inUse && availability == Availability.Busy ? "BadgeBad" : "BadgeGood"),
 			[.. windows.Where(window => window.Limiting).Select(window => Card(window, now, levels) with { Title = Text.Title(window) })],
 			Cards(account.Snapshot, windows, now, levels),
 			Join(plan, name, Localization.Get(inUse ? "langInUse" : "langRemembered")),

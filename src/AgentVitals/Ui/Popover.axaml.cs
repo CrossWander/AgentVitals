@@ -9,6 +9,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using AgentVitals.Core.Sessions;
 using AgentVitals.Core.Usage;
 
@@ -20,6 +21,12 @@ internal partial class Popover : TrayWindow
 {
 	private Vitals? _vitals;
 	private string? _selected;
+
+	// Агент → выбранный щелчком аккаунт; нет записи — аккаунт в работе. Живёт, пока окно открыто.
+	private readonly Dictionary<string, string> _accounts = [];
+
+	// Агент → аккаунт в работе при прошлом Render: вошли в другой — выбор переходит на него.
+	private readonly Dictionary<string, string?> _inUse = [];
 	private ChartMode _mode = ChartMode.Cost;
 	private (IReadOnlyList<UsageDay>? Days, ChartMode Mode, string Language, ThemeVariant? Theme) _shown;
 	private IReadOnlyList<BarView> _bars = [];
@@ -46,8 +53,13 @@ internal partial class Popover : TrayWindow
 	/// <summary>Глаз: почту спрятали или показали — окна рисуются заново.</summary>
 	public event Action? PrivateChanged;
 
+	/// <summary>Кнопка с роботом: открыть окно «Агенты».</summary>
+	public event Action? AgentsRequested;
+
 	public void Open(PixelRect anchor, bool settings)
 	{
+		// При каждом открытии сверху — аккаунт в работе.
+		_accounts.Clear();
 		ShowSettings(settings);
 
 		// Другой экран бывает ниже: MinHeight сильнее MaxHeight, а середина окна и так прокручивается.
@@ -96,6 +108,18 @@ internal partial class Popover : TrayWindow
 		var names = vitals.Agents.Select(agent => agent.Name).ToList();
 		_selected = Keep(_selected, names);
 
+		foreach (var agent in vitals.Agents)
+		{
+			var inUse = agent.Accounts.FirstOrDefault(account => account.InUse)?.Key;
+
+			if (_inUse.TryGetValue(agent.Name, out var was) && was != inUse)
+			{
+				_accounts.Remove(agent.Name);
+			}
+
+			_inUse[agent.Name] = inUse;
+		}
+
 		// Render бывает раз в секунду, пока Claude работает: вкладки пересоздаются, только если сменился
 		// набор агентов, иначе щелчок по вкладке, попавший на пересоздание, теряется.
 		if (!Tabs.Children.Select(tab => tab.Tag as string).SequenceEqual(names))
@@ -134,6 +158,24 @@ internal partial class Popover : TrayWindow
 		ShowAgent();
 	}
 
+	/// <summary>Щелчок по тосту о запомненном аккаунте: его вкладка, и сверху — он.</summary>
+	public void Choose(string agent, string account)
+	{
+		_selected = agent;
+		_accounts[agent] = account;
+
+		foreach (var tab in Tabs.Children.OfType<RadioButton>())
+		{
+			tab.IsChecked = tab.Tag as string == agent;
+		}
+
+		ShowAgent();
+	}
+
+	/// <summary>Какой аккаунт показать сверху: выбранный, а забытый или пропавший — аккаунт в работе; один аккаунт — null.</summary>
+	internal static AccountView? Chosen(AgentView agent, string? key) =>
+		agent.Accounts.FirstOrDefault(account => account.Key == key) ?? agent.Accounts.FirstOrDefault(account => account.InUse);
+
 	/// <summary>Выбранная вкладка по имени: появился или пропал другой агент — выбор не съезжает.</summary>
 	internal static string? Keep(string? selected, IReadOnlyList<string> names) =>
 		selected is not null && names.Contains(selected) ? selected : names.FirstOrDefault();
@@ -158,9 +200,18 @@ internal partial class Popover : TrayWindow
 		HealthPill.IsVisible = agent is not null;
 		ShowAlerts();
 
+		var chosen = agent is null ? null : Chosen(agent, _accounts.GetValueOrDefault(agent.Name));
+
 		Cards.DataContext = agent;
-		Cards.ItemsSource = agent?.Cards;
-		InfoLine.Text = string.Join(" · ", new[] { agent?.Updated, agent?.Info }.Where(text => !string.IsNullOrEmpty(text)));
+		Cards.ItemsSource = chosen?.Cards ?? agent?.Cards;
+		InfoLine.Text = string.Join(" · ", new[] { chosen?.Updated ?? agent?.Updated, chosen?.Info ?? agent?.Info }.Where(text => !string.IsNullOrEmpty(text)));
+		HintText.Text = chosen?.Hint;
+		HintBar.IsVisible = chosen?.HasHint == true;
+		AccountsCard.DataContext = agent;
+		AccountsCard.IsVisible = agent?.Shared == true;
+		AccountRows.ItemsSource = agent is null ? null : agent.Accounts.Select(account => account with { Selected = account.Key == chosen?.Key }).ToList();
+		TodayLabel.Text = Localization.Get(agent?.Shared == true ? "langTodayShared" : "langToday");
+		Dispatcher.UIThread.Post(FitAccounts, DispatcherPriority.Background);
 		PrivateIcon.Data = this.FindResource(Store.Current.Private ? "IconEyeOff" : "IconEye") as Geometry;
 		ToolTip.SetTip(PrivateButton, Localization.Get(Store.Current.Private ? "langShowPrivate" : "langHidePrivate"));
 		ErrorLine.Text = agent?.Error;
@@ -300,6 +351,29 @@ internal partial class Popover : TrayWindow
 	}
 
 	private void OnSettings(object? sender, RoutedEventArgs e) => ShowSettings(true);
+
+	private void OnAgents(object? sender, RoutedEventArgs e) => AgentsRequested?.Invoke();
+
+	private void OnAccount(object? sender, PointerReleasedEventArgs e)
+	{
+		if (e.InitialPressMouseButton == MouseButton.Left && sender is Control { DataContext: AccountView row } && _selected is { } agent)
+		{
+			_accounts[agent] = row.Key;
+			ShowAgent();
+		}
+	}
+
+	/// <summary>Видны три аккаунта, остальные прокручиваются внутри карточки; два-три — карточка ровно по ним.</summary>
+	private void FitAccounts()
+	{
+		var rows = AccountRows.GetRealizedContainers().ToList();
+		var height = rows.Count > 3 ? rows.Take(3).Sum(row => row.Bounds.Height) : double.PositiveInfinity;
+
+		if (AccountsScroll.MaxHeight != height)
+		{
+			AccountsScroll.MaxHeight = height;
+		}
+	}
 
 	private void OnClose(object? sender, RoutedEventArgs e) => Hide();
 
