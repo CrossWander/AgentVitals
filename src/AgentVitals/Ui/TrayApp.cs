@@ -244,7 +244,7 @@ internal sealed class TrayApp
 	{
 		var now = DateTime.UtcNow;
 
-		if (_alarm.Check(_poller.Visible.Select(state => (state.Agent.Name, state.Windows(now))), Store.Current.Thresholds, now) is { } alert)
+		if (_alarm.Check(_poller.Visible.Select(state => (state.Agent.Name, state.Key ?? "", state.Windows(now))), Store.Current.Thresholds, now) is { } alert)
 		{
 			var (title, message) = Text.QuotaToast(alert, now);
 			var brush = alert.Level switch

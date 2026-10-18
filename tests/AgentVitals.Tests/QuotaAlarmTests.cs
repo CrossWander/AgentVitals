@@ -27,6 +27,14 @@ public class QuotaAlarmTests
 	private static QuotaWindow Halfway(double used) => new(WindowKind.Session, null, used, Now.AddHours(2.5), Limiting: true);
 
 	[Fact]
+	public void SwitchingAccountIsNotAReset() // прежний на 95%, новый на 10% — окно не сбрасывалось
+	{
+		Assert.Equal(QuotaLevel.Critical, _alarm.Check("Claude", [Session(95)], _default, Now, "a").Single().Level);
+
+		Assert.DoesNotContain(_alarm.Check("Claude", [Session(10)], _default, Now, "b"), alert => alert.Level == QuotaLevel.Reset);
+	}
+
+	[Fact]
 	public void LevelsComeFromSettings() // пороги 60 и 80 вместо 75 и 90
 	{
 		Assert.Empty(_alarm.Check("Claude", [Session(55)], new Thresholds(60, 80), Now));
@@ -192,9 +200,9 @@ public class QuotaAlarmTests
 	[Fact]
 	public void ToastIsAboutTheGravestOfAllAgents() // выше порога у двух разом бывает разве что при запуске — тост один, о главном
 	{
-		var alert = _alarm.Check([("Claude", [Session(80)]), ("Codex", [Session(92)])], _default, Now);
+		var alert = _alarm.Check([("Claude", "", [Session(80)]), ("Codex", "", [Session(92)])], _default, Now);
 
 		Assert.Equal(("Codex", true), (alert?.Agent, alert?.Critical));
-		Assert.Null(_alarm.Check([("Claude", [Session(85)]), ("Codex", [Session(93)])], _default, Now)); // о «важно» у Claude уже сказано
+		Assert.Null(_alarm.Check([("Claude", "", [Session(85)]), ("Codex", "", [Session(93)])], _default, Now)); // о «важно» у Claude уже сказано
 	}
 }
