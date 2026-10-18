@@ -120,9 +120,12 @@ internal sealed class Poller
 				state.CheckInstalled();
 			}
 
-			var due = Installed
-				.Where(state => now >= state.NextFetch(Store.Current.IntervalSeconds) || (force && state.Error is not RateLimitedException))
-				.ToList();
+			foreach (var state in Installed)
+			{
+				state.CheckAccount(now);
+			}
+
+			var due = Installed.Where(state => state.Due(Store.Current.IntervalSeconds, now, force)).ToList();
 
 			foreach (var state in due)
 			{

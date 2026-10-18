@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using Xunit;
 
 namespace AgentVitals.Tests;
@@ -30,6 +32,56 @@ public class QuotaMemoryTests
 		Assert.Equal(_answer.Windows, memory.Snapshot!.Windows);
 		Assert.Equal((_answer.Plan, _answer.Account, _answer.Extra), (memory.Snapshot.Plan, memory.Snapshot.Account, memory.Snapshot.Extra));
 		Assert.Equal((_now, _now.AddMinutes(5)), (memory.Updated, memory.RetryAt));
+	}
+
+	[Fact]
+	public void AccountsSurviveRestart() // запомненные аккаунты и какой из них в работе
+	{
+		using var temp = new TempDirectory();
+		var file = temp.File("quota.json");
+		Account[] accounts = [new("A", _answer, _now.AddHours(-2), null), new("B", _answer, _now, _now.AddMinutes(5))];
+
+		QuotaMemory.Save(file, new Dictionary<string, RememberedQuota> { ["Claude"] = new(_answer, _now, _now.AddMinutes(5), "B", accounts) });
+		var state = new AgentState(new ClaudeAgent());
+		state.Recall(QuotaMemory.Load(file)["Claude"], _now);
+
+		Assert.Equal("B", state.Key);
+		Assert.Equal(["A", "B"], state.Accounts.Select(account => account.Key));
+		Assert.Equal(_now.AddHours(-2), state.Accounts[0].Updated);
+		Assert.IsType<RateLimitedException>(state.Error);
+	}
+
+	[Fact]
+	public void LegacyFileLoadsWithoutAccounts() // файл от 1.3.0: аккаунт ещё неизвестен, цифры видны
+	{
+		using var temp = new TempDirectory();
+		var file = temp.File("quota.json");
+		File.WriteAllText(file, """{"Claude":{"snapshot":{"plan":"Max","account":"you@example.com","windows":[],"extra":null},"updated":"2026-10-14T19:00:00Z","retryAt":null}}""");
+
+		var memory = QuotaMemory.Load(file)["Claude"];
+		var state = new AgentState(new ClaudeAgent());
+		state.Recall(memory, _now);
+
+		Assert.Null(memory.Key);
+		Assert.Null(memory.Accounts);
+		Assert.Null(state.Key);
+		Assert.Empty(state.Accounts);
+		Assert.Equal("you@example.com", state.Snapshot?.Account);
+	}
+
+	[Fact]
+	public void NewFileKeepsTopLevelForOlderVersions() // откат на 1.3.0 видит цифры аккаунта в работе
+	{
+		using var temp = new TempDirectory();
+		var file = temp.File("quota.json");
+
+		QuotaMemory.Save(file, new Dictionary<string, RememberedQuota> { ["Claude"] = new(_answer, _now, null, "A", [new("A", _answer, _now, null)]) });
+		var claude = JsonDocument.Parse(File.ReadAllText(file)).RootElement.GetProperty("Claude");
+
+		Assert.True(claude.TryGetProperty("snapshot", out _));
+		Assert.True(claude.TryGetProperty("updated", out _));
+		Assert.Equal("A", claude.GetProperty("key").GetString());
+		Assert.Equal(1, claude.GetProperty("accounts").GetArrayLength());
 	}
 
 	[Fact]
