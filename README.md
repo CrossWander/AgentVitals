@@ -29,8 +29,8 @@ and [claude-status-bar](https://github.com/m1ckc3s/claude-status-bar), which do 
 2. Start it. A pulse icon appears in the tray. Windows 10 may put it into the hidden area — drag it
    onto the taskbar once.
 3. Every agent you are signed in to shows its quotas right away, each on its own tab — see
-   [Agents](#agents). To see live sessions, open Settings → *Live sessions* → **Connect** on the
-   Claude Code or Codex row.
+   [Agents](#agents). To see live sessions, open the [Agents window](#agents-window), pick Claude or
+   Codex and press **Connect** under *Live sessions*.
 
 Hover the icon for a quick card, click it for the full window, right-click for the menu. The window
 stays open while you work in other windows: close it with ✕, another click on the icon or Esc.
@@ -45,6 +45,7 @@ scrolls.
 | Tray icon | A pulse line coloured by the limit closest to running out; it beats while an agent works, and a blue dot blinks while one waits for you |
 | Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a limit won't last until its reset at this pace, when a critical limit resets, when a long turn ends, when an agent asks for permission and when an agent's service status changes; two soft sounds you can turn on — for permission and for *critical* |
 | Live sessions | Every open Claude Code and Codex session, on its agent's tab, with its folder, git branch, state and turn timer → [more](#live-sessions) |
+| Accounts | Every account you have signed in to stays on its agent's tab with its last numbers, and a toast says when a remembered one is available again → [more](#accounts) |
 | Usage statistics | For Claude and Codex: today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
 | Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears), the Copilot component of githubstatus.com for Copilot, status.cursor.com for Cursor; a toast when one changes |
 | After sleep | Asks again as soon as the PC wakes; a window whose reset time has passed shows 0% instead of stale numbers |
@@ -55,10 +56,10 @@ scrolls.
 
 ## Settings
 
-The sliders button at the bottom of the window, or *Settings* in the right-click menu, opens
+The gear button at the bottom of the window, or *Settings* in the right-click menu, opens
 settings: language, theme, how often to check quotas, the *important* and *critical* levels,
-session toasts, their two sounds, start with Windows, updates and the Claude Code and Codex hooks
-for live sessions.
+session toasts, their two sounds, start with Windows and updates. Which agents to watch, the order
+of their tabs, live sessions and account names are in the [Agents window](#agents-window).
 
 | Light | Dark |
 |---|---|
@@ -79,6 +80,57 @@ confirmed it once: Copilot Chat comes with VS Code, so its folder alone says not
 
 If Claude Code keeps its sign-in in Windows Credential Manager, AgentVitals reads it from there too and
 takes whichever of the two lasts longer (not verified).
+
+## Accounts
+
+AgentVitals remembers every account of an agent you have signed in to — a Claude user in an
+organization, a ChatGPT account for Codex, a GitHub login for Copilot, a Cursor user. When a session
+runs out and you switch with `/login`, the previous account stays on the tab with its last numbers,
+and you can see when it frees up.
+
+| Light | Dark |
+|---|---|
+| <img src="docs/accounts-light.png" width="360" alt="Accounts card, light theme"> | <img src="docs/accounts-dark.png" width="360" alt="Accounts card, dark theme"> |
+
+- **The account in use** is the one whose sign-in the agent holds now. Only it gets fresh numbers,
+  colours the tray icon and the header and gets quota toasts. After `/login` AgentVitals sees the new
+  account within seconds, marks it *updating the numbers…* and asks the server at once; the wait after
+  a 429 belongs to each account, so the previous one does not hold the new one back.
+- **The Accounts card** appears under the quota cards once an agent has two accounts or more: the
+  account in use first, the others in the order they appeared, each with its plan, the age of its
+  numbers and a bar per limit. Three are visible, the rest scroll inside the card.
+- **A click on an account** shows it in the cards above, with a note that these are the last numbers
+  AgentVitals saw. Each time the window opens it shows the account in use again.
+- **The badge** says *in use*, *session — in 1 h 10 min* or *week — from Tue 09:00* while a limit of a
+  remembered account is used up (the one that resets last), *available again* once all of them have
+  reset since, and *free* otherwise. A toast says when a remembered account is available again; a
+  click opens its tab with it shown.
+- **Names.** An account is called by its email (for Copilot, the GitHub login); two accounts with one
+  email get the plan added. Under the eye they are *Account 1*, *Account 2*. Your own names are set
+  in the [Agents window](#agents-window) and stay visible under the eye.
+- Usage statistics and live sessions are shared by all accounts of an agent: the agents' logs do not
+  say which account did the work.
+
+AgentVitals never switches accounts itself and keeps no tokens: it only remembers the plan, the
+email, the percentages and the account's id from the agent's own files.
+
+## Agents window
+
+The robot button at the end of the tab row, or *Agents…* in the right-click menu, opens a normal
+window — it is on the taskbar, moves and stays open.
+
+| Light | Dark |
+|---|---|
+| <img src="docs/agents-light.png" width="360" alt="Agents window, light theme"> | <img src="docs/agents-dark.png" width="360" alt="Agents window, dark theme"> |
+
+- **The list** shows the agents in the order of their tabs: the number is the tab's place, which
+  is also its Ctrl+N. **▲ Up** and **▼ Down** move the selected agent. Agents that are not found are
+  grey at the bottom.
+- **The switch** turns an agent off: it is not asked, has no tab, sends no toasts and does not colour
+  the icon; its hooks stay in place. Turning it back on brings everything back at once.
+- **On the right** are the selected agent's details: its state, [live sessions](#live-sessions) with
+  **Connect** and **Disconnect**, and its accounts — a name field (the email is in its tooltip, hidden
+  by the eye), the plan, the last numbers and **Forget** for a remembered account.
 
 ## Quotas and alerts
 
@@ -130,7 +182,7 @@ restarting AgentVitals no longer spends the rate limit and gets refused straight
 
 ## Live sessions
 
-Settings → *Live sessions* → **Connect** on the Claude Code row adds AgentVitals hooks to
+The Agents window → Claude → *Live sessions* → **Connect** adds AgentVitals hooks to
 `~/.claude/settings.json`.
 Each hook runs `AgentVitals.exe hook` in the background, which writes one small state file per
 session into `sessions\` next to the exe. **Disconnect** removes only AgentVitals' entries.
@@ -158,9 +210,9 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
   you restart them.
 - AgentVitals rewrites `settings.json` as plain JSON, so comments in it are not kept. Before every
   change the file is copied to `settings.json.agentvitals.bak`, comments included.
-- If you move the exe, settings say so — reconnect. Before deleting the exe, press **Disconnect**:
+- If you move the exe, the Agents window says so — reconnect. Before deleting the exe, press **Disconnect**:
   otherwise Claude Code keeps calling a program that is no longer there.
-- **Codex.** **Connect** on the Codex row writes `~/.codex/hooks.json` (or `hooks.json` under
+- **Codex.** **Connect** on the Codex page writes `~/.codex/hooks.json` (or `hooks.json` under
   `$CODEX_HOME`); each hook runs `"AgentVitals.exe" hook codex`. Codex runs a new or changed hook
   only after you trust it: open `/hooks` in Codex once after connecting, and again after moving the
   exe. Esc in Codex fires its own `Interrupt` hook, so the session goes idle at once. Codex sessions
