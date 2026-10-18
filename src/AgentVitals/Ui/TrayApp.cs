@@ -77,7 +77,11 @@ internal sealed class TrayApp
 				_popover.Hide();
 			}
 		};
-		_popover.Settings.Changed += Render;
+		_popover.Settings.Changed += () =>
+		{
+			Render();
+			_agents?.Render();
+		};
 		_popover.Settings.ExitRequested += Exit;
 		_menu.RefreshRequested += Refresh;
 		_menu.SettingsRequested += () => OpenPopover(settings: true);

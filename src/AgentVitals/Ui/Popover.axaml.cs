@@ -39,6 +39,13 @@ internal partial class Popover : TrayWindow
 
 		Settings.Back += () => ShowSettings(false);
 
+		// Метка держится, пока новую версию не поставят: тост о ней один на версию и мог пройти мимо.
+		Settings.ReleaseChanged += release =>
+		{
+			UpdateBadge.IsVisible = release is { State: UpdateState.Newer };
+			ToolTip.SetTip(SettingsButton, release is { State: UpdateState.Newer } ? Localization.Format("langUpdateAvailable", release.Version) : null);
+		};
+
 		// Окно прижато к значку и растёт вверх: вкладка ниже соседней — у Copilot нет статистики и сессий — сдвигала
 		// бы верх и вкладки под мышью на полэкрана. Поэтому окно не становится ниже, чем уже было.
 		// ponytail: самая высокая вкладка, открытая впервые, ещё раз поднимет окно; потом — ни скачка.

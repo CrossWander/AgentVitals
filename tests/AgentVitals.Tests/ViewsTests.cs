@@ -210,6 +210,49 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void AgentLineCountsAccounts() // «2 аккаунта · Team», как на макете
+	{
+		var state = Claude("B", Signed("A", "Max", "a@x.z"), Signed("B", "Team", "b@x.z"));
+
+		Assert.Equal($"langAccountCount{Text.Plural(2, Localization.Current)} · Team", Text.AgentLine(state));
+	}
+
+	[Theory]
+	[InlineData(1, "ru", "One")]
+	[InlineData(2, "ru", "Few")]
+	[InlineData(4, "uk", "Few")]
+	[InlineData(5, "ru", "Many")]
+	[InlineData(11, "ru", "Many")]
+	[InlineData(12, "uk", "Many")]
+	[InlineData(21, "ru", "One")]
+	[InlineData(22, "ru", "Few")]
+	[InlineData(1, "en", "One")]
+	[InlineData(2, "en", "Many")]
+	public void PluralFollowsTheLanguage(int count, string language, string form) => Assert.Equal(form, Text.Plural(count, language));
+
+	[Fact]
+	public void AgentDetailsSayWhatIsKnown() // «Найден · вход есть · подписка Team · вкладка Ctrl+1»
+	{
+		Assert.Equal(
+			"langStateFound · langStateSignedIn · langStatePlan · langStateTab",
+			Text.AgentDetails(Found("Claude", snapshot: new("Team", null, [], null)), "1"));
+		Assert.Equal("langStateFound · langAgentOff", Text.AgentDetails(Found("Claude", off: true), ""));
+		Assert.Equal("langAgentMissing", Text.AgentDetails(Found("Claude", installed: false), ""));
+	}
+
+	[Fact]
+	public void BusyAccountSaysWhenItFreesUp() // «Сессия 100% · Неделя 64% · 2 ч назад; сессия сбросится через 1 ч 10 мин»
+	{
+		var busy = new Account("A", new Snapshot("Max", "a@x.z", [new(WindowKind.Session, null, 100, new DateTimeOffset(_now.AddMinutes(70)), Limiting: true)], null), _now.AddHours(-2), null);
+		var edits = Views.AccountEdits(Claude("B", busy, Signed("B", "Team", "b@x.z")), new Dictionary<string, string>(), hide: false, _now);
+		var remembered = edits.Single(edit => edit.Key == "A");
+
+		Assert.Equal("langAccountFreesIn", remembered.Note);
+		Assert.True(remembered.Numbers.Single().Spent);
+		Assert.Null(edits.Single(edit => edit.Key == "B").Note);
+	}
+
+	[Fact]
 	public void AgeIsShort()
 	{
 		Assert.Equal("langAgeNow", Text.Age(_now.AddSeconds(-30), _now));

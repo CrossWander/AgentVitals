@@ -4,8 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Threading;
 using AgentVitals.Core;
 using AgentVitals.Core.Sessions;
 using AgentVitals.Platform;
@@ -20,6 +23,9 @@ internal partial class AgentsWindow : Window
 
 	// Выбранный слева агент; пропал из списка — первый.
 	private string? _picked;
+
+	// Имена, которые ввели, но не сохранили, по ключу «агент/аккаунт»: строки перерисовываются, ввод остаётся.
+	private readonly Dictionary<string, string> _drafts = [];
 
 	public AgentsWindow(Poller poller)
 	{
@@ -62,20 +68,67 @@ internal partial class AgentsWindow : Window
 
 		var number = Views.AgentRows(_poller.Agents).First(row => row.Name == state.Agent.Name).Number;
 		AgentName.Text = state.Agent.Name;
-		AgentState.Text = string.Join(" · ", new[] { Text.AgentLine(state), number.Length > 0 ? Localization.Format("langAgentTab", number) : null }.OfType<string>());
+		AgentDot.Fill = Views.Brush(Dot(state));
+		AgentState.Text = Text.AgentDetails(state, number);
 		AgentError.Text = state.Error is { } problem && state.Installed && !state.Off ? Text.Error(problem, state.Agent.Name) : "";
 		AgentError.IsVisible = AgentError.Text.Length > 0;
 
 		// Как было в настройках: строка — только у агента, чья папка настроек есть.
 		var target = state.Agent.Hooks;
 		HooksCard.IsVisible = target is not null && Directory.Exists(Path.GetDirectoryName(target.File));
-		HookRows.ItemsSource = target is null ? null : new[] { HookRow.Of(target, target == failed ? error : null) };
+		HooksCard.DataContext = target is null ? null : HookRow.Of(target, target == failed ? error : null);
 
 		var accounts = Views.AccountEdits(state, Store.Current.AccountNames, Store.Current.Private, DateTime.UtcNow);
 		AccountsCard.IsVisible = accounts.Count > 0;
-		AccountsTitle.Text = Localization.Format("langAccounts", accounts.Count);
 		AccountRows.ItemsSource = accounts;
-		AccountsFoot.Text = Localization.Format("langAccountsFoot", Text.Login(state.Agent.Name));
+		AccountsFoot.Inlines = Code($"{Text.AccountsHow(state.Agent.Name)} {Localization.Get("langAccountsMemo")}");
+	}
+
+	private static string Dot(AgentState state) =>
+		!state.Installed || state.Off ? "Muted"
+		: state.Error is not null ? "Warn"
+		: state.Snapshot is not null ? "Good"
+		: "Muted";
+
+	/// <summary>Текст с `командами`: они — моноширинным на подложке.</summary>
+	private static InlineCollection Code(string text)
+	{
+		var parts = text.Split('`');
+		InlineCollection inlines = [];
+
+		for (var i = 0; i < parts.Length; i++)
+		{
+			inlines.Add(i % 2 == 0 ? new Run(parts[i]) : new Run($" {parts[i]} ") { FontFamily = new FontFamily("Consolas"), Background = Views.Brush("Well") });
+		}
+
+		return inlines;
+	}
+
+	/// <summary>Последние цифры аккаунта: израсходованное — цветом, у занятого — когда освободится.</summary>
+	private void OnNumbers(object? sender, EventArgs e)
+	{
+		if (sender is not TextBlock { DataContext: AccountEditView row } block)
+		{
+			return;
+		}
+
+		InlineCollection inlines = [];
+
+		foreach (var number in row.Numbers)
+		{
+			inlines.Add(new Run($"{number.Title} "));
+			inlines.Add(number.Spent ? new Run(number.Percent) { Foreground = Views.Brush("Warn"), FontWeight = FontWeight.SemiBold } : new Run(number.Percent));
+			inlines.Add(new Run(" · "));
+		}
+
+		inlines.Add(new Run(row.Age));
+
+		if (row.Note is { } note)
+		{
+			inlines.Add(new Run($"; {note}"));
+		}
+
+		block.Inlines = inlines;
 	}
 
 	protected override void OnKeyDown(KeyEventArgs e)
@@ -155,36 +208,86 @@ internal partial class AgentsWindow : Window
 		Changed?.Invoke();
 	}
 
+	private string NameKey(AccountEditView row) => $"{_picked}/{row.Key}";
+
+	// Строка аккаунта построена заново: в поле — недописанное имя, если оно есть, иначе сохранённое.
+	private void OnNameRow(object? sender, EventArgs e)
+	{
+		if (sender is TextBox { DataContext: AccountEditView row } box)
+		{
+			box.Text = _drafts.GetValueOrDefault(NameKey(row)) ?? row.Name;
+			Mark(box, row);
+		}
+	}
+
+	private void OnNameChanged(object? sender, TextChangedEventArgs e)
+	{
+		if (sender is not TextBox { DataContext: AccountEditView row } box)
+		{
+			return;
+		}
+
+		if ((box.Text ?? "").Trim() == row.Name)
+		{
+			_drafts.Remove(NameKey(row));
+		}
+		else
+		{
+			_drafts[NameKey(row)] = box.Text ?? "";
+		}
+
+		Mark(box, row);
+	}
+
+	// Имя правят — вместо «в работе» и «Забыть» кнопка «Сохранить»: без неё не видно, что ввод ещё не сохранён.
+	private static void Mark(TextBox box, AccountEditView row)
+	{
+		var editing = (box.Text ?? "").Trim() != row.Name;
+
+		foreach (var control in ((Grid)box.Parent!).Children.OfType<Panel>().Single().Children)
+		{
+			control.IsVisible = control.Classes.Contains("save") ? editing : !editing && control.Classes.Contains("inuse") == row.InUse;
+		}
+	}
+
+	// Enter сохраняет, Esc возвращает сохранённое; без правки Esc закрывает окно, как везде.
 	private void OnNameKey(object? sender, KeyEventArgs e)
 	{
-		if (e.Key == Key.Enter && sender is TextBox box)
-		{
-			SaveName(box);
-		}
-	}
-
-	private void OnNameDone(object? sender, RoutedEventArgs e)
-	{
-		if (sender is TextBox box)
-		{
-			SaveName(box);
-		}
-	}
-
-	private void SaveName(TextBox box)
-	{
-		if (box.DataContext is not AccountEditView row || _picked is not { } agent)
+		if (sender is not TextBox { DataContext: AccountEditView row } box)
 		{
 			return;
 		}
 
-		var key = $"{agent}/{row.Key}";
-		var name = box.Text?.Trim() ?? "";
+		if (e.Key == Key.Enter)
+		{
+			Save(row);
+			e.Handled = true;
+		}
+		else if (e.Key == Key.Escape && _drafts.ContainsKey(NameKey(row)))
+		{
+			box.Text = row.Name;
+			e.Handled = true;
+		}
+	}
 
-		if (name == (Store.Current.AccountNames.GetValueOrDefault(key) ?? ""))
+	private void OnSave(object? sender, RoutedEventArgs e)
+	{
+		if (sender is Control { DataContext: AccountEditView row })
+		{
+			Save(row);
+		}
+	}
+
+	private void Save(AccountEditView row)
+	{
+		var key = NameKey(row);
+
+		if (!_drafts.Remove(key, out var text))
 		{
 			return;
 		}
+
+		var name = text.Trim();
 
 		if (name.Length == 0)
 		{
@@ -196,6 +299,9 @@ internal partial class AgentsWindow : Window
 		}
 
 		Store.Save();
+
+		// Строки пересобираются после события: поле, в котором нажали Enter, ещё обрабатывает его.
+		Dispatcher.UIThread.Post(() => ShowDetails());
 		Changed?.Invoke();
 	}
 
@@ -204,6 +310,7 @@ internal partial class AgentsWindow : Window
 		if (sender is Control { DataContext: AccountEditView row } && Picked is { } state)
 		{
 			_poller.Forget(state, row.Key);
+			_drafts.Remove(NameKey(row));
 			Store.Current.AccountNames.Remove($"{state.Agent.Name}/{row.Key}");
 			Store.Save();
 			ShowDetails();
@@ -243,7 +350,7 @@ internal partial class AgentsWindow : Window
 	}
 }
 
-/// <summary>Строка hooks агента в разделе «Живые сессии».</summary>
+/// <summary>Hooks агента в разделе «Живые сессии».</summary>
 internal sealed record HookRow(HookTarget Target, string State, bool CanConnect, bool CanDisconnect)
 {
 	public string Title => Target.Title;

@@ -36,6 +36,9 @@
             <SolidColorBrush x:Key="HintFill" Color="#1AFBBF24"/>
             <SolidColorBrush x:Key="HintLine" Color="#4DFBBF24"/>
             <SolidColorBrush x:Key="HintText" Color="#FDE68A"/>
+            <SolidColorBrush x:Key="Well" Color="#0DFFFFFF"/>
+            <SolidColorBrush x:Key="GoodFill" Color="#2934D399"/>
+            <SolidColorBrush x:Key="GoodText" Color="#6EE7B7"/>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Light">
@@ -66,6 +69,9 @@
             <SolidColorBrush x:Key="HintFill" Color="#FFF7ED"/>
             <SolidColorBrush x:Key="HintLine" Color="#FED7AA"/>
             <SolidColorBrush x:Key="HintText" Color="#7C2D12"/>
+            <SolidColorBrush x:Key="Well" Color="#F3F6FA"/>
+            <SolidColorBrush x:Key="GoodFill" Color="#D1FAE5"/>
+            <SolidColorBrush x:Key="GoodText" Color="#065F46"/>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 

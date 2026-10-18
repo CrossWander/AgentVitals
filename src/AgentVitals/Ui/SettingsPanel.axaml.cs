@@ -238,6 +238,9 @@ internal partial class SettingsPanel : UserControl
 		}
 	}
 
+	/// <summary>Узнали, есть ли новая версия: шестерня ставит метку.</summary>
+	public event Action<Release?>? ReleaseChanged;
+
 	private void ShowRelease(string? error = null)
 	{
 		UpdateLine.Text = error ?? (_release is null ? Localization.Format("langVersion", Updates.Current) : _release.State switch
@@ -251,6 +254,7 @@ internal partial class SettingsPanel : UserControl
 		var newer = error is null && _release?.State == UpdateState.Newer;
 		UpdateInstall.IsVisible = newer && OperatingSystem.IsWindows();
 		UpdateOpen.IsVisible = error is not null || (newer && !OperatingSystem.IsWindows());
+		ReleaseChanged?.Invoke(_release);
 	}
 
 	private void OnBack(object? sender, RoutedEventArgs e) => Back?.Invoke();

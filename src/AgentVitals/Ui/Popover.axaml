@@ -370,9 +370,17 @@
                             <TextBlock Text="{DynamicResource langRefresh}"/>
                         </StackPanel>
                     </Button>
-                    <Button Grid.Column="3" Theme="{StaticResource Round}" Click="OnSettings">
-                        <Path Classes="icon" Data="{StaticResource IconGear}" Stroke="{Binding $parent[Button].Foreground}"/>
-                    </Button>
+                    <!-- Шестерня залита, как у ClaudeBar. Метка — есть новая версия, а тост о ней пропустили -->
+                    <Panel Grid.Column="3">
+                        <Button Name="SettingsButton" Theme="{StaticResource Round}" Click="OnSettings">
+                            <Path Classes="icon" Width="15" Height="15" Data="{StaticResource IconGear}" Fill="{Binding $parent[Button].Foreground}"/>
+                        </Button>
+                        <Border Name="UpdateBadge" IsVisible="False" IsHitTestVisible="False" Width="13" Height="13" CornerRadius="6.5"
+                                Background="{DynamicResource BrandFill}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0">
+                            <Path Width="7" Height="7" Stretch="Uniform" Data="{StaticResource IconArrowUp}" Stroke="White"
+                                  StrokeThickness="1.6" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Border>
+                    </Panel>
                     <Button Grid.Column="4" Theme="{StaticResource Round}" Margin="8,0,0,0" Click="OnClose">
                         <Path Classes="icon" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}"/>
                     </Button>

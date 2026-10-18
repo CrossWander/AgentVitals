@@ -23,7 +23,7 @@
             </Button>
             <Button Theme="{StaticResource MenuRow}" Click="OnSettings">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Path Classes="icon" Data="{StaticResource IconGear}" Stroke="{Binding $parent[Button].Foreground}"/>
+                    <Path Classes="icon" Data="{StaticResource IconGear}" Fill="{Binding $parent[Button].Foreground}"/>
                     <TextBlock Text="{DynamicResource langSettings}"/>
                 </StackPanel>
             </Button>

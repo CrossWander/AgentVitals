@@ -115,13 +115,21 @@ internal sealed record AccountView(
 /// <param name="Shown">Не выключен — переключатель «показывать».</param>
 internal sealed record AgentRowView(string Name, string Number, string State, bool Found, bool Shown, bool Picked = false)
 {
-	public double Fade => Found ? 1 : 0.5;
+	/// <summary>Слева у строки: номер вкладки, у выключенного — «—», у ненайденного — ничего.</summary>
+	public string Mark => Found && !Shown ? "—" : Number;
+
+	/// <summary>Выключенный и ненайденный — бледнее: вкладки у них нет.</summary>
+	public bool Dim => !Found || !Shown;
 }
+
+/// <summary>Окно аккаунта в строке таблицы: «Сессия 100%»; израсходованное подсвечено.</summary>
+internal sealed record AccountNumber(string Title, string Percent, bool Spent);
 
 /// <summary>Аккаунт в окне «Агенты»: своё имя, тариф и последние цифры.</summary>
 /// <param name="Name">Своё имя; "" — не задано, вместо него виден Placeholder — имя по умолчанию.</param>
 /// <param name="Email">Почта для подсказки над именем; null — глаз её прячет.</param>
-internal sealed record AccountEditView(string Key, string Name, string Placeholder, string? Email, string Plan, string Last, bool InUse);
+/// <param name="Note">У занятого запомненного — когда он освободится; иначе null.</param>
+internal sealed record AccountEditView(string Key, string Name, string Placeholder, string? Email, string Plan, IReadOnlyList<AccountNumber> Numbers, string Age, string? Note, bool InUse);
 
 /// <param name="Prompt">Первый запрос сессии; null — ещё не известен или экран показывают другим.</param>
 /// <param name="Namesake">В той же папке идёт другая сессия агента: у обеих вместо ветки — запрос, иначе строк не различить.</param>
@@ -333,7 +341,12 @@ internal static class Views
 				plain[account.Key],
 				hide ? null : account.Snapshot?.Account,
 				account.Snapshot?.Plan ?? "",
-				Join([.. account.Windows(now).Where(window => window.Limiting).Select(window => $"{Text.Title(window)} {Math.Round(window.Used).ToString(CultureInfo.InvariantCulture)}%"), Text.Age(account.Updated, now)]),
+				[.. account.Windows(now).Where(window => window.Limiting).Select(window => new AccountNumber(
+					Text.Title(window),
+					Math.Round(window.Used).ToString(CultureInfo.InvariantCulture) + "%",
+					Math.Round(window.Used) >= 100))],
+				Text.Age(account.Updated, now),
+				account.Key != state.Key && account.Availability(now) is (Availability.Busy, { } blocker) ? Text.Frees(blocker, now) : null,
 				account.Key == state.Key))];
 	}
 
