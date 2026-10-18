@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,6 +61,32 @@ internal sealed class CodexAgent : IAgent
 		}
 
 		return Parse(await Api.SendAsync(http, request, Cli, cancellation)) with { Account = Email((string?)tokens["id_token"]) };
+	}
+
+	/// <inheritdoc/>
+	public string? Identity()
+	{
+		try
+		{
+			return File.Exists(Credentials) ? AccountId(SharedFile.ReadAllText(Credentials)) : null;
+		}
+		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+		{
+			return null;
+		}
+	}
+
+	/// <summary>Аккаунт ChatGPT из файла входа — тот же, что уходит в заголовке ChatGPT-Account-Id.</summary>
+	internal static string? AccountId(string json)
+	{
+		try
+		{
+			return (string?)JsonNode.Parse(json)?["tokens"]?["account_id"] is { Length: > 0 } account ? account : null;
+		}
+		catch (Exception exception) when (exception is JsonException or InvalidOperationException)
+		{
+			return null;
+		}
 	}
 
 	/// <summary>Почта из id_token Codex CLI. Не разобралась — null, квоты и без неё.</summary>
