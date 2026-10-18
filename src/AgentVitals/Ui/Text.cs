@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
+using AgentVitals.Core;
 using AgentVitals.Core.Quotas;
 using AgentVitals.Core.Sessions;
 using AgentVitals.Core.Status;
@@ -82,6 +83,15 @@ internal static class Text
 			? Localization.Format("langAccountBusyAt", title, at.LocalDateTime.ToString(ResetPattern(left), Localization.Culture))
 			: Localization.Format("langAccountBusyIn", title, Span(left));
 	}
+
+	/// <summary>Состояние агента в списке окна «Агенты»: почему нет данных или его тариф.</summary>
+	public static string AgentLine(AgentState state) =>
+		!state.Installed ? Localization.Get("langAgentMissing")
+		: state.Off ? Localization.Get("langAgentOff")
+		: state.Error is SignInException ? Localization.Get("langAgentNoSignIn")
+		: state.Snapshot is { Plan: { Length: > 0 } plan } ? plan
+		: state.Error is not null ? Localization.Get("langAgentNoAnswer")
+		: Localization.Get("langAgentNoData");
 
 	/// <summary>Как переключиться на другой аккаунт агента: у Claude — «/login в Claude Code», у прочих — своя строка или общая.</summary>
 	public static string Login(string agent) =>

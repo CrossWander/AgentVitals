@@ -177,4 +177,15 @@
     <x:String x:Key="langAgentsMenu">Агенты…</x:String>
     <x:String x:Key="langAccountBackTitle">Аккаунт снова доступен</x:String>
     <x:String x:Key="langAccountBackText">{0} · {1} снова доступен — переключитесь: {2}</x:String>
+    <x:String x:Key="langAgentsHint">Номер — место вкладки: Ctrl+1, Ctrl+2… переключают их в этом порядке</x:String>
+    <x:String x:Key="langUp">▲ Выше</x:String>
+    <x:String x:Key="langDown">▼ Ниже</x:String>
+    <x:String x:Key="langShow">Показывать</x:String>
+    <x:String x:Key="langAgentMissing">не найден</x:String>
+    <x:String x:Key="langAgentOff">выключен</x:String>
+    <x:String x:Key="langAgentNoSignIn">нет входа</x:String>
+    <x:String x:Key="langAgentNoAnswer">нет ответа</x:String>
+    <x:String x:Key="langAgentNoData">нет данных</x:String>
+    <x:String x:Key="langAgentTab">вкладка {0} · Ctrl+{0}</x:String>
+    <x:String x:Key="langForget">Забыть</x:String>
 </ResourceDictionary>

@@ -29,6 +29,9 @@ internal sealed class TrayApp
 	private readonly QuotaAlarm _alarm = new();
 	private readonly AccountAlarm _accountAlarm = new();
 
+	// Окно «Агенты»: одно на программу, null — закрыто.
+	private AgentsWindow? _agents;
+
 	private readonly DispatcherTimer _hover = new()
 	{
 		Interval = _hoverDelay,
@@ -78,6 +81,8 @@ internal sealed class TrayApp
 		_popover.Settings.ExitRequested += Exit;
 		_menu.RefreshRequested += Refresh;
 		_menu.SettingsRequested += () => OpenPopover(settings: true);
+		_menu.AgentsRequested += OpenAgents;
+		_popover.AgentsRequested += OpenAgents;
 		_menu.ExitRequested += Exit;
 		_hover.Tick += (_, _) => OnHoverTick();
 		_watch.Tick += (_, _) => OnWatchTick();
@@ -182,7 +187,26 @@ internal sealed class TrayApp
 	private void OnPolled()
 	{
 		Render();
+		_agents?.Render();
 		Notify();
+	}
+
+	/// <summary>Окно «Агенты» посреди экрана; уже открыто — поднять его.</summary>
+	private void OpenAgents()
+	{
+		HideGlance();
+		_menu.Hide();
+		_popover.Hide();
+
+		if (_agents is null)
+		{
+			_agents = new AgentsWindow(_poller);
+			_agents.Changed += Render;
+			_agents.Closed += (_, _) => _agents = null;
+			_agents.Show();
+		}
+
+		_agents.Activate();
 	}
 
 	private void Render()

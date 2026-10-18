@@ -131,34 +131,6 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
-
-                <Border Classes="card">
-                    <StackPanel Spacing="8">
-                        <TextBlock Classes="label" Text="{DynamicResource langHooks}"/>
-                        <!-- Строка на агента с hooks: только установленные — у кого есть папка настроек -->
-                        <ItemsControl Name="HookRows">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Spacing="12"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="local:HookRow">
-                                    <StackPanel Spacing="6">
-                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
-                                        <TextBlock Classes="caption" Text="{Binding State}" TextWrapping="Wrap"/>
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <Button Theme="{StaticResource Brand}" Content="{DynamicResource langHooksConnect}"
-                                                    IsVisible="{Binding CanConnect}" Click="OnConnect"/>
-                                            <Button Theme="{StaticResource Pill}" Content="{DynamicResource langHooksDisconnect}"
-                                                    IsVisible="{Binding CanDisconnect}" Click="OnDisconnect"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
             </StackPanel>
         </ScrollViewer>
 

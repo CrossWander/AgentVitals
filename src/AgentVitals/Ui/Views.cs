@@ -109,6 +109,20 @@ internal sealed record AccountView(
 	public bool HasHint => Hint is not null;
 }
 
+/// <summary>Агент в списке окна «Агенты».</summary>
+/// <param name="Number">Место вкладки — оно же Ctrl+N; "" — вкладки нет.</param>
+/// <param name="Found">Установлен: у ненайденного нет ни номера, ни переключателя.</param>
+/// <param name="Shown">Не выключен — переключатель «показывать».</param>
+internal sealed record AgentRowView(string Name, string Number, string State, bool Found, bool Shown, bool Picked = false)
+{
+	public double Fade => Found ? 1 : 0.5;
+}
+
+/// <summary>Аккаунт в окне «Агенты»: своё имя, тариф и последние цифры.</summary>
+/// <param name="Name">Своё имя; "" — не задано, вместо него виден Placeholder — имя по умолчанию.</param>
+/// <param name="Email">Почта для подсказки над именем; null — глаз её прячет.</param>
+internal sealed record AccountEditView(string Key, string Name, string Placeholder, string? Email, string Plan, string Last, bool InUse);
+
 /// <param name="Prompt">Первый запрос сессии; null — ещё не известен или экран показывают другим.</param>
 /// <param name="Namesake">В той же папке идёт другая сессия агента: у обеих вместо ветки — запрос, иначе строк не различить.</param>
 /// <param name="Session">Сама сессия: по щелчку на строке поднимается окно, где она идёт.</param>
@@ -289,6 +303,38 @@ internal static class Views
 			rows,
 			Localization.Format("langAccounts", rows.Count),
 			Localization.Format("langAccountsFoot", Text.Login(state.Agent.Name)));
+	}
+
+	/// <summary>Агенты в порядке вкладок, ненайденные — в конце. Номер — место среди вкладок: Ctrl+N.</summary>
+	internal static IReadOnlyList<AgentRowView> AgentRows(IReadOnlyList<AgentState> agents)
+	{
+		List<string> tabs = [.. agents.Where(state => state.Visible).Select(state => state.Agent.Name)];
+
+		return [.. agents
+			.OrderBy(state => state.Installed ? 0 : 1)
+			.Select(state => new AgentRowView(
+				state.Agent.Name,
+				tabs.IndexOf(state.Agent.Name) is >= 0 and var place ? (place + 1).ToString(CultureInfo.InvariantCulture) : "",
+				Text.AgentLine(state),
+				state.Installed,
+				!state.Off))];
+	}
+
+	/// <summary>Аккаунты агента для окна «Агенты»: аккаунт в работе первым, как в карточке на вкладке.</summary>
+	internal static IReadOnlyList<AccountEditView> AccountEdits(AgentState state, IReadOnlyDictionary<string, string> custom, bool hide, DateTime now)
+	{
+		var plain = Names(state.Agent.Name, state.Accounts, new Dictionary<string, string>(), hide);
+
+		return [.. state.Accounts
+			.OrderBy(account => account.Key == state.Key ? 0 : 1)
+			.Select(account => new AccountEditView(
+				account.Key,
+				custom.GetValueOrDefault($"{state.Agent.Name}/{account.Key}") ?? "",
+				plain[account.Key],
+				hide ? null : account.Snapshot?.Account,
+				account.Snapshot?.Plan ?? "",
+				Join([.. account.Windows(now).Where(window => window.Limiting).Select(window => $"{Text.Title(window)} {Math.Round(window.Used).ToString(CultureInfo.InvariantCulture)}%"), Text.Age(account.Updated, now)]),
+				account.Key == state.Key))];
 	}
 
 	/// <summary>Карточки квот снимка: окна на этот момент и доплата сверх тарифа.</summary>

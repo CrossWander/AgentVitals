@@ -1,0 +1,139 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AgentVitals"
+        x:Class="AgentVitals.AgentsWindow"
+        x:ClassModifier="internal"
+        Title="AgentVitals"
+        Icon="avares://AgentVitals/app.png"
+        Width="760" Height="560" MinWidth="640" MinHeight="420"
+        WindowStartupLocation="CenterScreen" ShowInTaskbar="True"
+        Background="{DynamicResource Window}">
+
+    <!-- Обычное окно: на панели задач, двигается и не закрывается от щелчка мимо. Слева — агенты в порядке вкладок,
+         справа — подробности выбранного разделами: новые подключения и настройки агента встают туда же -->
+    <Window.Styles>
+        <Style Selector="Border.agent">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.agent:pointerover">
+            <Setter Property="Background" Value="{DynamicResource CardHover}"/>
+        </Style>
+        <Style Selector="Border.agent.picked">
+            <Setter Property="Background" Value="{DynamicResource AccountPick}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Blue}"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*" Margin="20,16,20,20">
+        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,14">
+            <Path Classes="icon" Width="20" Height="20" Data="{StaticResource IconAgents}" Stroke="{DynamicResource Text}" VerticalAlignment="Center"/>
+            <TextBlock Text="{DynamicResource langAgents}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="260,*">
+            <Border Classes="card" Padding="8">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="4,10,4,2">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Name="UpButton" Theme="{StaticResource Pill}" Content="{DynamicResource langUp}" Click="OnUp"/>
+                            <Button Name="DownButton" Theme="{StaticResource Pill}" Content="{DynamicResource langDown}" Click="OnDown"/>
+                        </StackPanel>
+                        <TextBlock Classes="faint" Text="{DynamicResource langAgentsHint}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl Name="AgentList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="local:AgentRowView">
+                                    <!-- Фон прозрачный, а не пустой: щелчок ловится во всю строку -->
+                                    <Border Classes="agent" Classes.picked="{Binding Picked}" Margin="0,0,0,4" Padding="10,8"
+                                            CornerRadius="10" BorderThickness="1" Cursor="Hand" Opacity="{Binding Fade}"
+                                            PointerReleased="OnAgent">
+                                        <Grid ColumnDefinitions="24,*,Auto">
+                                            <TextBlock Text="{Binding Number}" FontWeight="Bold" Foreground="{DynamicResource TextDim}"
+                                                       VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                <TextBlock Classes="faint" Text="{Binding State}" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                            <CheckBox Grid.Column="2" Theme="{StaticResource Toggle}" IsChecked="{Binding Shown}"
+                                                      IsVisible="{Binding Found}" ToolTip.Tip="{DynamicResource langShow}"
+                                                      IsCheckedChanged="OnShow"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- Подробности прокручиваются целиком: окно на малом экране не выше рабочей области -->
+            <ScrollViewer Grid.Column="1" Margin="16,0,-14,0" Padding="0,0,14,0" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="12">
+                    <StackPanel Spacing="4">
+                        <TextBlock Name="AgentName" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Name="AgentState" Classes="caption" TextWrapping="Wrap"/>
+                        <TextBlock Name="AgentError" Classes="error" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Живые сессии — из настроек, как были: строка на hooks выбранного агента -->
+                    <Border Name="HooksCard" Classes="card">
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="label" Text="{DynamicResource langHooks}"/>
+                            <ItemsControl Name="HookRows">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:HookRow">
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Classes="caption" Text="{Binding State}" TextWrapping="Wrap"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <Button Theme="{StaticResource Brand}" Content="{DynamicResource langHooksConnect}"
+                                                        IsVisible="{Binding CanConnect}" Click="OnConnect"/>
+                                                <Button Theme="{StaticResource Pill}" Content="{DynamicResource langHooksDisconnect}"
+                                                        IsVisible="{Binding CanDisconnect}" Click="OnDisconnect"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Аккаунты: своё имя вместо почты, последние цифры, «Забыть» — только у запомненных -->
+                    <Border Name="AccountsCard" Classes="card">
+                        <StackPanel Spacing="10">
+                            <TextBlock Name="AccountsTitle" Classes="label"/>
+                            <ItemsControl Name="AccountRows">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="10"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:AccountEditView">
+                                        <Grid ColumnDefinitions="150,*,Auto">
+                                            <!-- Почта — в подсказке над именем; глаз прячет её и здесь -->
+                                            <TextBox Text="{Binding Name, Mode=OneTime}" PlaceholderText="{Binding Placeholder}" ToolTip.Tip="{Binding Email}"
+                                                     VerticalAlignment="Center" LostFocus="OnNameDone" KeyDown="OnNameKey"/>
+                                            <StackPanel Grid.Column="1" Margin="10,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Plan}" FontWeight="SemiBold"/>
+                                                <TextBlock Classes="faint" Text="{Binding Last}" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="2" Classes="badge" Background="{DynamicResource BadgeGood}"
+                                                    IsVisible="{Binding InUse}" VerticalAlignment="Center">
+                                                <TextBlock Text="{DynamicResource langAccountInUse}"/>
+                                            </Border>
+                                            <Button Grid.Column="2" Theme="{StaticResource Pill}" Content="{DynamicResource langForget}"
+                                                    IsVisible="{Binding !InUse}" VerticalAlignment="Center" Click="OnForget"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Name="AccountsFoot" Classes="faint" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>

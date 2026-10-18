@@ -178,6 +178,37 @@ public class ViewsTests
 		Assert.Null(Popover.Chosen(Views.Agent(Claude("A", Signed("A", "Max", "a@x.z")), _now, _levels), "A"));
 	}
 
+	private static AgentState Found(string name, bool installed = true, bool off = false, Snapshot? snapshot = null) =>
+		new(new Named(name, installed)) { Off = off, Snapshot = snapshot };
+
+	[Fact]
+	public void AgentRowsNumberOnlyVisibleTabs() // номер — это Ctrl+N: у выключенного его нет, и соседи не сдвигаются
+	{
+		var rows = Views.AgentRows([Found("Claude"), Found("Codex", off: true), Found("Gemini")]);
+
+		Assert.Equal(["1", "", "2"], rows.Select(row => row.Number));
+		Assert.Equal([true, false, true], rows.Select(row => row.Shown));
+	}
+
+	[Fact]
+	public void MissingAgentsGoLast()
+	{
+		var rows = Views.AgentRows([Found("Claude", installed: false), Found("Codex")]);
+
+		Assert.Equal(["Codex", "Claude"], rows.Select(row => row.Name));
+		Assert.False(rows[1].Found);
+		Assert.Equal("", rows[1].Number);
+	}
+
+	[Fact]
+	public void AgentLineTellsWhyNoData()
+	{
+		Assert.Equal("langAgentMissing", Text.AgentLine(Found("Claude", installed: false, off: true)));
+		Assert.Equal("langAgentOff", Text.AgentLine(Found("Claude", off: true)));
+		Assert.Equal("Max", Text.AgentLine(Found("Claude", snapshot: new("Max", null, [], null))));
+		Assert.Equal("langAgentNoData", Text.AgentLine(Found("Claude")));
+	}
+
 	[Fact]
 	public void AgeIsShort()
 	{
@@ -185,6 +216,29 @@ public class ViewsTests
 		Assert.Equal("langAgeAgo", Text.Age(_now.AddHours(-2), _now));
 		Assert.Equal("langAgeAt", Text.Age(_now.AddDays(-2), _now));
 		Assert.Equal("", Text.Age(null, _now));
+	}
+
+	/// <summary>Агент с именем, установленный или нет; его не спрашивают.</summary>
+	private sealed class Named(string name, bool installed) : IAgent
+	{
+		public string Name => name;
+
+		public string Cli => "fake";
+
+		public string? Credentials => null;
+
+		public bool Installed => installed;
+
+		public string? Dashboard => null;
+
+		public IUsageLog? Usage => null;
+
+		public IStatusPage? Status => null;
+
+		public HookTarget? Hooks => null;
+
+		public System.Threading.Tasks.Task<Snapshot> FetchAsync(System.Net.Http.HttpClient http, System.Threading.CancellationToken cancellation) =>
+			throw new NotSupportedException();
 	}
 
 	private static Dictionary<string, HookLink> Hooks(HookLink claude = HookLink.On, HookLink codex = HookLink.On) =>
