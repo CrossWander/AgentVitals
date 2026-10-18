@@ -78,6 +78,28 @@ internal partial class AgentsWindow : Window
 		AccountsFoot.Text = Localization.Format("langAccountsFoot", Text.Login(state.Agent.Name));
 	}
 
+	protected override void OnKeyDown(KeyEventArgs e)
+	{
+		if (e.Key == Key.Escape)
+		{
+			Close();
+			e.Handled = true;
+		}
+
+		base.OnKeyDown(e);
+	}
+
+	// Рамки нет: окно двигают за заголовок.
+	private void OnDrag(object? sender, PointerPressedEventArgs e)
+	{
+		if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+		{
+			BeginMoveDrag(e);
+		}
+	}
+
+	private void OnClose(object? sender, RoutedEventArgs e) => Close();
+
 	private void OnAgent(object? sender, PointerReleasedEventArgs e)
 	{
 		if (e.InitialPressMouseButton == MouseButton.Left && sender is Control { DataContext: AgentRowView row })

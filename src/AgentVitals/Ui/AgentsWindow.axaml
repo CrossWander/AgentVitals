@@ -5,11 +5,12 @@
         x:ClassModifier="internal"
         Title="AgentVitals"
         Icon="avares://AgentVitals/app.png"
-        Width="760" Height="560" MinWidth="640" MinHeight="420"
-        WindowStartupLocation="CenterScreen" ShowInTaskbar="True"
-        Background="{DynamicResource Window}">
+        Width="792" Height="592" CanResize="False"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        WindowStartupLocation="CenterScreen" ShowInTaskbar="True">
 
-    <!-- Обычное окно: на панели задач, двигается и не закрывается от щелчка мимо. Слева — агенты в порядке вкладок,
+    <!-- Оформление — как у остальных окон программы: без системной рамки, своя подложка и ✕. Но окно обычное: на
+         панели задач, двигается за заголовок и не закрывается от щелчка мимо. Слева — агенты в порядке вкладок,
          справа — подробности выбранного разделами: новые подключения и настройки агента встают туда же -->
     <Window.Styles>
         <Style Selector="Border.agent">
@@ -25,11 +26,17 @@
         </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="Auto,*" Margin="20,16,20,20">
-        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,14">
+    <!-- Внешние поля — место для тени: окно прозрачное, и тень рисуется внутри него -->
+    <Border Classes="window" Margin="16,12,16,20" Padding="20,14,20,20">
+    <Grid RowDefinitions="Auto,*">
+        <!-- Заголовок: за него окно и перетаскивают. Фон прозрачный, а не пустой: иначе ловится только над буквами -->
+        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,14" Background="Transparent" PointerPressed="OnDrag">
             <Path Classes="icon" Width="20" Height="20" Data="{StaticResource IconAgents}" Stroke="{DynamicResource Text}" VerticalAlignment="Center"/>
-            <TextBlock Text="{DynamicResource langAgents}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
-        </StackPanel>
+            <TextBlock Grid.Column="1" Margin="10,0" Text="{DynamicResource langAgents}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+            <Button Grid.Column="2" Theme="{StaticResource Round}" VerticalAlignment="Center" Click="OnClose">
+                <Path Classes="icon" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}"/>
+            </Button>
+        </Grid>
 
         <Grid Grid.Row="1" ColumnDefinitions="260,*">
             <Border Classes="card" Padding="8">
@@ -136,4 +143,5 @@
             </ScrollViewer>
         </Grid>
     </Grid>
+    </Border>
 </Window>
