@@ -275,7 +275,9 @@ internal static class Views
 			.OrderBy(account => account.Key == state.Key ? 0 : 1)
 			.Select(account => Account(state, account, named[account.Key], now, levels))];
 
-		var info = rows.Count > 0 ? rows[0].Info : Join(state.Snapshot?.Plan, hide ? null : state.Snapshot?.Account);
+		// Один аккаунт: «Аккаунт 1» ничего не говорит — под глазом своё имя или ничего.
+		var custom = state.Key is { } key ? names?.GetValueOrDefault($"{state.Agent.Name}/{key}") : null;
+		var info = rows.Count > 0 ? rows[0].Info : Join(state.Snapshot?.Plan, hide ? custom : state.Snapshot?.Account ?? custom);
 
 		var badge = Badge([state], now, levels);
 		var target = hooks is null ? null : state.Agent.Hooks;
@@ -386,8 +388,8 @@ internal static class Views
 			inUse ? null : Localization.Format("langRememberedHint", name, Text.Login(state.Agent.Name)));
 	}
 
-	/// <summary>Как назвать аккаунты агента: своё имя — всегда, и под глазом; иначе почта (у Copilot — логин), а под глазом
-	/// и без почты — «Аккаунт N» по порядку появления. Одна почта у двух — с тарифом, совпал и он — ещё с номером.</summary>
+	/// <summary>Как назвать аккаунты агента: без глаза — почта (у Copilot — логин), под глазом и без почты — своё имя,
+	/// а без него «Аккаунт N» по порядку появления. Одна почта у двух — с тарифом, совпал и он — ещё с номером.</summary>
 	/// <param name="custom">Свои имена: «агент/ключ» → имя.</param>
 	/// <returns>Ключ аккаунта → имя, в порядке появления.</returns>
 	internal static IReadOnlyDictionary<string, string> Names(string agent, IReadOnlyList<Account> accounts, IReadOnlyDictionary<string, string> custom, bool hide)
@@ -404,9 +406,9 @@ internal static class Views
 		{
 			names[item.Account.Key] = item switch
 			{
+				{ Email: { Length: > 0 } email } => Unique(email, item.Account, [.. plain.Where(other => other.Email == email).Select(other => other.Account)]),
 				{ Own: { } own } => own,
-				{ Email: not { Length: > 0 } } => Localization.Format("langAccountNumber", item.Number),
-				_ => Unique(item.Email!, item.Account, [.. plain.Where(other => other.Own is null && other.Email == item.Email).Select(other => other.Account)]),
+				_ => Localization.Format("langAccountNumber", item.Number),
 			};
 		}
 

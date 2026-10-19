@@ -109,8 +109,9 @@ and you can see when it frees up.
   reset since, and *free* otherwise. A toast says when a remembered account is available again; a
   click opens its tab with it shown.
 - **Names.** An account is called by its email (for Copilot, the GitHub login); two accounts with one
-  email get the plan added. Under the eye they are *Account 1*, *Account 2*. Your own names are set
-  on the [Agents tab](#agents-tab) and stay visible under the eye.
+  email get the plan added. Under the eye an account goes by your own name, set on the
+  [Agents tab](#agents-tab), or else *Account 1*, *Account 2*; a single account without a name
+  shows just its plan.
 - Usage statistics and live sessions are shared by all accounts of an agent: the agents' logs do not
   say which account did the work.
 

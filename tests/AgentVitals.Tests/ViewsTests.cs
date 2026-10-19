@@ -132,17 +132,33 @@ public class ViewsTests
 	}
 
 	[Fact]
-	public void CustomNameStaysUnderEye() // глаз прячет почту, а не имя
+	public void EyeSwapsCustomNameForEmail() // под глазом — своё имя вместо почты, без глаза — почта
 	{
-		var names = Views.Names("Claude", [Signed("A", "Max", "a@x.z")], new Dictionary<string, string> { ["Claude/A"] = "Личный" }, hide: true);
+		Account[] accounts = [Signed("A", "Max", "a@x.z"), Signed("B", "Team", null)];
+		var custom = new Dictionary<string, string> { ["Claude/A"] = "Личный", ["Claude/B"] = "Работа" };
 
-		Assert.Equal("Личный", names["A"]);
+		Assert.Equal(["Личный", "Работа"], Views.Names("Claude", accounts, custom, hide: true).Values);
+		Assert.Equal(["a@x.z", "Работа"], Views.Names("Claude", accounts, custom, hide: false).Values); // почты нет — своё имя
 	}
 
 	[Fact]
-	public void SameEmailGetsPlan() // одна почта и в Team, и в личном тарифе
+	public void OneAccountShowsCustomNameUnderEye() // «Team · Работа» под глазом, «Team · почта» без него; без имени — только тариф
 	{
-		var names = Views.Names("Claude", [Signed("A", "Team", "a@x.z"), Signed("B", "Max", "a@x.z")], new Dictionary<string, string>(), hide: false);
+		var claude = Claude("A", Signed("A", "Team", "a@x.z"));
+		var custom = new Dictionary<string, string> { ["Claude/A"] = "Работа" };
+
+		Assert.Equal("Team · Работа", Views.Agent(claude, _now, _levels, hide: true, names: custom).Info);
+		Assert.Equal("Team · a@x.z", Views.Agent(claude, _now, _levels, names: custom).Info);
+		Assert.Equal("Team", Views.Agent(claude, _now, _levels, hide: true).Info);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)] // своё имя без глаза уступает почте — и почты снова совпадают
+	public void SameEmailGetsPlan(bool named) // одна почта и в Team, и в личном тарифе
+	{
+		var custom = named ? new Dictionary<string, string> { ["Claude/A"] = "Работа" } : [];
+		var names = Views.Names("Claude", [Signed("A", "Team", "a@x.z"), Signed("B", "Max", "a@x.z")], custom, hide: false);
 
 		Assert.Equal(["a@x.z · Team", "a@x.z · Max"], names.Values);
 	}
