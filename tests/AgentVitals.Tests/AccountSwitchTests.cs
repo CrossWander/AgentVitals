@@ -82,10 +82,28 @@ public class AccountSwitchTests
 	}
 
 	[Fact]
-	public async Task AnswerIsDroppedWhenLoginFileIsRewrittenDuringRequest()
+	public async Task AnswerStaysWhenLoginWithIdentityInsideIsRewritten() // Cursor пишет в свою базу всё время работы
 	{
 		using var http = new HttpClient();
 		var login = new Login { Who = "A" };
+		login.During = () => login.Stamp += TimeSpan.FromSeconds(1);
+		var state = new AgentState(login);
+
+		await state.FetchAsync(http, _now);
+
+		Assert.NotNull(state.Snapshot);
+		Assert.Equal("A", state.Key);
+	}
+
+	[Fact]
+	public void OnlyClaudeKeepsTheAccountApartFromTheLogin() =>
+		Assert.Equal(["Claude"], AgentCatalog.All().Where(agent => agent.IdentityApart).Select(agent => agent.Name));
+
+	[Fact]
+	public async Task AnswerIsDroppedWhenLoginFileIsRewrittenDuringRequest() // у Claude аккаунт записан не во входе
+	{
+		using var http = new HttpClient();
+		var login = new Login { Who = "A", Apart = true };
 		login.During = () => login.Stamp += TimeSpan.FromSeconds(1);
 		var state = new AgentState(login);
 
@@ -207,6 +225,10 @@ public class AccountSwitchTests
 		public HookTarget? Hooks => null;
 
 		public string? Identity() => Who;
+
+		public bool Apart { get; set; }
+
+		public bool IdentityApart => Apart;
 
 		public Task<Snapshot> FetchAsync(HttpClient http, CancellationToken cancellation)
 		{

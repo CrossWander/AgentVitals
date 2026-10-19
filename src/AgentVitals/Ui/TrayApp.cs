@@ -72,7 +72,12 @@ internal sealed class TrayApp
 	{
 		_poller.Changed += OnPolled;
 		_popover.RefreshRequested += Refresh;
-		_popover.PrivateChanged += Render;
+		// Глаз — для показа экрана: почты прячутся во всех окнах сразу, а не с опросом через минуту.
+		_popover.PrivateChanged += () =>
+		{
+			Render();
+			_window?.Render(eye: true);
+		};
 		_popover.SessionChosen += session =>
 		{
 			if (Raise(session))
@@ -321,7 +326,9 @@ internal sealed class TrayApp
 			var message = Localization.Format("langAccountBackText", back.Agent, name, Text.Login(back.Agent));
 
 			_toast.Say(message, Anchor(), title, Views.Brush("Good"), Toast.Long, () => OpenPopover(back.Agent, back.Key));
-			Journal.Add($"toast: {title}: {message}");
+
+			// В тексте тоста — почта, а журнал прикладывают к отчётам об ошибках: в него — только агент.
+			Journal.Add($"toast: {title}: {back.Agent}");
 		}
 
 		// У каждого агента своя страница: тост — о той, что сменила индикатор.

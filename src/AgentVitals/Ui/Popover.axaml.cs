@@ -69,8 +69,9 @@ internal partial class Popover : TrayWindow
 
 	public void Open(PixelRect anchor)
 	{
-		// При каждом открытии сверху — аккаунт в работе.
+		// При каждом открытии сверху — аккаунт в работе: выбор прошлого раза сбрасывается и вкладка рисуется заново.
 		_accounts.Clear();
+		ShowAgent();
 
 		// Другой экран бывает ниже: MinHeight сильнее MaxHeight, а середина окна и так прокручивается.
 		Placement.Fit(this, anchor);

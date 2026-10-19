@@ -110,10 +110,11 @@ public sealed class AgentState(IAgent agent)
 		{
 			var answer = await Agent.FetchAsync(http, CancellationToken.None);
 
-			// Вход переписали, пока шёл запрос: чей это ответ — неизвестно, спросить на следующем тике.
+			// Вошли в другой аккаунт, пока шёл запрос: чей это ответ — неизвестно, спросить на следующем тике. Где аккаунт
+			// записан не во входе, о новом входе говорит только время записи: Cursor же пишет свою базу всю работу.
 			// ponytail: если CLI допишет ~/.claude.json позже файла входа, а запрос по интервалу попадёт ровно между,
 			// ответ ляжет под прежнее имя; Poller ждёт Settle после записи входа, щель — доли секунды.
-			if (Stamp() != credentials || Agent.Identity() != who)
+			if ((Agent.IdentityApart && Stamp() != credentials) || Agent.Identity() != who)
 			{
 				Started = DateTime.MinValue;
 

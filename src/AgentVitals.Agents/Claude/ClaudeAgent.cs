@@ -235,6 +235,9 @@ internal sealed class ClaudeAgent : IAgent
 	private static decimal Scale(int places) => (decimal)Math.Pow(10, places);
 
 	/// <inheritdoc/>
+	public bool IdentityApart => true;
+
+	/// <inheritdoc/>
 	public string? Identity()
 	{
 		try

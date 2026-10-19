@@ -53,7 +53,8 @@ internal partial class AppWindow : Window
 		ShowPage(page);
 	}
 
-	public void Render() => Agents.Render();
+	/// <param name="eye">Переключили глаз: см. <see cref="AgentsPage.Render"/>.</param>
+	public void Render(bool eye = false) => Agents.Render(eye);
 
 	// Страница — по нажатой вкладке: соседняя в этот момент ещё отмечена, группа снимает с неё отметку после события.
 	private void OnPage(object? sender, RoutedEventArgs e)

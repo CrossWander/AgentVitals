@@ -38,7 +38,8 @@ internal partial class AgentsPage : UserControl
 	public event Action? Changed;
 
 	/// <summary>Нарисовать по свежему состоянию. Имя, которое сейчас вводят, не трогается: опрос раз в минуту стёр бы его.</summary>
-	public void Render()
+	/// <param name="eye">Переключили глаз: почты прячутся сразу и при вводе имени — введённое ждёт в черновике.</param>
+	public void Render(bool eye = false)
 	{
 		var rows = Views.AgentRows(_poller.Agents);
 		_picked = rows.Any(row => row.Name == _picked) ? _picked : rows.FirstOrDefault()?.Name;
@@ -49,7 +50,7 @@ internal partial class AgentsPage : UserControl
 		UpButton.IsEnabled = place > 0;
 		DownButton.IsEnabled = place >= 0 && place < found.Count - 1;
 
-		if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
+		if (eye || TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
 		{
 			ShowDetails();
 		}
