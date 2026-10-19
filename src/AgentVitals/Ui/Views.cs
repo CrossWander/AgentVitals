@@ -48,8 +48,11 @@ internal sealed record CardView(
 /// <param name="StatusUrl">Страница статуса агента; null — её нет, и строки статуса тоже.</param>
 /// <param name="Sessions">Живые сессии агента; null — hooks у агента нет, и карточки тоже.</param>
 /// <param name="HealthText">Плашка в шапке, пока выбрана эта вкладка: по самому узкому окну этого агента.</param>
+/// <param name="Plan">Тариф аккаунта в работе: в строке под вкладками он жирным.</param>
+/// <param name="Info">Остальное в той строке: кто вошёл, а у нескольких аккаунтов — ещё «в работе».</param>
 internal sealed record AgentView(
 	string Name,
+	string? Plan,
 	string Info,
 	string Updated,
 	IReadOnlyList<CardView> Cards,
@@ -88,7 +91,8 @@ internal sealed record AgentView(
 /// <param name="Selected">Показан в карточках сверху; ставит поповер — выбор живёт, пока окно открыто.</param>
 /// <param name="Line">«Team · сейчас»: тариф и возраст цифр.</param>
 /// <param name="Meters">Ограничивающие окна полосками, в порядке карточек агента.</param>
-/// <param name="Info">Строка тарифа, пока он выбран: «Team · Личный · в работе».</param>
+/// <param name="Plan">Тариф: пока аккаунт выбран, он в строке под вкладками жирным.</param>
+/// <param name="Info">Остальное в той строке: «Личный · в работе».</param>
 /// <param name="Hint">Полоса над карточками у запомненного: это последние цифры; у аккаунта в работе — null.</param>
 internal sealed record AccountView(
 	string Key,
@@ -100,6 +104,7 @@ internal sealed record AccountView(
 	IBrush BadgeBrush,
 	IReadOnlyList<CardView> Meters,
 	IReadOnlyList<CardView> Cards,
+	string? Plan,
 	string Info,
 	string Updated,
 	string? Hint)
@@ -277,7 +282,7 @@ internal static class Views
 
 		// Один аккаунт: «Аккаунт 1» ничего не говорит — под глазом своё имя или ничего.
 		var custom = state.Key is { } key ? names?.GetValueOrDefault($"{state.Agent.Name}/{key}") : null;
-		var info = rows.Count > 0 ? rows[0].Info : Join(state.Snapshot?.Plan, hide ? custom : state.Snapshot?.Account ?? custom);
+		var info = rows.Count > 0 ? rows[0].Info : Join(hide ? custom : state.Snapshot?.Account ?? custom);
 
 		var badge = Badge([state], now, levels);
 		var target = hooks is null ? null : state.Agent.Hooks;
@@ -285,6 +290,7 @@ internal static class Views
 
 		return new(
 			state.Agent.Name,
+			state.Snapshot?.Plan,
 			info,
 			state.Pending ? Localization.Get("langUpdating") : Text.Ago(state.Updated, now),
 			cards,
@@ -383,7 +389,8 @@ internal static class Views
 			Brush(!inUse && availability == Availability.Busy ? "BadgeBad" : "BadgeGood"),
 			[.. windows.Where(window => window.Limiting).Select(window => Card(window, now, levels) with { Title = Text.Title(window) })],
 			Cards(account.Snapshot, windows, now, levels),
-			Join(plan, name, Localization.Get(inUse ? "langInUse" : "langRemembered")),
+			plan,
+			Join(name, Localization.Get(inUse ? "langInUse" : "langRemembered")),
 			pending ? Localization.Get("langUpdating") : Text.Ago(account.Updated, now),
 			inUse ? null : Localization.Format("langRememberedHint", name, Text.Login(state.Agent.Name)));
 	}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -187,6 +188,29 @@ internal partial class Popover : TrayWindow
 	internal static AccountView? Chosen(AgentView agent, string? key) =>
 		agent.Accounts.FirstOrDefault(account => account.Key == key) ?? agent.Accounts.FirstOrDefault(account => account.InUse);
 
+	/// <summary>Строка под вкладками: «Обновлено только что · <b>Team</b> · Рабочий» — тариф жирным, он есть и под глазом.</summary>
+	private static InlineCollection Line(string? updated, string? plan, string? info)
+	{
+		InlineCollection line = [];
+
+		foreach (var (text, bold) in new[] { (updated, false), (plan, true), (info, false) })
+		{
+			if (string.IsNullOrEmpty(text))
+			{
+				continue;
+			}
+
+			if (line.Count > 0)
+			{
+				line.Add(new Run(" · "));
+			}
+
+			line.Add(new Run(text) { FontWeight = bold ? FontWeight.SemiBold : FontWeight.Normal });
+		}
+
+		return line;
+	}
+
 	/// <summary>Выбранная вкладка по имени: появился или пропал другой агент — выбор не съезжает.</summary>
 	internal static string? Keep(string? selected, IReadOnlyList<string> names) =>
 		selected is not null && names.Contains(selected) ? selected : names.FirstOrDefault();
@@ -215,7 +239,7 @@ internal partial class Popover : TrayWindow
 
 		Cards.DataContext = agent;
 		Cards.ItemsSource = chosen?.Cards ?? agent?.Cards;
-		InfoLine.Text = string.Join(" · ", new[] { chosen?.Updated ?? agent?.Updated, chosen?.Info ?? agent?.Info }.Where(text => !string.IsNullOrEmpty(text)));
+		InfoLine.Inlines = Line(chosen?.Updated ?? agent?.Updated, chosen is null ? agent?.Plan : chosen.Plan, chosen?.Info ?? agent?.Info);
 		HintText.Text = chosen?.Hint;
 		HintBar.IsVisible = chosen?.HasHint == true;
 		AccountsCard.DataContext = agent;

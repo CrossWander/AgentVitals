@@ -96,7 +96,17 @@ public class ViewsTests
 		var view = Views.Agent(Claude("A", Signed("A", "Max", "a@x.z")), _now, _levels);
 
 		Assert.Empty(view.Accounts);
-		Assert.Equal("Max · a@x.z", view.Info);
+		Assert.Equal(("Max", "a@x.z"), (view.Plan, view.Info));
+	}
+
+	[Fact]
+	public void PlanStandsApartFromTheName() // тариф в строке под вкладками — жирным, отдельно от имени
+	{
+		var view = Views.Agent(Claude("B", Signed("A", "Max", "a@x.z"), Signed("B", "Team", "b@x.z")), _now, _levels);
+		var remembered = view.Accounts.Single(account => account.Key == "A");
+
+		Assert.Equal(("Team", "b@x.z · langInUse"), (view.Plan, view.Info));
+		Assert.Equal(("Max", "a@x.z · langRemembered"), (remembered.Plan, remembered.Info));
 	}
 
 	[Fact]
@@ -147,9 +157,9 @@ public class ViewsTests
 		var claude = Claude("A", Signed("A", "Team", "a@x.z"));
 		var custom = new Dictionary<string, string> { ["Claude/A"] = "Работа" };
 
-		Assert.Equal("Team · Работа", Views.Agent(claude, _now, _levels, hide: true, names: custom).Info);
-		Assert.Equal("Team · a@x.z", Views.Agent(claude, _now, _levels, names: custom).Info);
-		Assert.Equal("Team", Views.Agent(claude, _now, _levels, hide: true).Info);
+		Assert.Equal("Работа", Views.Agent(claude, _now, _levels, hide: true, names: custom).Info);
+		Assert.Equal("a@x.z", Views.Agent(claude, _now, _levels, names: custom).Info);
+		Assert.Equal("", Views.Agent(claude, _now, _levels, hide: true).Info);
 	}
 
 	[Theory]
@@ -349,8 +359,8 @@ public class ViewsTests
 		var now = DateTime.UtcNow;
 		var claude = new AgentState(new ClaudeAgent()) { Snapshot = new("Max", "me@example.com", [], null) };
 
-		Assert.Equal("Max · me@example.com", Views.Agent(claude, now, _levels).Info);
-		Assert.Equal("Max", Views.Build([claude], Hooks(), [], now, _levels, hide: true).Agents[0].Info);
+		Assert.Equal(("Max", "me@example.com"), (Views.Agent(claude, now, _levels).Plan, Views.Agent(claude, now, _levels).Info));
+		Assert.Equal(("Max", ""), (Views.Build([claude], Hooks(), [], now, _levels, hide: true).Agents[0].Plan, Views.Build([claude], Hooks(), [], now, _levels, hide: true).Agents[0].Info));
 	}
 
 	[Fact]
