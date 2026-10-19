@@ -1,0 +1,70 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AgentVitals.AppWindow"
+        x:ClassModifier="internal"
+        Title="AgentVitals"
+        Icon="avares://AgentVitals/app.png"
+        Width="992" Height="652" CanResize="False"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        WindowStartupLocation="CenterScreen" ShowInTaskbar="True">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.note">
+            <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+        </Style>
+        <Style Selector="TextBlock.note.newer">
+            <Setter Property="Foreground" Value="{DynamicResource Bad}"/>
+        </Style>
+    </Window.Styles>
+
+    <!-- Окно AgentVitals: вкладки «Агенты» и «Настройки». Оформление — как у остальных окон программы: без системной
+         рамки, своя подложка и ✕. Но окно обычное: на панели задач, двигается за заголовок и не закрывается от щелчка мимо.
+         Страницы вкладок ставит код: страница «Агенты» берёт опрос программы -->
+    <!-- Внешние поля — место для тени: окно прозрачное, и тень рисуется внутри него -->
+    <Border Classes="window" Margin="16,12,16,20" Padding="20">
+        <Grid Name="Body" RowDefinitions="Auto,*" RowSpacing="14">
+            <!-- Заголовок: за него окно и перетаскивают. Фон прозрачный, а не пустой: иначе ловится только над буквами -->
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" Background="Transparent" PointerPressed="OnDrag">
+                <!-- Значок 256 px сжимается в 36: без высокого качества края и пульс выходят лесенкой -->
+                <Image Source="avares://AgentVitals/app.png" Width="36" Height="36" VerticalAlignment="Center"
+                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="AgentVitals" FontSize="17" FontWeight="Bold"/>
+                    <TextBlock Classes="caption" Text="{DynamicResource langSubtitle}"/>
+                </StackPanel>
+
+                <!-- Вкладки — сегменты на дорожке, как переключатель аккаунтов -->
+                <Border Grid.Column="2" Classes="track" Padding="3" Margin="24,0,12,0" VerticalAlignment="Center">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="2">
+                        <RadioButton Name="AgentsTab" Theme="{StaticResource PageTab}" GroupName="page" IsCheckedChanged="OnPage">
+                            <StackPanel Orientation="Horizontal" Spacing="9">
+                                <Path Classes="icon" Width="16" Height="16" Data="{StaticResource IconAgents}"
+                                      Stroke="{Binding $parent[RadioButton].Foreground}" VerticalAlignment="Center"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource langAgents}" FontSize="13" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{DynamicResource langAgentsNote}" FontSize="10.5" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextDim}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Name="SettingsTab" Grid.Column="1" Theme="{StaticResource PageTab}" GroupName="page" IsCheckedChanged="OnPage">
+                            <StackPanel Orientation="Horizontal" Spacing="9">
+                                <Path Classes="icon" Width="16" Height="16" Data="{StaticResource IconGear}"
+                                      Fill="{Binding $parent[RadioButton].Foreground}" VerticalAlignment="Center"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource langSettings}" FontSize="13" FontWeight="SemiBold"/>
+                                    <!-- Есть новая версия — здесь, цветом: тост о ней один на версию и мог пройти мимо -->
+                                    <TextBlock Name="SettingsNote" Classes="note" FontSize="10.5" FontWeight="Bold"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </RadioButton>
+                    </Grid>
+                </Border>
+
+                <Button Grid.Column="3" Theme="{StaticResource Round}" VerticalAlignment="Center" Click="OnClose">
+                    <Path Classes="icon" Data="{StaticResource IconClose}" Stroke="{Binding $parent[Button].Foreground}"/>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

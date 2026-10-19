@@ -19,7 +19,7 @@ An installed agent that has a tab: not switched off, and at once for most agents
 _Avoid_: shown, enabled
 
 **Switched-off agent**:
-An installed agent the person chose not to watch in the Agents window: it is not asked, has no tab, sends no toasts and does not colour the icon; its hooks stay in place.
+An installed agent the person chose not to watch on the Agents tab: it is not asked, has no tab, sends no toasts and does not colour the icon; its hooks stay in place.
 _Avoid_: hidden agent, disabled agent
 
 **Account**:

@@ -15,9 +15,9 @@ using AgentVitals.Platform;
 
 namespace AgentVitals;
 
-/// <summary>Окно «Агенты»: за кем следить, порядок вкладок, живые сессии и аккаунты с их именами.
-/// Одно на программу; правки сохраняются в config.json сразу.</summary>
-internal partial class AgentsWindow : Window
+/// <summary>Вкладка «Агенты» окна AgentVitals: за кем следить, порядок вкладок, живые сессии и аккаунты с их именами.
+/// Правки сохраняются в config.json сразу.</summary>
+internal partial class AgentsPage : UserControl
 {
 	private readonly Poller _poller;
 
@@ -27,7 +27,7 @@ internal partial class AgentsWindow : Window
 	// Имена, которые ввели, но не сохранили, по ключу «агент/аккаунт»: строки перерисовываются, ввод остаётся.
 	private readonly Dictionary<string, string> _drafts = [];
 
-	public AgentsWindow(Poller poller)
+	public AgentsPage(Poller poller)
 	{
 		_poller = poller;
 		InitializeComponent();
@@ -40,8 +40,6 @@ internal partial class AgentsWindow : Window
 	/// <summary>Нарисовать по свежему состоянию. Имя, которое сейчас вводят, не трогается: опрос раз в минуту стёр бы его.</summary>
 	public void Render()
 	{
-		Title = $"AgentVitals — {Localization.Get("langAgents")}";
-
 		var rows = Views.AgentRows(_poller.Agents);
 		_picked = rows.Any(row => row.Name == _picked) ? _picked : rows.FirstOrDefault()?.Name;
 		AgentList.ItemsSource = rows.Select(row => row with { Picked = row.Name == _picked }).ToList();
@@ -51,7 +49,7 @@ internal partial class AgentsWindow : Window
 		UpButton.IsEnabled = place > 0;
 		DownButton.IsEnabled = place >= 0 && place < found.Count - 1;
 
-		if (FocusManager?.GetFocusedElement() is not TextBox)
+		if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is not TextBox)
 		{
 			ShowDetails();
 		}
@@ -130,28 +128,6 @@ internal partial class AgentsWindow : Window
 
 		block.Inlines = inlines;
 	}
-
-	protected override void OnKeyDown(KeyEventArgs e)
-	{
-		if (e.Key == Key.Escape)
-		{
-			Close();
-			e.Handled = true;
-		}
-
-		base.OnKeyDown(e);
-	}
-
-	// Рамки нет: окно двигают за заголовок.
-	private void OnDrag(object? sender, PointerPressedEventArgs e)
-	{
-		if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-		{
-			BeginMoveDrag(e);
-		}
-	}
-
-	private void OnClose(object? sender, RoutedEventArgs e) => Close();
 
 	private void OnAgent(object? sender, PointerReleasedEventArgs e)
 	{

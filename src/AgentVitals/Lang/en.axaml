@@ -60,7 +60,7 @@
     <x:String x:Key="langSessionWaiting">waiting for permission</x:String>
     <x:String x:Key="langNoSessions">No active sessions</x:String>
     <x:String x:Key="langNoStats">{0} has no daily statistics or live sessions — only quotas</x:String>
-    <x:String x:Key="langHooksHint">Connect {0} in settings to see live sessions</x:String>
+    <x:String x:Key="langHooksHint">Connect {0} on the Agents tab to see live sessions</x:String>
     <x:String x:Key="langLiveWorking">{0} is working · {1}</x:String>
     <x:String x:Key="langLiveTool">{0} is working: {1} · {2}</x:String>
     <x:String x:Key="langLiveWaiting">{0} is waiting for permission · {1}</x:String>
@@ -92,15 +92,14 @@
     <x:String x:Key="langRefresh">Refresh</x:String>
     <x:String x:Key="langSettings">Settings</x:String>
     <x:String x:Key="langExit">Exit</x:String>
-    <x:String x:Key="langExitApp">Quit AgentVitals</x:String>
-    <x:String x:Key="langLanguage">LANGUAGE</x:String>
-    <x:String x:Key="langTheme">APPEARANCE</x:String>
+    <x:String x:Key="langLanguage">Language</x:String>
+    <x:String x:Key="langTheme">Appearance</x:String>
     <x:String x:Key="langThemeAuto">System</x:String>
     <x:String x:Key="langThemeLight">Light</x:String>
     <x:String x:Key="langThemeDark">Dark</x:String>
-    <x:String x:Key="langInterval">CHECK QUOTAS EVERY</x:String>
+    <x:String x:Key="langInterval">Check quotas every</x:String>
     <x:String x:Key="langAutostart">Start with Windows</x:String>
-    <x:String x:Key="langNotifications">NOTIFICATIONS</x:String>
+    <x:String x:Key="langNotifications">Notifications</x:String>
     <x:String x:Key="langChartModels">Models</x:String>
     <x:String x:Key="langOther">other</x:String>
     <x:String x:Key="langCacheSaved">cache saved {0}</x:String>
@@ -109,7 +108,7 @@
     <x:String x:Key="langLowSound">Play a sound when a quota is almost used up</x:String>
     <x:String x:Key="langSessionToasts">Tell me when an agent finishes or asks</x:String>
     <x:String x:Key="langWaitingSound">Play a sound when an agent asks for permission</x:String>
-    <x:String x:Key="langTurnLonger">FINISHED TURNS LONGER THAN</x:String>
+    <x:String x:Key="langTurnLonger">Finished turns longer than</x:String>
     <x:String x:Key="langHooks">LIVE SESSIONS</x:String>
     <x:String x:Key="langHooksOffClaude">Not connected. AgentVitals will add its hooks to ~/.claude/settings.json and keep a backup next to it.</x:String>
     <x:String x:Key="langHooksOnClaude">Connected: Claude Code reports its state to AgentVitals.</x:String>
@@ -120,7 +119,6 @@
     <x:String x:Key="langHooksConnect">Connect</x:String>
     <x:String x:Key="langHooksDisconnect">Disconnect</x:String>
     <x:String x:Key="langHooksError">Could not change {0}: {1}</x:String>
-    <x:String x:Key="langUpdates">UPDATES</x:String>
     <x:String x:Key="langAutoUpdate">Check for updates daily</x:String>
     <x:String x:Key="langVersion">Version {0}</x:String>
     <x:String x:Key="langCheckUpdates">Check</x:String>
@@ -205,4 +203,19 @@
     <x:String x:Key="langAccountsHowCodex">Switch accounts with `codex login`.</x:String>
     <x:String x:Key="langAccountsMemo">AgentVitals remembers every account you have signed in to and tells you when a remembered one is available again. Numbers of an account not in use are the last it saw. The email is in the tooltip over the name; the eye in the window hides it here too.</x:String>
     <x:String x:Key="langSave">Save</x:String>
+    <x:String x:Key="langAgentsNote">order, accounts, sessions</x:String>
+    <x:String x:Key="langSettingsNote">language, notifications, updates</x:String>
+    <x:String x:Key="langUpdateBadge">● version {0} is out</x:String>
+    <x:String x:Key="langGeneral">General</x:String>
+    <x:String x:Key="langGeneralNote">language, appearance, checks</x:String>
+    <x:String x:Key="langGeneralHint">How the app looks and how often it asks for quotas.</x:String>
+    <x:String x:Key="langNotificationsNote">quota levels, sounds, finished turns</x:String>
+    <x:String x:Key="langNotificationsHint">When AgentVitals shows a notification and plays a sound.</x:String>
+    <x:String x:Key="langSystem">Startup and updates</x:String>
+    <x:String x:Key="langSystemNote">autostart, versions</x:String>
+    <x:String x:Key="langSystemHint">Autostart and app versions.</x:String>
+    <x:String x:Key="langAbout">About</x:String>
+    <x:String x:Key="langAboutNote">version {0} · author</x:String>
+    <x:String x:Key="langAboutLine">AI agents monitor · version {0}</x:String>
+    <x:String x:Key="langWhatsNew">What’s new in {0}</x:String>
 </ResourceDictionary>

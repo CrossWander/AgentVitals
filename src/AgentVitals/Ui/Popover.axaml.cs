@@ -37,14 +37,6 @@ internal partial class Popover : TrayWindow
 	{
 		InitializeComponent();
 
-		Settings.Back += () => ShowSettings(false);
-
-		// Метка держится, пока новую версию не поставят: тост о ней один на версию и мог пройти мимо.
-		Settings.ReleaseChanged += release =>
-		{
-			UpdateBadge.IsVisible = release is { State: UpdateState.Newer };
-			ToolTip.SetTip(SettingsButton, release is { State: UpdateState.Newer } ? Localization.Format("langUpdateAvailable", release.Version) : null);
-		};
 
 		// Окно прижато к значку и растёт вверх: вкладка ниже соседней — у Copilot нет статистики и сессий — сдвигала
 		// бы верх и вкладки под мышью на полэкрана. Поэтому окно не становится ниже, чем уже было.
@@ -60,14 +52,25 @@ internal partial class Popover : TrayWindow
 	/// <summary>Глаз: почту спрятали или показали — окна рисуются заново.</summary>
 	public event Action? PrivateChanged;
 
-	/// <summary>Кнопка с роботом: открыть окно «Агенты».</summary>
+	/// <summary>Кнопка с роботом: окно AgentVitals на вкладке «Агенты».</summary>
 	public event Action? AgentsRequested;
 
-	public void Open(PixelRect anchor, bool settings)
+	/// <summary>Шестерня: окно AgentVitals на вкладке «Настройки».</summary>
+	public event Action? SettingsRequested;
+
+	/// <summary>Метка на шестерне — есть новая версия. Держится, пока её не поставят: тост о ней один на версию и мог
+	/// пройти мимо.</summary>
+	public void ShowRelease(Release? release)
+	{
+		var newer = release is { State: UpdateState.Newer };
+		UpdateBadge.IsVisible = newer;
+		ToolTip.SetTip(SettingsButton, newer ? Localization.Format("langUpdateAvailable", release!.Version) : Localization.Get("langSettings"));
+	}
+
+	public void Open(PixelRect anchor)
 	{
 		// При каждом открытии сверху — аккаунт в работе.
 		_accounts.Clear();
-		ShowSettings(settings);
 
 		// Другой экран бывает ниже: MinHeight сильнее MaxHeight, а середина окна и так прокручивается.
 		Placement.Fit(this, anchor);
@@ -334,20 +337,6 @@ internal partial class Popover : TrayWindow
 		ChartLine.Text = _total;
 	}
 
-	private void ShowSettings(bool settings)
-	{
-		// Главный вид остаётся в раскладке и задаёт высоту окна — и когда настройки открыты прямо из меню;
-		// под настройками он не виден и не берёт ни щелчков, ни фокуса.
-		MainView.Opacity = settings ? 0 : 1;
-		MainView.IsEnabled = !settings;
-		Settings.IsVisible = settings;
-
-		if (settings)
-		{
-			Settings.Load();
-		}
-	}
-
 	private void OnRefresh(object? sender, RoutedEventArgs e) => RefreshRequested?.Invoke();
 
 	private void OnPrivate(object? sender, RoutedEventArgs e)
@@ -357,7 +346,7 @@ internal partial class Popover : TrayWindow
 		PrivateChanged?.Invoke();
 	}
 
-	private void OnSettings(object? sender, RoutedEventArgs e) => ShowSettings(true);
+	private void OnSettings(object? sender, RoutedEventArgs e) => SettingsRequested?.Invoke();
 
 	private void OnAgents(object? sender, RoutedEventArgs e) => AgentsRequested?.Invoke();
 

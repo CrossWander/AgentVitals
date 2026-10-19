@@ -30,7 +30,10 @@ internal sealed class TrayApp
 	private readonly AccountAlarm _accountAlarm = new();
 
 	// Окно «Агенты»: одно на программу, null — закрыто.
-	private AgentsWindow? _agents;
+	private AppWindow? _window;
+
+	// Последний ответ GitHub: окно, открытое позже, сразу знает о новой версии.
+	private Release? _release;
 
 	private readonly DispatcherTimer _hover = new()
 	{
@@ -77,16 +80,12 @@ internal sealed class TrayApp
 				_popover.Hide();
 			}
 		};
-		_popover.Settings.Changed += () =>
-		{
-			Render();
-			_agents?.Render();
-		};
-		_popover.Settings.ExitRequested += Exit;
+
 		_menu.RefreshRequested += Refresh;
-		_menu.SettingsRequested += () => OpenPopover(settings: true);
-		_menu.AgentsRequested += OpenAgents;
-		_popover.AgentsRequested += OpenAgents;
+		_menu.SettingsRequested += () => OpenWindow(WindowPage.Settings);
+		_menu.AgentsRequested += () => OpenWindow(WindowPage.Agents);
+		_popover.AgentsRequested += () => OpenWindow(WindowPage.Agents);
+		_popover.SettingsRequested += () => OpenWindow(WindowPage.Settings);
 		_menu.ExitRequested += Exit;
 		_hover.Tick += (_, _) => OnHoverTick();
 		_watch.Tick += (_, _) => OnWatchTick();
@@ -102,7 +101,7 @@ internal sealed class TrayApp
 			_tray.Moved += OnTrayMove;
 			_tray.Clicked += TogglePopover;
 			_tray.RightClicked += ShowMenu;
-			_tray.KeySelected += () => OpenPopover(settings: false);
+			_tray.KeySelected += () => OpenPopover();
 			_tray.Woke += () =>
 			{
 				Journal.Add("woke");
@@ -157,14 +156,15 @@ internal sealed class TrayApp
 			return;
 		}
 
-		_popover.Settings.Show(release);
+		ShowRelease(release);
+		_window?.Settings.Show(release);
 
 		if (release is { State: UpdateState.Newer, Version: { } version } && Store.Current.UpdateAnnounced != version.ToString())
 		{
 			Store.Current.UpdateAnnounced = version.ToString();
 			Store.Save();
 			_toast.Say(Localization.Get("langToastUpdateText"), Anchor(), Localization.Format("langToastUpdate", version), life: Toast.Long,
-				click: () => OpenPopover(settings: true));
+				click: () => OpenWindow(WindowPage.Settings));
 			Journal.Add($"toast: update {version} available");
 		}
 	}
@@ -191,26 +191,41 @@ internal sealed class TrayApp
 	private void OnPolled()
 	{
 		Render();
-		_agents?.Render();
+		_window?.Render();
 		Notify();
 	}
 
-	/// <summary>Окно «Агенты» посреди экрана; уже открыто — поднять его.</summary>
-	private void OpenAgents()
+	/// <summary>Окно AgentVitals посреди экрана на нужной вкладке; уже открыто — поднять его.</summary>
+	private void OpenWindow(WindowPage page)
 	{
 		HideGlance();
 		_menu.Hide();
 		_popover.Hide();
 
-		if (_agents is null)
+		if (_window is null)
 		{
-			_agents = new AgentsWindow(_poller);
-			_agents.Changed += Render;
-			_agents.Closed += (_, _) => _agents = null;
-			_agents.Show();
+			_window = new AppWindow(_poller);
+			_window.Changed += Render;
+			_window.Settings.ExitRequested += Exit;
+			_window.Settings.ReleaseChanged += ShowRelease;
+			_window.Closed += (_, _) => _window = null;
+
+			if (_release is { } release)
+			{
+				_window.Settings.Show(release);
+			}
+
+			_window.Show();
 		}
 
-		_agents.Activate();
+		_window.Open(page);
+		_window.Activate();
+	}
+
+	private void ShowRelease(Release? release)
+	{
+		_release = release;
+		_popover.ShowRelease(release);
 	}
 
 	private void Render()
@@ -289,7 +304,7 @@ internal sealed class TrayApp
 				QuotaLevel.Critical => "Bad",
 			};
 
-			_toast.Say(message, Anchor(), title, Views.Brush(brush), Toast.Long, () => OpenPopover(settings: false));
+			_toast.Say(message, Anchor(), title, Views.Brush(brush), Toast.Long, () => OpenPopover());
 
 			if (QuotaAlarm.Knocks(alert, Store.Current.LowSound))
 			{
@@ -305,7 +320,7 @@ internal sealed class TrayApp
 			var title = Localization.Get("langAccountBackTitle");
 			var message = Localization.Format("langAccountBackText", back.Agent, name, Text.Login(back.Agent));
 
-			_toast.Say(message, Anchor(), title, Views.Brush("Good"), Toast.Long, () => OpenPopover(settings: false, back.Agent, back.Key));
+			_toast.Say(message, Anchor(), title, Views.Brush("Good"), Toast.Long, () => OpenPopover(back.Agent, back.Key));
 			Journal.Add($"toast: {title}: {message}");
 		}
 
@@ -319,7 +334,7 @@ internal sealed class TrayApp
 
 			if (_indicators.TryGetValue(state.Agent.Name, out var previous) && previous != status.Indicator)
 			{
-				_toast.Say(Text.StatusToast(status), Anchor(), click: () => OpenPopover(settings: false));
+				_toast.Say(Text.StatusToast(status), Anchor(), click: () => OpenPopover());
 			}
 
 			_indicators[state.Agent.Name] = status.Indicator;
@@ -353,7 +368,7 @@ internal sealed class TrayApp
 	{
 		if (!Raise(session))
 		{
-			OpenPopover(settings: false);
+			OpenPopover();
 		}
 	}
 
@@ -441,17 +456,17 @@ internal sealed class TrayApp
 			return;
 		}
 
-		OpenPopover(settings: false);
+		OpenPopover();
 	}
 
 	/// <param name="agent">Открыть на вкладке этого агента…</param>
 	/// <param name="account">…и показать сверху этот аккаунт.</param>
-	private void OpenPopover(bool settings, string? agent = null, string? account = null)
+	private void OpenPopover(string? agent = null, string? account = null)
 	{
 		HideGlance();
 		_menu.Hide();
 		_popover.Render(Gather());
-		_popover.Open(Anchor(), settings);
+		_popover.Open(Anchor());
 
 		if (agent is not null && account is not null)
 		{

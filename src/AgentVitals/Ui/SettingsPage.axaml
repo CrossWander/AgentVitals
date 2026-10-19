@@ -1,0 +1,259 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="AgentVitals.SettingsPage"
+             x:ClassModifier="internal">
+
+    <!-- Вкладка «Настройки» окна AgentVitals устроена как «Агенты»: разделы слева, справа — строки выбранного,
+         «название — переключатель». Новая настройка — строка в своём разделе, сетку она не ломает -->
+    <UserControl.Styles>
+        <Style Selector="Border.rows">
+            <Setter Property="BorderBrush" Value="{DynamicResource CardLine}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+        </Style>
+        <!-- Строки разделены чертой сверху; у первой её нет -->
+        <Style Selector="Border.row">
+            <Setter Property="BorderBrush" Value="{DynamicResource CardLine}"/>
+            <Setter Property="BorderThickness" Value="0,1,0,0"/>
+            <Setter Property="Padding" Value="14,9"/>
+            <Setter Property="MinHeight" Value="52"/>
+        </Style>
+        <Style Selector="Border.row:nth-child(1)">
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Border.row TextBlock.name">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.row > CheckBox">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style Selector="TextBlock.note">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+        </Style>
+        <!-- Есть новая версия: строка о ней — цветом -->
+        <Style Selector="TextBlock.newer">
+            <Setter Property="Foreground" Value="{DynamicResource Bad}"/>
+        </Style>
+        <Style Selector="Path.section">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Stroke" Value="{DynamicResource TextDim}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="270,*" ColumnSpacing="14">
+        <!-- Разделы. Tag — имя раздела: по нему же заголовок и подсказка справа -->
+        <Border Classes="card" Padding="6" VerticalAlignment="Top">
+            <StackPanel Spacing="2">
+                <RadioButton Name="GeneralTab" Theme="{StaticResource ListRow}" GroupName="section" Tag="General" IsCheckedChanged="OnSection">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <Path Classes="icon section" Data="{StaticResource IconToggles}"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="section" Text="{DynamicResource langGeneral}"/>
+                            <TextBlock Classes="note" Text="{DynamicResource langGeneralNote}"/>
+                        </StackPanel>
+                    </Grid>
+                </RadioButton>
+                <RadioButton Theme="{StaticResource ListRow}" GroupName="section" Tag="Notifications" IsCheckedChanged="OnSection">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <Path Classes="icon section" Data="{StaticResource IconBell}"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="section" Text="{DynamicResource langNotifications}"/>
+                            <TextBlock Classes="note" Text="{DynamicResource langNotificationsNote}"/>
+                        </StackPanel>
+                    </Grid>
+                </RadioButton>
+                <RadioButton Theme="{StaticResource ListRow}" GroupName="section" Tag="System" IsCheckedChanged="OnSection">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <Path Classes="icon section" Data="{StaticResource IconRefresh}"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="section" Text="{DynamicResource langSystem}"/>
+                            <!-- Есть новая версия — здесь, цветом -->
+                            <TextBlock Name="SystemNote" Classes="note"/>
+                        </StackPanel>
+                    </Grid>
+                </RadioButton>
+                <RadioButton Theme="{StaticResource ListRow}" GroupName="section" Tag="About" IsCheckedChanged="OnSection">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <Path Classes="icon section" Data="{StaticResource IconInfo}"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="section" Text="{DynamicResource langAbout}"/>
+                            <TextBlock Name="AboutNote" Classes="note"/>
+                        </StackPanel>
+                    </Grid>
+                </RadioButton>
+            </StackPanel>
+        </Border>
+
+        <!-- Справа — выбранный раздел. Прокручивается целиком: окно на малом экране не выше рабочей области -->
+        <Border Grid.Column="1" Classes="card" Padding="0">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="16" Spacing="12">
+                    <StackPanel Name="SectionHead" Spacing="2">
+                        <TextBlock Name="SectionTitle" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Name="SectionHint" FontSize="12" Foreground="{DynamicResource TextDim}" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <Border Name="GeneralRows" Classes="rows">
+                        <StackPanel>
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <TextBlock Classes="name" Text="{DynamicResource langLanguage}"/>
+                                    <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
+                                        <StackPanel Name="Languages" Orientation="Horizontal">
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="en"
+                                                         Content="English" IsCheckedChanged="OnLanguage"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="ru"
+                                                         Content="Русский" IsCheckedChanged="OnLanguage"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="language" Tag="uk"
+                                                         Content="Українська" IsCheckedChanged="OnLanguage"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <TextBlock Classes="name" Text="{DynamicResource langTheme}"/>
+                                    <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
+                                        <StackPanel Name="Themes" Orientation="Horizontal">
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Auto"
+                                                         Content="{DynamicResource langThemeAuto}" IsCheckedChanged="OnTheme"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Light"
+                                                         Content="{DynamicResource langThemeLight}" IsCheckedChanged="OnTheme"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="theme" Tag="Dark"
+                                                         Content="{DynamicResource langThemeDark}" IsCheckedChanged="OnTheme"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <TextBlock Classes="name" Text="{DynamicResource langInterval}"/>
+                                    <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
+                                        <!-- Tag — значение настройки: код языка, ThemeMode, интервал в секундах -->
+                                        <StackPanel Name="Intervals" Orientation="Horizontal">
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="60"
+                                                         Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnInterval"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="120"
+                                                         Content="{DynamicResource langMinutes2}" IsCheckedChanged="OnInterval"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="300"
+                                                         Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnInterval"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="interval" Tag="600"
+                                                         Content="{DynamicResource langMinutes10}" IsCheckedChanged="OnInterval"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Name="NotificationsRows" Classes="rows" IsVisible="False">
+                        <StackPanel>
+                            <!-- Пороги тостов о квоте: Tag — какой порог и шаг; границы и порядок держит QuotaAlarm.Shift -->
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                    <TextBlock Classes="name" Text="{DynamicResource langLevelImportant}"/>
+                                    <Button Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
+                                            VerticalAlignment="Center" Tag="important:-5" Click="OnLevel"/>
+                                    <TextBlock Grid.Column="2" Name="ImportantValue" Width="48" TextAlignment="Center"
+                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="3" Theme="{StaticResource Round}" Width="26" Height="26" Content="+"
+                                            VerticalAlignment="Center" Tag="important:5" Click="OnLevel"/>
+                                </Grid>
+                            </Border>
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                    <TextBlock Classes="name" Text="{DynamicResource langLevelCritical}"/>
+                                    <Button Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
+                                            VerticalAlignment="Center" Tag="critical:-5" Click="OnLevel"/>
+                                    <TextBlock Grid.Column="2" Name="CriticalValue" Width="48" TextAlignment="Center"
+                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="3" Theme="{StaticResource Round}" Width="26" Height="26" Content="+"
+                                            VerticalAlignment="Center" Tag="critical:5" Click="OnLevel"/>
+                                </Grid>
+                            </Border>
+                            <Border Name="LowSoundRow" Classes="row">
+                                <CheckBox Name="LowSoundToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langLowSound}"
+                                          IsCheckedChanged="OnLowSound"/>
+                            </Border>
+                            <Border Classes="row">
+                                <CheckBox Name="SessionToastsToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langSessionToasts}"
+                                          IsCheckedChanged="OnSessionToasts"/>
+                            </Border>
+                            <Border Name="TurnPanel" Classes="row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <TextBlock Classes="name" Text="{DynamicResource langTurnLonger}"/>
+                                    <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
+                                        <!-- Tag — минуты; 0 — о любом ходе -->
+                                        <StackPanel Name="TurnMinutes" Orientation="Horizontal">
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="0"
+                                                         Content="{DynamicResource langAnyTurn}" IsCheckedChanged="OnTurnMinutes"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="1"
+                                                         Content="{DynamicResource langMinutes1}" IsCheckedChanged="OnTurnMinutes"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="5"
+                                                         Content="{DynamicResource langMinutes5}" IsCheckedChanged="OnTurnMinutes"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="turn" Tag="15"
+                                                         Content="{DynamicResource langMinutes15}" IsCheckedChanged="OnTurnMinutes"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <Border Name="WaitingSoundRow" Classes="row">
+                                <CheckBox Name="WaitingSoundToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langWaitingSound}"
+                                          IsCheckedChanged="OnWaitingSound"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Name="SystemRows" Classes="rows" IsVisible="False">
+                        <StackPanel>
+                            <Border Name="AutostartCard" Classes="row">
+                                <CheckBox Name="AutostartToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langAutostart}"
+                                          IsCheckedChanged="OnAutostart"/>
+                            </Border>
+                            <Border Classes="row">
+                                <CheckBox Name="AutoUpdateToggle" Theme="{StaticResource Toggle}" Content="{DynamicResource langAutoUpdate}"
+                                          IsCheckedChanged="OnAutoUpdate"/>
+                            </Border>
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <TextBlock Name="UpdateLine" Classes="name" TextWrapping="Wrap"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <Button Name="UpdateInstall" Theme="{StaticResource Brand}" Content="{DynamicResource langInstallUpdate}"
+                                                Click="OnInstallUpdate"/>
+                                        <Button Name="UpdateCheck" Theme="{StaticResource Pill}" Content="{DynamicResource langCheckUpdates}"
+                                                Click="OnCheckUpdates"/>
+                                        <Button Name="UpdateOpen" Theme="{StaticResource Pill}" Content="{DynamicResource langUpdateOpen}"
+                                                Click="OnOpenReleases"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- О программе: кто сделал, версия, ссылки. Заголовка над ним нет — всё по центру -->
+                    <StackPanel Name="AboutView" IsVisible="False" HorizontalAlignment="Center" Spacing="8" Margin="0,48,0,0">
+                        <Image Source="avares://AgentVitals/app.png" Width="64" Height="64" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                        <TextBlock Text="AgentVitals" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                        <TextBlock Name="AboutLine" FontSize="14" Foreground="{DynamicResource TextDim}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Developed by Dykalo Pavlo, 2026" FontSize="14" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,12,0,0">
+                            <Button Theme="{StaticResource Pill}" Content="GitHub" Click="OnOpenRepository"/>
+                            <Button Name="WhatsNew" Theme="{StaticResource Pill}" Click="OnWhatsNew"/>
+                        </StackPanel>
+                        <TextBlock Classes="faint" Text="Apache License 2.0" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

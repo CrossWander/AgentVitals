@@ -29,7 +29,7 @@ and [claude-status-bar](https://github.com/m1ckc3s/claude-status-bar), which do 
 2. Start it. A pulse icon appears in the tray. Windows 10 may put it into the hidden area — drag it
    onto the taskbar once.
 3. Every agent you are signed in to shows its quotas right away, each on its own tab — see
-   [Agents](#agents). To see live sessions, open the [Agents window](#agents-window), pick Claude or
+   [Agents](#agents). To see live sessions, open the [Agents tab](#agents-tab), pick Claude or
    Codex and press **Connect** under *Live sessions*.
 
 Hover the icon for a quick card, click it for the full window, right-click for the menu. The window
@@ -56,14 +56,17 @@ scrolls.
 
 ## Settings
 
-The gear button at the bottom of the window, or *Settings* in the right-click menu, opens
-settings: language, theme, how often to check quotas, the *important* and *critical* levels,
-session toasts, their two sounds, start with Windows and updates. Which agents to watch, the order
-of their tabs, live sessions and account names are in the [Agents window](#agents-window).
+The gear button at the bottom of the window, or *Settings* in the right-click menu, opens the
+AgentVitals window on its *Settings* tab. It is laid out like the [Agents tab](#agents-tab): sections on
+the left, their rows on the right. *General* holds the language, theme and how often to check quotas;
+*Notifications* — the *important* and *critical* levels, session toasts and their two sounds;
+*Startup and updates* — start with Windows and updates; *About* — the author, the version and links.
+Which agents to watch, the order of their tabs, live sessions and account names are on the
+[Agents tab](#agents-tab).
 
 | Light | Dark |
 |---|---|
-| <img src="docs/settings-light.png" width="360" alt="AgentVitals settings, light theme"> | <img src="docs/settings-dark.png" width="360" alt="AgentVitals settings, dark theme"> |
+| <img src="docs/settings-light.png" width="480" alt="AgentVitals settings, light theme"> | <img src="docs/settings-dark.png" width="480" alt="AgentVitals settings, dark theme"> |
 
 ## Agents
 
@@ -107,21 +110,22 @@ and you can see when it frees up.
   click opens its tab with it shown.
 - **Names.** An account is called by its email (for Copilot, the GitHub login); two accounts with one
   email get the plan added. Under the eye they are *Account 1*, *Account 2*. Your own names are set
-  in the [Agents window](#agents-window) and stay visible under the eye.
+  on the [Agents tab](#agents-tab) and stay visible under the eye.
 - Usage statistics and live sessions are shared by all accounts of an agent: the agents' logs do not
   say which account did the work.
 
 AgentVitals never switches accounts itself and keeps no tokens: it only remembers the plan, the
 email, the percentages and the account's id from the agent's own files.
 
-## Agents window
+## Agents tab
 
-The robot button at the end of the tab row, or *Agents…* in the right-click menu, opens a normal
-window — it is on the taskbar, moves and stays open.
+The robot button at the end of the tab row, or *Agents…* in the right-click menu, opens the
+AgentVitals window on its *Agents* tab. It is a normal window — it is on the taskbar, moves and stays
+open; the switch at its top flips between *Agents* and *Settings*.
 
 | Light | Dark |
 |---|---|
-| <img src="docs/agents-light.png" width="360" alt="Agents window, light theme"> | <img src="docs/agents-dark.png" width="360" alt="Agents window, dark theme"> |
+| <img src="docs/agents-light.png" width="480" alt="Agents tab, light theme"> | <img src="docs/agents-dark.png" width="480" alt="Agents tab, dark theme"> |
 
 - **The list** shows the agents in the order of their tabs: the number is the tab's place, which
   is also its Ctrl+N. **▲ Up** and **▼ Down** move the selected agent. Agents that are not found are
@@ -182,7 +186,7 @@ restarting AgentVitals no longer spends the rate limit and gets refused straight
 
 ## Live sessions
 
-The Agents window → Claude → *Live sessions* → **Connect** adds AgentVitals hooks to
+The Agents tab → Claude → *Live sessions* → **Connect** adds AgentVitals hooks to
 `~/.claude/settings.json`.
 Each hook runs `AgentVitals.exe hook` in the background, which writes one small state file per
 session into `sessions\` next to the exe. **Disconnect** removes only AgentVitals' entries.
@@ -210,7 +214,7 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
   you restart them.
 - AgentVitals rewrites `settings.json` as plain JSON, so comments in it are not kept. Before every
   change the file is copied to `settings.json.agentvitals.bak`, comments included.
-- If you move the exe, the Agents window says so — reconnect. Before deleting the exe, press **Disconnect**:
+- If you move the exe, the Agents tab says so — reconnect. Before deleting the exe, press **Disconnect**:
   otherwise Claude Code keeps calling a program that is no longer there.
 - **Codex.** **Connect** on the Codex page writes `~/.codex/hooks.json` (or `hooks.json` under
   `$CODEX_HOME`); each hook runs `"AgentVitals.exe" hook codex`. Codex runs a new or changed hook
@@ -244,7 +248,7 @@ once — Claude Code writes the same answer several times while it streams.
 ## Updates
 
 With *Check for updates daily* on (the default), AgentVitals asks GitHub for the latest release when
-it starts and then once a day, and toasts a new version once. Settings → *Updates* → **Check** asks
+it starts and then once a day, and toasts a new version once. Settings → *Startup and updates* → **Check** asks
 right away. **Update** downloads `AgentVitals.exe` from the release, checks its SHA-256 against the
 one GitHub publishes and refuses a file that does not match. A short script then waits for the
 program to close, puts the new exe in place of the old one — the same path, so the hooks

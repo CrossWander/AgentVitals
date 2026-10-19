@@ -60,7 +60,7 @@
     <x:String x:Key="langSessionWaiting">чекає дозволу</x:String>
     <x:String x:Key="langNoSessions">Активних сесій немає</x:String>
     <x:String x:Key="langNoStats">У {0} немає статистики за днями й живих сесій — лише квоти</x:String>
-    <x:String x:Key="langHooksHint">Підключи {0} у налаштуваннях, щоб бачити живі сесії</x:String>
+    <x:String x:Key="langHooksHint">Підключи {0} на вкладці «Агенти», щоб бачити живі сесії</x:String>
     <x:String x:Key="langLiveWorking">{0} працює · {1}</x:String>
     <x:String x:Key="langLiveTool">{0} працює: {1} · {2}</x:String>
     <x:String x:Key="langLiveWaiting">{0} чекає дозволу · {1}</x:String>
@@ -92,15 +92,14 @@
     <x:String x:Key="langRefresh">Оновити</x:String>
     <x:String x:Key="langSettings">Налаштування</x:String>
     <x:String x:Key="langExit">Вихід</x:String>
-    <x:String x:Key="langExitApp">Вийти з AgentVitals</x:String>
-    <x:String x:Key="langLanguage">МОВА</x:String>
-    <x:String x:Key="langTheme">ВИГЛЯД</x:String>
+    <x:String x:Key="langLanguage">Мова</x:String>
+    <x:String x:Key="langTheme">Вигляд</x:String>
     <x:String x:Key="langThemeAuto">Як у системі</x:String>
     <x:String x:Key="langThemeLight">Світла</x:String>
     <x:String x:Key="langThemeDark">Темна</x:String>
-    <x:String x:Key="langInterval">ПЕРЕВІРЯТИ КВОТИ КОЖНІ</x:String>
+    <x:String x:Key="langInterval">Перевіряти квоти кожні</x:String>
     <x:String x:Key="langAutostart">Запускати разом з Windows</x:String>
-    <x:String x:Key="langNotifications">СПОВІЩЕННЯ</x:String>
+    <x:String x:Key="langNotifications">Сповіщення</x:String>
     <x:String x:Key="langChartModels">Моделі</x:String>
     <x:String x:Key="langOther">інші</x:String>
     <x:String x:Key="langCacheSaved">кеш заощадив {0}</x:String>
@@ -109,7 +108,7 @@
     <x:String x:Key="langLowSound">Звук, коли квоту майже вичерпано</x:String>
     <x:String x:Key="langSessionToasts">Повідомляти про кінець ходу й питання</x:String>
     <x:String x:Key="langWaitingSound">Звук, коли агент чекає дозволу</x:String>
-    <x:String x:Key="langTurnLonger">ПРО КІНЕЦЬ ХОДУ, ЯКЩО ВІН ДОВШИЙ</x:String>
+    <x:String x:Key="langTurnLonger">Про кінець ходу, якщо він довший</x:String>
     <x:String x:Key="langHooks">ЖИВІ СЕСІЇ</x:String>
     <x:String x:Key="langHooksOffClaude">Не підключено. AgentVitals додасть свої hooks у ~/.claude/settings.json і збереже поруч резервну копію.</x:String>
     <x:String x:Key="langHooksOnClaude">Підключено: Claude Code повідомляє AgentVitals про свій стан.</x:String>
@@ -120,7 +119,6 @@
     <x:String x:Key="langHooksConnect">Підключити</x:String>
     <x:String x:Key="langHooksDisconnect">Відключити</x:String>
     <x:String x:Key="langHooksError">Не вдалося змінити {0}: {1}</x:String>
-    <x:String x:Key="langUpdates">ОНОВЛЕННЯ</x:String>
     <x:String x:Key="langAutoUpdate">Перевіряти оновлення щодня</x:String>
     <x:String x:Key="langVersion">Версія {0}</x:String>
     <x:String x:Key="langCheckUpdates">Перевірити</x:String>
@@ -205,4 +203,19 @@
     <x:String x:Key="langAccountsHowCodex">Акаунт змінюється командою `codex login`.</x:String>
     <x:String x:Key="langAccountsMemo">AgentVitals запам’ятовує кожен, у який ви входили, і повідомить, коли запам’ятований знову доступний. Цифри не в роботі — останні, які він бачив. Пошта видна в підказці над іменем; око у вікні ховає її і тут.</x:String>
     <x:String x:Key="langSave">Зберегти</x:String>
+    <x:String x:Key="langAgentsNote">порядок, акаунти, сесії</x:String>
+    <x:String x:Key="langSettingsNote">мова, сповіщення, оновлення</x:String>
+    <x:String x:Key="langUpdateBadge">● доступна версія {0}</x:String>
+    <x:String x:Key="langGeneral">Загальні</x:String>
+    <x:String x:Key="langGeneralNote">мова, вигляд, перевірка</x:String>
+    <x:String x:Key="langGeneralHint">Як виглядає програма і як часто вона питає квоти.</x:String>
+    <x:String x:Key="langNotificationsNote">пороги квот, звуки, кінець ходу</x:String>
+    <x:String x:Key="langNotificationsHint">Коли AgentVitals показує сповіщення і подає звук.</x:String>
+    <x:String x:Key="langSystem">Запуск і оновлення</x:String>
+    <x:String x:Key="langSystemNote">автозапуск, версії</x:String>
+    <x:String x:Key="langSystemHint">Автозапуск і версії програми.</x:String>
+    <x:String x:Key="langAbout">Про програму</x:String>
+    <x:String x:Key="langAboutNote">версія {0} · автор</x:String>
+    <x:String x:Key="langAboutLine">Монітор AI-агентів · версія {0}</x:String>
+    <x:String x:Key="langWhatsNew">Що нового в {0}</x:String>
 </ResourceDictionary>
