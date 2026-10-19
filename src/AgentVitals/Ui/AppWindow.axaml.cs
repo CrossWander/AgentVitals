@@ -50,22 +50,23 @@ internal partial class AppWindow : Window
 	public void Open(WindowPage page)
 	{
 		(page == WindowPage.Settings ? SettingsTab : AgentsTab).IsChecked = true;
-		ShowPage();
+		ShowPage(page);
 	}
 
 	public void Render() => Agents.Render();
 
+	// Страница — по нажатой вкладке: соседняя в этот момент ещё отмечена, группа снимает с неё отметку после события.
 	private void OnPage(object? sender, RoutedEventArgs e)
 	{
-		if (sender is RadioButton { IsChecked: true })
+		if (sender is RadioButton { IsChecked: true } tab)
 		{
-			ShowPage();
+			ShowPage(tab == SettingsTab ? WindowPage.Settings : WindowPage.Agents);
 		}
 	}
 
-	private void ShowPage()
+	private void ShowPage(WindowPage page)
 	{
-		var settings = SettingsTab.IsChecked == true;
+		var settings = page == WindowPage.Settings;
 
 		// Настройки выставляются по сохранённому при каждом переходе: их могли поменять руками в config.json.
 		if (settings && !Settings.IsVisible)
