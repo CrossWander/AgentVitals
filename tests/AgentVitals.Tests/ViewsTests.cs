@@ -81,9 +81,13 @@ public class ViewsTests
 		new(key, new Snapshot(plan, email, [new(WindowKind.Session, null, used, new DateTimeOffset(_now.AddHours(2)), Limiting: true)], null), _now.AddHours(-2), null);
 
 	/// <summary>Claude с аккаунтами в порядке появления; в работе — inUse.</summary>
-	private static AgentState Claude(string inUse, params Account[] accounts)
+	private static AgentState Claude(string inUse, params Account[] accounts) => Remembering(new ClaudeAgent(), inUse, accounts);
+
+	/// <summary>Агент с аккаунтами. Где важно, найден ли агент, — подставной: настоящий Claude ищет свой вход в профиле,
+	/// а на сборке релиза на GitHub его нет.</summary>
+	private static AgentState Remembering(IAgent agent, string inUse, params Account[] accounts)
 	{
-		var state = new AgentState(new ClaudeAgent());
+		var state = new AgentState(agent);
 		var current = accounts.Single(account => account.Key == inUse);
 		state.Recall(new(current.Snapshot, current.Updated, null, inUse, accounts), _now);
 
@@ -238,7 +242,7 @@ public class ViewsTests
 	[Fact]
 	public void AgentLineCountsAccounts() // «2 аккаунта · Team», как на макете
 	{
-		var state = Claude("B", Signed("A", "Max", "a@x.z"), Signed("B", "Team", "b@x.z"));
+		var state = Remembering(new Named("Claude", installed: true), "B", Signed("A", "Max", "a@x.z"), Signed("B", "Team", "b@x.z"));
 
 		Assert.Equal($"langAccountCount{Text.Plural(2, Localization.Current)} · Team", Text.AgentLine(state));
 	}
