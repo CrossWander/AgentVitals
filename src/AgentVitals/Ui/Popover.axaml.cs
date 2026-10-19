@@ -188,7 +188,8 @@ internal partial class Popover : TrayWindow
 	internal static AccountView? Chosen(AgentView agent, string? key) =>
 		agent.Accounts.FirstOrDefault(account => account.Key == key) ?? agent.Accounts.FirstOrDefault(account => account.InUse);
 
-	/// <summary>Строка под вкладками: «Обновлено только что · <b>Team</b> · Рабочий» — тариф жирным, он есть и под глазом.</summary>
+	/// <summary>Строка под вкладками: «Обновлено только что · <b>Team</b> · Рабочий» — тариф жирным, он есть и под глазом.
+	/// Цветом обычного текста, как имя в строке аккаунта: полужирный бледным в 11 px от обычного не отличить.</summary>
 	private static InlineCollection Line(string? updated, string? plan, string? info)
 	{
 		InlineCollection line = [];
@@ -205,7 +206,7 @@ internal partial class Popover : TrayWindow
 				line.Add(new Run(" · "));
 			}
 
-			line.Add(new Run(text) { FontWeight = bold ? FontWeight.SemiBold : FontWeight.Normal });
+			line.Add(bold ? new Run(text) { FontWeight = FontWeight.Bold, Foreground = Views.Brush("Text") } : new Run(text));
 		}
 
 		return line;
