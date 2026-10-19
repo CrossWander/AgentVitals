@@ -1,0 +1,204 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:AgentVitals"
+             x:Class="AgentVitals.AgentsPage"
+             x:ClassModifier="internal">
+
+    <!-- Вкладка «Агенты» окна AgentVitals. Слева — агенты в порядке вкладок, справа — подробности выбранного одной
+         карточкой: новые подключения и настройки агента встают туда же -->
+    <UserControl.Styles>
+        <Style Selector="Border.agent">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.agent:pointerover">
+            <Setter Property="Background" Value="{DynamicResource CardHover}"/>
+        </Style>
+        <Style Selector="Border.agent.picked">
+            <Setter Property="Background" Value="{DynamicResource CardHover}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PillLine}"/>
+        </Style>
+        <!-- Выключенный и ненайденный агент — бледнее: вкладки у него нет -->
+        <Style Selector="TextBlock.mark">
+            <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+        </Style>
+        <Style Selector="TextBlock.mark.dim">
+            <Setter Property="Foreground" Value="{DynamicResource TextFaint}"/>
+        </Style>
+        <Style Selector="TextBlock.agent.dim">
+            <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+        </Style>
+        <!-- Заголовок раздела и столбца таблицы -->
+        <Style Selector="TextBlock.head">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="LetterSpacing" Value="0.4"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+        </Style>
+        <Style Selector="Button.small">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="Button.cell">
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <!-- Поле имени — в цветах программы, а не Fluent: тонкая рамка, под мышью и в фокусе — ярче -->
+        <Style Selector="TextBox.name">
+            <Setter Property="MinHeight" Value="26"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+            <Setter Property="Background" Value="{DynamicResource PillFill}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PillLine}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="TextBox.name:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource PillFill}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TextFaint}"/>
+        </Style>
+        <Style Selector="TextBox.name:focus">
+            <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+        </Style>
+        <Style Selector="TextBox.name:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource PillFill}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Blue}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="270,*" ColumnSpacing="14">
+        <!-- Слева: список, под ним стрелки и подсказка -->
+        <StackPanel Spacing="6">
+            <Border Classes="card" Padding="6">
+                <ItemsControl Name="AgentList">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="2"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:AgentRowView">
+                            <Panel>
+                                <!-- Ненайденный — на подложке в пунктирной рамке: его нет на компьютере -->
+                                <Rectangle IsVisible="{Binding !Found}" RadiusX="10" RadiusY="10" Fill="{DynamicResource Well}"
+                                           Stroke="{DynamicResource PillLine}" StrokeThickness="1" StrokeDashArray="4,3"/>
+                                <!-- Фон прозрачный, а не пустой: щелчок ловится во всю строку -->
+                                <Border Classes="agent" Classes.picked="{Binding Picked}" Padding="8" CornerRadius="10"
+                                        BorderThickness="1" Cursor="Hand" PointerReleased="OnAgent">
+                                    <Grid ColumnDefinitions="18,*,Auto" ColumnSpacing="8">
+                                        <TextBlock Classes="mark" Classes.dim="{Binding Dim}" Text="{Binding Mark}" FontSize="12"
+                                                   FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Classes="agent" Classes.dim="{Binding Dim}" Text="{Binding Name}" FontSize="14" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding State}" FontSize="11" Foreground="{DynamicResource TextDim}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <CheckBox Grid.Column="2" Theme="{StaticResource SmallToggle}" IsChecked="{Binding Shown}"
+                                                  IsVisible="{Binding Found}" ToolTip.Tip="{DynamicResource langShow}"
+                                                  VerticalAlignment="Center" IsCheckedChanged="OnShow"/>
+                                    </Grid>
+                                </Border>
+                            </Panel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                <Button Name="UpButton" Theme="{StaticResource Pill}" Height="30" Padding="0" CornerRadius="15" FontSize="12"
+                        HorizontalAlignment="Stretch" Content="{DynamicResource langUp}" Click="OnUp"/>
+                <Button Name="DownButton" Grid.Column="1" Theme="{StaticResource Pill}" Height="30" Padding="0" CornerRadius="15"
+                        FontSize="12" HorizontalAlignment="Stretch" Content="{DynamicResource langDown}" Click="OnDown"/>
+            </Grid>
+            <TextBlock Text="{DynamicResource langAgentsHint}" FontSize="12" Foreground="{DynamicResource TextDim}" TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- Справа: одна карточка выбранного агента. Прокручивается целиком: окно на малом экране не выше рабочей области -->
+        <Border Grid.Column="1" Classes="card" Padding="0">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="16" Spacing="12">
+                    <StackPanel Spacing="2">
+                        <TextBlock Name="AgentName" FontSize="18" FontWeight="Bold"/>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                            <Ellipse Name="AgentDot" Width="7" Height="7" VerticalAlignment="Center"/>
+                            <TextBlock Name="AgentState" Grid.Column="1" FontSize="12" Foreground="{DynamicResource TextDim}" TextWrapping="Wrap"/>
+                        </Grid>
+                        <TextBlock Name="AgentError" Classes="error" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Живые сессии — из настроек, как были: hooks выбранного агента -->
+                    <Border Name="HooksCard" x:DataType="local:HookRow" Background="{DynamicResource Well}" CornerRadius="10" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <StackPanel Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Classes="head" Text="{DynamicResource langHooks}"/>
+                                <TextBlock Text="{Binding State}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <Button Classes="small" Theme="{StaticResource Brand}" Content="{DynamicResource langHooksConnect}"
+                                        IsVisible="{Binding CanConnect}" Click="OnConnect"/>
+                                <Button Classes="small" Theme="{StaticResource Pill}" Content="{DynamicResource langHooksDisconnect}"
+                                        IsVisible="{Binding CanDisconnect}" Click="OnDisconnect"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Аккаунты таблицей: своё имя вместо почты, тариф, последние цифры; «Забыть» — только у запомненных -->
+                    <StackPanel Name="AccountsCard" Spacing="8">
+                        <TextBlock Classes="head" Text="{DynamicResource langAccountsLabel}"/>
+                        <Border BorderBrush="{DynamicResource CardLine}" BorderThickness="1" CornerRadius="10" ClipToBounds="True">
+                            <StackPanel>
+                                <Border Background="{DynamicResource Well}" Padding="12,8">
+                                    <Grid ColumnDefinitions="150,64,*,90" ColumnSpacing="8">
+                                        <TextBlock Classes="head" Text="{DynamicResource langAccountsName}"/>
+                                        <TextBlock Grid.Column="1" Classes="head" Text="{DynamicResource langAccountsPlan}"/>
+                                        <TextBlock Grid.Column="2" Classes="head" Text="{DynamicResource langAccountsLast}" TextTrimming="CharacterEllipsis"/>
+                                    </Grid>
+                                </Border>
+                                <ItemsControl Name="AccountRows">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="local:AccountEditView">
+                                            <Border BorderBrush="{DynamicResource CardLine}" BorderThickness="0,1,0,0" Padding="12,10">
+                                                <Grid ColumnDefinitions="150,64,*,90" ColumnSpacing="8">
+                                                    <!-- Почта — в подсказке над именем; глаз прячет её и здесь. Текст и кнопки строки
+                                                         ставит код: в поле может быть недописанное имя -->
+                                                    <TextBox Classes="name" PlaceholderText="{Binding Placeholder}" ToolTip.Tip="{Binding Email}"
+                                                             VerticalAlignment="Center" DataContextChanged="OnNameRow"
+                                                             TextChanged="OnNameChanged" KeyDown="OnNameKey"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Plan}" FontSize="12" VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="2" FontSize="12" Foreground="{DynamicResource TextDim}"
+                                                               TextWrapping="Wrap" VerticalAlignment="Center" DataContextChanged="OnNumbers"/>
+                                                    <Panel Grid.Column="3" VerticalAlignment="Center">
+                                                        <Border Classes="inuse" Height="20" CornerRadius="10" Background="{DynamicResource GoodFill}">
+                                                            <TextBlock Text="{DynamicResource langInUse}" FontSize="11" FontWeight="Bold"
+                                                                       Foreground="{DynamicResource GoodText}"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <Button Classes="cell" Theme="{StaticResource Pill}" FontWeight="Normal"
+                                                                Content="{DynamicResource langForget}" Click="OnForget"/>
+                                                        <Button Classes="cell save" Theme="{StaticResource Brand}"
+                                                                Content="{DynamicResource langSave}" Click="OnSave"/>
+                                                    </Panel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Name="AccountsFoot" FontSize="12" Foreground="{DynamicResource TextDim}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

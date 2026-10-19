@@ -18,6 +18,8 @@ internal partial class TrayMenu : TrayWindow
 
 	public event Action? SettingsRequested;
 
+	public event Action? AgentsRequested;
+
 	public event Action? ExitRequested;
 
 	public void Open(PixelRect anchor)
@@ -30,6 +32,12 @@ internal partial class TrayMenu : TrayWindow
 	{
 		Hide();
 		RefreshRequested?.Invoke();
+	}
+
+	private void OnAgents(object? sender, RoutedEventArgs e)
+	{
+		Hide();
+		AgentsRequested?.Invoke();
 	}
 
 	private void OnSettings(object? sender, RoutedEventArgs e)

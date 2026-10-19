@@ -234,6 +234,39 @@ internal sealed class ClaudeAgent : IAgent
 
 	private static decimal Scale(int places) => (decimal)Math.Pow(10, places);
 
+	/// <inheritdoc/>
+	public bool IdentityApart => true;
+
+	/// <inheritdoc/>
+	public string? Identity()
+	{
+		try
+		{
+			return File.Exists(_account) ? Identity(SharedFile.ReadAllText(_account)) : null;
+		}
+		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+		{
+			return null;
+		}
+	}
+
+	/// <summary>Аккаунт — пользователь в организации: одна почта бывает и в Team, и в личном тарифе.</summary>
+	internal static string? Identity(string json)
+	{
+		try
+		{
+			var account = JsonNode.Parse(json)?["oauthAccount"];
+
+			return (string?)account?["accountUuid"] is { Length: > 0 } user
+				? (string?)account["organizationUuid"] is { Length: > 0 } organization ? $"{user}/{organization}" : user
+				: null;
+		}
+		catch (Exception exception) when (exception is JsonException or InvalidOperationException)
+		{
+			return null;
+		}
+	}
+
 	// Почта аккаунта — для подписи в поповере; без неё всё работает.
 	private static async Task<string?> ReadAccountAsync(CancellationToken cancellation)
 	{

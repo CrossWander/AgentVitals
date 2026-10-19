@@ -31,6 +31,14 @@
             <SolidColorBrush x:Key="Bad" Color="#F87171"/>
             <SolidColorBrush x:Key="Muted" Color="#8E8E93"/>
             <SolidColorBrush x:Key="Blue" Color="#60A5FA"/>
+            <!-- Аккаунт, показанный в карточках сверху, и полоса «это последние цифры» -->
+            <SolidColorBrush x:Key="AccountPick" Color="#1A60A5FA"/>
+            <SolidColorBrush x:Key="HintFill" Color="#1AFBBF24"/>
+            <SolidColorBrush x:Key="HintLine" Color="#4DFBBF24"/>
+            <SolidColorBrush x:Key="HintText" Color="#FDE68A"/>
+            <SolidColorBrush x:Key="Well" Color="#0DFFFFFF"/>
+            <SolidColorBrush x:Key="GoodFill" Color="#2934D399"/>
+            <SolidColorBrush x:Key="GoodText" Color="#6EE7B7"/>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Light">
@@ -57,6 +65,13 @@
             <SolidColorBrush x:Key="Bad" Color="#E11D48"/>
             <SolidColorBrush x:Key="Muted" Color="#93A3B4"/>
             <SolidColorBrush x:Key="Blue" Color="#2563EB"/>
+            <SolidColorBrush x:Key="AccountPick" Color="#143B82F6"/>
+            <SolidColorBrush x:Key="HintFill" Color="#FFF7ED"/>
+            <SolidColorBrush x:Key="HintLine" Color="#FED7AA"/>
+            <SolidColorBrush x:Key="HintText" Color="#7C2D12"/>
+            <SolidColorBrush x:Key="Well" Color="#F3F6FA"/>
+            <SolidColorBrush x:Key="GoodFill" Color="#D1FAE5"/>
+            <SolidColorBrush x:Key="GoodText" Color="#065F46"/>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 

@@ -38,7 +38,9 @@ internal sealed record Release(UpdateState State, Version? Version = null, strin
 /// </summary>
 internal static class Updates
 {
-	public const string Releases = "https://github.com/CrossWander/AgentVitals/releases";
+	public const string Repository = "https://github.com/CrossWander/AgentVitals";
+
+	public const string Releases = Repository + "/releases";
 
 	private const string _api = "https://api.github.com/repos/CrossWander/AgentVitals/releases/latest";
 	private const string _asset = "AgentVitals.exe";

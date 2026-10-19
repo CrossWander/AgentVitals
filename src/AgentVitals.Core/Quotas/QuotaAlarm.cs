@@ -50,14 +50,15 @@ public sealed class QuotaAlarm
 	/// <param name="windows">Окна из свежего снимка.</param>
 	/// <param name="levels">Пороги из настроек.</param>
 	/// <param name="now">От него темп: сколько окна уже прошло.</param>
+	/// <param name="account">Аккаунт в работе: у другого аккаунта свои окна, и вход в него — не сброс окна прежнего.</param>
 	/// <returns>По тревоге на окно, только о самом высоком из пройденных порогов.</returns>
-	public IReadOnlyList<QuotaAlert> Check(string agent, IReadOnlyList<QuotaWindow> windows, Thresholds levels, DateTime now)
+	public IReadOnlyList<QuotaAlert> Check(string agent, IReadOnlyList<QuotaWindow> windows, Thresholds levels, DateTime now, string account = "")
 	{
 		var alerts = new List<QuotaAlert>();
 
 		foreach (var window in windows.Where(window => window.Limiting))
 		{
-			var key = $"{agent}/{window.Kind}/{window.Label}";
+			var key = $"{agent}/{account}/{window.Kind}/{window.Label}";
 
 			if (window.Used < levels.Important)
 			{
@@ -100,8 +101,8 @@ public sealed class QuotaAlarm
 
 	/// <summary>Самая серьёзная из новых тревог всех агентов: выше порога у двух разом бывает разве что при
 	/// запуске — тост один, о главном. Пороги взводятся у всех, а не только у сказанного.</summary>
-	public QuotaAlert? Check(IEnumerable<(string Agent, IReadOnlyList<QuotaWindow> Windows)> agents, Thresholds levels, DateTime now) =>
+	public QuotaAlert? Check(IEnumerable<(string Agent, string Account, IReadOnlyList<QuotaWindow> Windows)> agents, Thresholds levels, DateTime now) =>
 		agents
-			.SelectMany(agent => Check(agent.Agent, agent.Windows, levels, now))
+			.SelectMany(agent => Check(agent.Agent, agent.Windows, levels, now, agent.Account))
 			.MaxBy(alert => (alert.Level, alert.Window.Used));
 }

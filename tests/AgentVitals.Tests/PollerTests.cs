@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -315,6 +316,34 @@ public class PollerTests
 	}
 
 	[Fact]
+	public void DefaultOrderIsCatalog() =>
+		Assert.Equal(["Claude", "Codex", "Gemini", "Copilot", "Cursor"], AgentCatalog.All().Select(agent => agent.Name));
+
+	[Fact]
+	public void ArrangeFollowsSavedOrderThenCatalog() // незнакомое имя в config.json пропускается
+	{
+		List<AgentState> agents = [.. new[] { "Claude", "Codex", "Gemini", "Copilot", "Cursor" }.Select(name => new AgentState(new Fake(() => _snapshot, name: name)))];
+
+		Assert.Equal(
+			["Cursor", "Claude", "Codex", "Gemini", "Copilot"],
+			Poller.Arrange(agents, ["Cursor", "Nobody", "Claude"]).Select(state => state.Agent.Name));
+	}
+
+	[Fact]
+	public void SwitchedOffAgentHasNoTab()
+	{
+		using var temp = new TempDirectory();
+		var credentials = temp.File("auth.json");
+		File.WriteAllText(credentials, "{}");
+		var state = new AgentState(new Fake(() => _snapshot, credentials)) { Snapshot = _snapshot };
+
+		state.Off = true;
+
+		Assert.True(state.Installed);
+		Assert.False(state.Visible);
+	}
+
+	[Fact]
 	public void OrdinaryAgentShowsOnceInstalled()
 	{
 		using var temp = new TempDirectory();
@@ -357,11 +386,11 @@ public class PollerTests
 		Assert.Equal(_now.AddSeconds(expected), AgentState.Schedule(null, seconds, _now));
 
 	/// <summary>Агент, который отвечает тем, что вернёт или бросит answer.</summary>
-	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json", IStatusPage? status = null, bool confirmFirst = false) : IAgent
+	private sealed class Fake(Func<Snapshot> answer, string credentials = "none.json", IStatusPage? status = null, bool confirmFirst = false, string name = "Fake") : IAgent
 	{
 		public bool ConfirmFirst => confirmFirst;
 
-		public string Name => "Fake";
+		public string Name => name;
 
 		public string Cli => "fake";
 

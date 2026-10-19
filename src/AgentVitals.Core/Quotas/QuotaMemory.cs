@@ -8,7 +8,10 @@ using AgentVitals.Platform;
 namespace AgentVitals.Core.Quotas;
 
 /// <summary>Последний ответ агента и до какого времени сервер велел ждать — то, что переживает перезапуск.</summary>
-public sealed record RememberedQuota(Snapshot? Snapshot, DateTime? Updated, DateTime? RetryAt);
+/// <param name="Snapshot">Цифры аккаунта в работе; верхние поля читает и 1.3.0, если на него откатились.</param>
+/// <param name="Key">Аккаунт в работе; null — ещё неизвестен или файл от 1.3.0.</param>
+/// <param name="Accounts">Все аккаунты в порядке появления, вместе с аккаунтом в работе; null — файл от 1.3.0.</param>
+public sealed record RememberedQuota(Snapshot? Snapshot, DateTime? Updated, DateTime? RetryAt, string? Key = null, IReadOnlyList<Account>? Accounts = null);
 
 /// <summary>
 /// quota.json рядом с настройками: последний ответ каждого агента. После запуска окно сразу показывает его,

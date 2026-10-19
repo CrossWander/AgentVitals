@@ -77,6 +77,22 @@ internal sealed class CursorAgent : IAgent
 			? await AskAsync(_http, token, Sqlite.Item(Credentials, "cursorAuth/cachedEmail"), cancellation)
 			: throw new SignInException(Cli, SignInProblem.Missing);
 
+	/// <inheritdoc/>
+	public string? Identity()
+	{
+		try
+		{
+			return OperatingSystem.IsWindows() && File.Exists(Credentials) && Sqlite.Item(Credentials, "cursorAuth/accessToken") is { Length: > 0 } token
+				? UserId(token)
+				: null;
+		}
+		catch (IOException)
+		{
+			// База занята или повреждена: кто вошёл, скажет следующий тик.
+			return null;
+		}
+	}
+
 	/// <summary>Кто вошёл: последняя часть sub из JWT после «|». Чужие символы в cookie не пускаем — тогда null.</summary>
 	internal static string? UserId(string token) =>
 		Api.Claim(token, "sub")?.Split('|')[^1] is { Length: > 0 } id && id.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-')

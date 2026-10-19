@@ -27,6 +27,16 @@ public class OtherAgentsTests
 	public void BrokenIdTokenIsNoEmail(string? token) => Assert.Null(CodexAgent.Email(token));
 
 	[Fact]
+	public void CodexAccountIdReadsTokens() =>
+		Assert.Equal("acc-1", CodexAgent.AccountId("""{"tokens":{"account_id":"acc-1","id_token":"x"}}"""));
+
+	[Theory]
+	[InlineData("""{"tokens":{}}""")]
+	[InlineData("""{"tokens":{"account_id":""}}""")]
+	[InlineData("not json")]
+	public void CodexWithoutAccountIdIsNull(string json) => Assert.Null(CodexAgent.AccountId(json));
+
+	[Fact]
 	public void ReadsCodexWindows()
 	{
 		var usage = JsonNode.Parse("""

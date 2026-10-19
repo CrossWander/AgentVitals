@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
+using AgentVitals.Core;
 using AgentVitals.Core.Quotas;
 using AgentVitals.Core.Sessions;
 using AgentVitals.Core.Status;
@@ -49,6 +51,128 @@ internal static class Text
 		: now - time < TimeSpan.FromMinutes(1) ? Localization.Get("langUpdatedNow")
 		: now - time > TimeSpan.FromDays(1) ? Localization.Format("langUpdatedAt", time.ToLocalTime().ToString("ddd HH:mm", Localization.Culture))
 		: Localization.Format("langUpdatedAgo", Span(now - time));
+
+	/// <summary>Возраст цифр в строке аккаунта: «сейчас», «2 ч назад», а старше суток — «пт 18:40».</summary>
+	public static string Age(DateTime? at, DateTime now) =>
+		at is not { } time ? ""
+		: now - time < TimeSpan.FromMinutes(1) ? Localization.Get("langAgeNow")
+		: now - time > TimeSpan.FromDays(1) ? Localization.Format("langAgeAt", time.ToLocalTime().ToString("ddd HH:mm", Localization.Culture))
+		: Localization.Format("langAgeAgo", Span(now - time));
+
+	/// <summary>Плашка запомненного аккаунта. Занят — какое окно его держит и до когда, в тех же словах, что сброс на
+	/// карточке: в пределах суток — «через», дальше — день и время.</summary>
+	/// <param name="blocker">Израсходованное окно, которое сбросится последним; есть только у занятого.</param>
+	public static string AccountBadge(Availability state, QuotaWindow? blocker, DateTime now) => state switch
+	{
+		Availability.Free => Localization.Get("langAccountFree"),
+		Availability.Back => Localization.Get("langAccountBack"),
+		Availability.Busy => Busy(blocker, now),
+	};
+
+	private static string Busy(QuotaWindow? blocker, DateTime now)
+	{
+		var title = blocker is null ? "" : Lower(Title(blocker));
+
+		if (blocker?.ResetsAt is not { } at)
+		{
+			return Localization.Format("langAccountBusy", title);
+		}
+
+		var left = at.UtcDateTime - now;
+
+		return left > TimeSpan.FromDays(1)
+			? Localization.Format("langAccountBusyAt", title, at.LocalDateTime.ToString(ResetPattern(left), Localization.Culture))
+			: Localization.Format("langAccountBusyIn", title, Span(left));
+	}
+
+	/// <summary>Состояние агента в списке окна «Агенты»: почему нет данных или «2 аккаунта · Team».</summary>
+	public static string AgentLine(AgentState state) =>
+		!state.Installed ? Localization.Get("langAgentMissing")
+		: state.Off ? Localization.Get("langAgentOff")
+		: state.Error is SignInException ? Localization.Get("langAgentNoSignIn")
+		: state.Snapshot is { Plan: { Length: > 0 } plan } ? state.Accounts.Count > 0 ? $"{Accounts(state.Accounts.Count)} · {plan}" : plan
+		: state.Error is not null ? Localization.Get("langAgentNoAnswer")
+		: Localization.Get("langAgentNoData");
+
+	/// <summary>Строка под именем агента справа в окне «Агенты»: «Найден · вход есть · подписка Team · вкладка Ctrl+1».</summary>
+	/// <param name="number">Место вкладки; "" — вкладки нет.</param>
+	public static string AgentDetails(AgentState state, string number)
+	{
+		if (!state.Installed)
+		{
+			return Localization.Get("langAgentMissing");
+		}
+
+		List<string> parts = [Localization.Get("langStateFound")];
+
+		if (state.Off)
+		{
+			parts.Add(Localization.Get("langAgentOff"));
+		}
+		else if (state.Error is SignInException)
+		{
+			parts.Add(Localization.Get("langAgentNoSignIn"));
+		}
+		else if (state.Snapshot is { } snapshot)
+		{
+			parts.Add(Localization.Get("langStateSignedIn"));
+
+			if (snapshot.Plan.Length > 0)
+			{
+				parts.Add(Localization.Format("langStatePlan", snapshot.Plan));
+			}
+		}
+		else
+		{
+			parts.Add(Localization.Get(state.Error is null ? "langAgentNoData" : "langAgentNoAnswer"));
+		}
+
+		if (number.Length > 0)
+		{
+			parts.Add(Localization.Format("langStateTab", number));
+		}
+
+		return string.Join(" · ", parts);
+	}
+
+	/// <summary>«2 аккаунта» — с формой слова по числу на языке интерфейса.</summary>
+	public static string Accounts(int count) => Localization.Format($"langAccountCount{Plural(count, Localization.Current)}", count);
+
+	/// <summary>Форма слова по числу: у русского и украинского три (1 аккаунт, 2 аккаунта, 5 аккаунтов), у английского две.</summary>
+	internal static string Plural(int count, string language) => language is "ru" or "uk"
+		? (count % 10, count % 100) switch
+		{
+			(1, not 11) => "One",
+			(>= 2 and <= 4, < 12 or > 14) => "Few",
+			_ => "Many",
+		}
+		: count == 1 ? "One" : "Many";
+
+	/// <summary>Когда освободится занятый запомненный аккаунт: «сессия сбросится через 1 ч 10 мин», дальше суток — днём и временем.</summary>
+	public static string? Frees(QuotaWindow blocker, DateTime now)
+	{
+		if (blocker.ResetsAt is not { } at)
+		{
+			return null;
+		}
+
+		var left = at.UtcDateTime - now;
+		var title = Lower(Title(blocker));
+
+		return left > TimeSpan.FromDays(1)
+			? Localization.Format("langAccountFreesAt", title, at.LocalDateTime.ToString(ResetPattern(left), Localization.Culture))
+			: Localization.Format("langAccountFreesIn", title, Span(left));
+	}
+
+	private static string Lower(string text) => text.Length > 0 ? char.ToLower(text[0], Localization.Culture) + text[1..] : text;
+
+	/// <summary>Как переключиться на другой аккаунт агента: у Claude — «/login в Claude Code», у прочих — своя строка или общая.</summary>
+	/// <summary>Как сменить аккаунт агента — для подвала таблицы аккаунтов; `команда` в обратных кавычках.</summary>
+	public static string AccountsHow(string agent) =>
+		Localization.Has($"langAccountsHow{agent}") ? Localization.Get($"langAccountsHow{agent}") : Localization.Format("langAccountsHow", agent);
+
+	public static string Login(string agent) =>
+		Localization.Has($"langLogin{agent}") ? Localization.Get($"langLogin{agent}") : Localization.Format("langLogin", agent);
 
 	/// <param name="agent">Чей отказ: у агента бывает своя строка — «Нет входа GitHub…» у Copilot, а нет — общая.</param>
 	public static string Error(Exception error, string agent) => error switch

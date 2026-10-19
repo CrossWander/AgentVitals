@@ -48,8 +48,11 @@ internal sealed record CardView(
 /// <param name="StatusUrl">Страница статуса агента; null — её нет, и строки статуса тоже.</param>
 /// <param name="Sessions">Живые сессии агента; null — hooks у агента нет, и карточки тоже.</param>
 /// <param name="HealthText">Плашка в шапке, пока выбрана эта вкладка: по самому узкому окну этого агента.</param>
+/// <param name="Plan">Тариф аккаунта в работе: в строке под вкладками он жирным.</param>
+/// <param name="Info">Остальное в той строке: кто вошёл, а у нескольких аккаунтов — ещё «в работе».</param>
 internal sealed record AgentView(
 	string Name,
+	string? Plan,
 	string Info,
 	string Updated,
 	IReadOnlyList<CardView> Cards,
@@ -64,8 +67,14 @@ internal sealed record AgentView(
 	string SessionsHint,
 	string HealthText,
 	IBrush HealthBrush,
-	Health Health)
+	Health Health,
+	IReadOnlyList<AccountView> Accounts,
+	string AccountsTitle,
+	string AccountsFoot)
 {
+	/// <summary>Аккаунтов у агента два и больше: карточка «Аккаунты», а «Сегодня» — общее на все.</summary>
+	public bool Shared => Accounts.Count > 1;
+
 	/// <summary>Точка на вкладке: у агента запас на исходе, даже когда смотришь на соседа.</summary>
 	public bool Alert => Health is Health.Warning or Health.Critical;
 
@@ -77,6 +86,55 @@ internal sealed record AgentView(
 	/// <summary>Ни статистики, ни сессий — как у Copilot: на их месте строка, почему там пусто.</summary>
 	public bool Bare => Usage is null && Sessions is null;
 }
+
+/// <summary>Аккаунт агента на вкладке: строка в карточке «Аккаунты» и то, что показать сверху, когда он выбран.</summary>
+/// <param name="Selected">Показан в карточках сверху; ставит поповер — выбор живёт, пока окно открыто.</param>
+/// <param name="Line">«Team · сейчас»: тариф и возраст цифр.</param>
+/// <param name="Meters">Ограничивающие окна полосками, в порядке карточек агента.</param>
+/// <param name="Plan">Тариф: пока аккаунт выбран, он в строке под вкладками жирным.</param>
+/// <param name="Info">Остальное в той строке: «Личный · в работе».</param>
+/// <param name="Hint">Полоса над карточками у запомненного: это последние цифры; у аккаунта в работе — null.</param>
+internal sealed record AccountView(
+	string Key,
+	string Name,
+	bool InUse,
+	bool Selected,
+	string Line,
+	string Badge,
+	IBrush BadgeBrush,
+	IReadOnlyList<CardView> Meters,
+	IReadOnlyList<CardView> Cards,
+	string? Plan,
+	string Info,
+	string Updated,
+	string? Hint)
+{
+	public IBrush Dot => Views.Brush(InUse ? "Good" : "TextFaint");
+
+	public bool HasHint => Hint is not null;
+}
+
+/// <summary>Агент в списке окна «Агенты».</summary>
+/// <param name="Number">Место вкладки — оно же Ctrl+N; "" — вкладки нет.</param>
+/// <param name="Found">Установлен: у ненайденного нет ни номера, ни переключателя.</param>
+/// <param name="Shown">Не выключен — переключатель «показывать».</param>
+internal sealed record AgentRowView(string Name, string Number, string State, bool Found, bool Shown, bool Picked = false)
+{
+	/// <summary>Слева у строки: номер вкладки, у выключенного — «—», у ненайденного — ничего.</summary>
+	public string Mark => Found && !Shown ? "—" : Number;
+
+	/// <summary>Выключенный и ненайденный — бледнее: вкладки у них нет.</summary>
+	public bool Dim => !Found || !Shown;
+}
+
+/// <summary>Окно аккаунта в строке таблицы: «Сессия 100%»; израсходованное подсвечено.</summary>
+internal sealed record AccountNumber(string Title, string Percent, bool Spent);
+
+/// <summary>Аккаунт в окне «Агенты»: своё имя, тариф и последние цифры.</summary>
+/// <param name="Name">Своё имя; "" — не задано, вместо него виден Placeholder — имя по умолчанию.</param>
+/// <param name="Email">Почта для подсказки над именем; null — глаз её прячет.</param>
+/// <param name="Note">У занятого запомненного — когда он освободится; иначе null.</param>
+internal sealed record AccountEditView(string Key, string Name, string Placeholder, string? Email, string Plan, IReadOnlyList<AccountNumber> Numbers, string Age, string? Note, bool InUse);
 
 /// <param name="Prompt">Первый запрос сессии; null — ещё не известен или экран показывают другим.</param>
 /// <param name="Namesake">В той же папке идёт другая сессия агента: у обеих вместо ветки — запрос, иначе строк не различить.</param>
@@ -154,7 +212,8 @@ internal static class Views
 	/// <param name="now">Момент снимка: от него «обновлено N мин назад» и «сброс через».</param>
 	/// <param name="levels">Пороги из настроек.</param>
 	/// <param name="hide">Показывают экран: почты аккаунтов и запросов сессий не видно.</param>
-	public static Vitals Build(IReadOnlyList<AgentState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false)
+	/// <param name="names">Свои имена аккаунтов: «агент/ключ» → имя.</param>
+	public static Vitals Build(IReadOnlyList<AgentState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false, IReadOnlyDictionary<string, string>? names = null)
 	{
 		// Значок и карточка по наведению — по худшему агенту; шапка окна — по выбранной вкладке.
 		var badge = Badge(agents, now, levels);
@@ -165,7 +224,7 @@ internal static class Views
 		return new(
 			badge.Text,
 			badge.Brush,
-			[.. agents.Select(state => Agent(state, now, levels, hooks.TryGetValue(state.Agent.Name, out var link) ? link : null, sessions, hide))],
+			[.. agents.Select(state => Agent(state, now, levels, hooks.TryGetValue(state.Agent.Name, out var link) ? link : null, sessions, hide, names))],
 			status.Text,
 			Brush(Level(status.Health)),
 			focus is null ? "" : Text.Live(focus),
@@ -209,21 +268,21 @@ internal static class Views
 
 	/// <param name="hooks">Подключены ли hooks агента; null — у агента их нет.</param>
 	/// <param name="hide">Показывают экран: почты аккаунта и запросов сессий не видно.</param>
-	internal static AgentView Agent(AgentState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null, bool hide = false)
+	/// <param name="names">Свои имена аккаунтов: «агент/ключ» → имя.</param>
+	internal static AgentView Agent(AgentState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null, bool hide = false, IReadOnlyDictionary<string, string>? names = null)
 	{
-		List<CardView> cards = [];
+		var cards = Cards(state.Snapshot, state.Windows(now), now, levels);
+		var accounts = state.Accounts;
+		var named = Names(state.Agent.Name, accounts, names ?? new Dictionary<string, string>(), hide);
 
-		if (state.Snapshot is { } snapshot)
-		{
-			cards.AddRange(state.Windows(now).Select(window => Card(window, now, levels)));
+		// Аккаунт в работе — первым, остальные — в порядке появления: строки не прыгают.
+		List<AccountView> rows = accounts.Count < 2 ? [] : [.. accounts
+			.OrderBy(account => account.Key == state.Key ? 0 : 1)
+			.Select(account => Account(state, account, named[account.Key], now, levels))];
 
-			if (snapshot.Extra is { } extra)
-			{
-				cards.Add(Extra(extra, levels));
-			}
-		}
-
-		var info = string.Join(" · ", new[] { state.Snapshot?.Plan, hide ? null : state.Snapshot?.Account }.Where(text => !string.IsNullOrEmpty(text)));
+		// Один аккаунт: «Аккаунт 1» ничего не говорит — под глазом своё имя или ничего.
+		var custom = state.Key is { } key ? names?.GetValueOrDefault($"{state.Agent.Name}/{key}") : null;
+		var info = rows.Count > 0 ? rows[0].Info : Join(hide ? custom : state.Snapshot?.Account ?? custom);
 
 		var badge = Badge([state], now, levels);
 		var target = hooks is null ? null : state.Agent.Hooks;
@@ -231,8 +290,9 @@ internal static class Views
 
 		return new(
 			state.Agent.Name,
+			state.Snapshot?.Plan,
 			info,
-			Text.Ago(state.Updated, now),
+			state.Pending ? Localization.Get("langUpdating") : Text.Ago(state.Updated, now),
 			cards,
 			state.Error is { } error ? Text.Error(error, state.Agent.Name) : "",
 			state.Agent.Dashboard,
@@ -255,8 +315,127 @@ internal static class Views
 				: "",
 			badge.Text,
 			badge.Brush,
-			badge.Health);
+			badge.Health,
+			rows,
+			Localization.Format("langAccounts", rows.Count),
+			Localization.Format("langAccountsFoot", Text.Login(state.Agent.Name)));
 	}
+
+	/// <summary>Агенты в порядке вкладок, ненайденные — в конце. Номер — место среди вкладок: Ctrl+N.</summary>
+	internal static IReadOnlyList<AgentRowView> AgentRows(IReadOnlyList<AgentState> agents)
+	{
+		List<string> tabs = [.. agents.Where(state => state.Visible).Select(state => state.Agent.Name)];
+
+		return [.. agents
+			.OrderBy(state => state.Installed ? 0 : 1)
+			.Select(state => new AgentRowView(
+				state.Agent.Name,
+				tabs.IndexOf(state.Agent.Name) is >= 0 and var place ? (place + 1).ToString(CultureInfo.InvariantCulture) : "",
+				Text.AgentLine(state),
+				state.Installed,
+				!state.Off))];
+	}
+
+	/// <summary>Аккаунты агента для окна «Агенты»: аккаунт в работе первым, как в карточке на вкладке.</summary>
+	internal static IReadOnlyList<AccountEditView> AccountEdits(AgentState state, IReadOnlyDictionary<string, string> custom, bool hide, DateTime now)
+	{
+		var plain = Names(state.Agent.Name, state.Accounts, new Dictionary<string, string>(), hide);
+
+		return [.. state.Accounts
+			.OrderBy(account => account.Key == state.Key ? 0 : 1)
+			.Select(account => new AccountEditView(
+				account.Key,
+				custom.GetValueOrDefault($"{state.Agent.Name}/{account.Key}") ?? "",
+				plain[account.Key],
+				hide ? null : account.Snapshot?.Account,
+				account.Snapshot?.Plan ?? "",
+				[.. account.Windows(now).Where(window => window.Limiting).Select(window => new AccountNumber(
+					Text.Title(window),
+					Math.Round(window.Used).ToString(CultureInfo.InvariantCulture) + "%",
+					Math.Round(window.Used) >= 100))],
+				Text.Age(account.Updated, now),
+				account.Key != state.Key && account.Availability(now) is (Availability.Busy, { } blocker) ? Text.Frees(blocker, now) : null,
+				account.Key == state.Key))];
+	}
+
+	/// <summary>Карточки квот снимка: окна на этот момент и доплата сверх тарифа.</summary>
+	private static List<CardView> Cards(Snapshot? snapshot, IReadOnlyList<QuotaWindow> windows, DateTime now, Thresholds levels)
+	{
+		List<CardView> cards = [.. windows.Select(window => Card(window, now, levels))];
+
+		if (snapshot?.Extra is { } extra)
+		{
+			cards.Add(Extra(extra, levels));
+		}
+
+		return cards;
+	}
+
+	private static AccountView Account(AgentState state, Account account, string name, DateTime now, Thresholds levels)
+	{
+		var inUse = account.Key == state.Key;
+		var pending = inUse && state.Pending;
+		var windows = account.Windows(now);
+		var (availability, blocker) = account.Availability(now);
+		var plan = account.Snapshot?.Plan;
+
+		return new(
+			account.Key,
+			name,
+			inUse,
+			false,
+			Join(plan, pending ? Localization.Get("langAgeUpdating") : Text.Age(account.Updated, now)),
+			inUse ? Localization.Get("langAccountInUse") : Text.AccountBadge(availability, blocker, now),
+			Brush(!inUse && availability == Availability.Busy ? "BadgeBad" : "BadgeGood"),
+			[.. windows.Where(window => window.Limiting).Select(window => Card(window, now, levels) with { Title = Text.Title(window) })],
+			Cards(account.Snapshot, windows, now, levels),
+			plan,
+			Join(name, Localization.Get(inUse ? "langInUse" : "langRemembered")),
+			pending ? Localization.Get("langUpdating") : Text.Ago(account.Updated, now),
+			inUse ? null : Localization.Format("langRememberedHint", name, Text.Login(state.Agent.Name)));
+	}
+
+	/// <summary>Как назвать аккаунты агента: без глаза — почта (у Copilot — логин), под глазом и без почты — своё имя,
+	/// а без него «Аккаунт N» по порядку появления. Одна почта у двух — с тарифом, совпал и он — ещё с номером.</summary>
+	/// <param name="custom">Свои имена: «агент/ключ» → имя.</param>
+	/// <returns>Ключ аккаунта → имя, в порядке появления.</returns>
+	internal static IReadOnlyDictionary<string, string> Names(string agent, IReadOnlyList<Account> accounts, IReadOnlyDictionary<string, string> custom, bool hide)
+	{
+		var plain = accounts.Select((account, index) => (
+			Account: account,
+			Own: custom.TryGetValue($"{agent}/{account.Key}", out var own) ? own : null,
+			Email: hide ? null : account.Snapshot?.Account,
+			Number: index + 1)).ToList();
+
+		Dictionary<string, string> names = [];
+
+		foreach (var item in plain)
+		{
+			names[item.Account.Key] = item switch
+			{
+				{ Email: { Length: > 0 } email } => Unique(email, item.Account, [.. plain.Where(other => other.Email == email).Select(other => other.Account)]),
+				{ Own: { } own } => own,
+				_ => Localization.Format("langAccountNumber", item.Number),
+			};
+		}
+
+		return names;
+	}
+
+	private static string Unique(string email, Account account, IReadOnlyList<Account> same)
+	{
+		if (same.Count == 1)
+		{
+			return email;
+		}
+
+		var plan = account.Snapshot?.Plan;
+		List<Account> twins = [.. same.Where(other => other.Snapshot?.Plan == plan)];
+
+		return twins.Count == 1 ? $"{email} · {plan}" : $"{email} · {plan} · {twins.IndexOf(account) + 1}";
+	}
+
+	private static string Join(params string?[] parts) => string.Join(" · ", parts.Where(part => !string.IsNullOrEmpty(part)));
 
 	public const double ChartHeight = 90;
 

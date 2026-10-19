@@ -28,6 +28,14 @@ public interface IAgent
 	/// <summary>Когда вход последний раз переписали: пока он тот же, после отказа спрашивать снова бесполезно.</summary>
 	DateTime SignedIn => Credentials is { } file ? File.GetLastWriteTimeUtc(file) : DateTime.MinValue;
 
+	/// <summary>Кто вошёл — ключ аккаунта по файлам на диске, без сети; null — агент сообщает это только ответом сервера.
+	/// Не бросает: нечитаемый файл — тоже null.</summary>
+	string? Identity() => null;
+
+	/// <summary>Аккаунт записан не во входе (у Claude — в ~/.claude.json): переписанный по ходу запроса вход может быть
+	/// уже чужим, хотя Identity() ещё прежняя. Где аккаунт — в самом входе, хватает сверки Identity().</summary>
+	bool IdentityApart => false;
+
 	/// <summary>Показывать агента только после первого удачного ответа: его признаки бывают и у тех, у кого его нет.</summary>
 	bool ConfirmFirst => false;
 

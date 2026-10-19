@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security;
 using System.Text.Json;
 using Avalonia.Controls;
@@ -14,8 +13,9 @@ using AgentVitals.Platform;
 
 namespace AgentVitals;
 
-/// <summary>Настройки внутри поповера: применяются сразу и сохраняются в config.json.</summary>
-internal partial class SettingsPanel : UserControl
+/// <summary>Вкладка «Настройки» окна AgentVitals: разделы слева, строки справа. Всё применяется сразу и сохраняется
+/// в config.json.</summary>
+internal partial class SettingsPage : UserControl
 {
 	// Пока переключатели выставляются по сохранённому, их события — не выбор человека.
 	private bool _loading;
@@ -23,13 +23,17 @@ internal partial class SettingsPanel : UserControl
 	// Последний ответ GitHub — от кнопки или автопроверки; null — ещё не спрашивали.
 	private Release? _release;
 
-	public SettingsPanel()
+	// Открытый раздел — Tag его строки слева: General, Notifications, System, About.
+	private string _section = "General";
+
+	public SettingsPage()
 	{
 		InitializeComponent();
-		Credits.Text = $"Developed by Dykalo Pavlo, 2026 · {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)}";
-	}
 
-	public event Action? Back;
+		// Не в разметке: событие пришло бы раньше, чем найдены строки разделов.
+		GeneralTab.IsChecked = true;
+		ShowTexts();
+	}
 
 	public event Action? Changed;
 
@@ -52,8 +56,8 @@ internal partial class SettingsPanel : UserControl
 		LowSoundToggle.IsChecked = Store.Current.LowSound;
 
 		// Звук играет только Windows (winmm).
-		WaitingSoundToggle.IsVisible = OperatingSystem.IsWindows();
-		LowSoundToggle.IsVisible = OperatingSystem.IsWindows();
+		WaitingSoundRow.IsVisible = OperatingSystem.IsWindows();
+		LowSoundRow.IsVisible = OperatingSystem.IsWindows();
 		AutostartCard.IsVisible = OperatingSystem.IsWindows();
 
 		if (OperatingSystem.IsWindows())
@@ -62,8 +66,7 @@ internal partial class SettingsPanel : UserControl
 		}
 
 		AutoUpdateToggle.IsChecked = Store.Current.AutoUpdate;
-		ShowRelease();
-		ShowHooks();
+		ShowTexts();
 		_loading = false;
 	}
 
@@ -89,8 +92,7 @@ internal partial class SettingsPanel : UserControl
 			Localization.Apply(code);
 			Store.Current.Language = Localization.Current;
 			Store.Save();
-			ShowHooks();
-			ShowRelease();
+			ShowTexts();
 			Changed?.Invoke();
 		}
 	}
@@ -232,13 +234,54 @@ internal partial class SettingsPanel : UserControl
 		ShowRelease(error);
 	}
 
-	private async void OnOpenReleases(object? sender, RoutedEventArgs e)
+	private void OnOpenReleases(object? sender, RoutedEventArgs e) => Launch(Updates.Releases);
+
+	private void OnOpenRepository(object? sender, RoutedEventArgs e) => Launch(Updates.Repository);
+
+	private void OnWhatsNew(object? sender, RoutedEventArgs e) => Launch($"{Updates.Releases}/tag/v{Updates.Current}");
+
+	private async void Launch(string address)
 	{
 		if (TopLevel.GetTopLevel(this) is { } top)
 		{
-			await top.Launcher.LaunchUriAsync(new Uri(Updates.Releases));
+			await top.Launcher.LaunchUriAsync(new Uri(address));
 		}
 	}
+
+	private void OnSection(object? sender, RoutedEventArgs e)
+	{
+		if (sender is RadioButton { IsChecked: true, Tag: string section })
+		{
+			_section = section;
+			ShowSection();
+		}
+	}
+
+	private void ShowSection()
+	{
+		GeneralRows.IsVisible = _section == "General";
+		NotificationsRows.IsVisible = _section == "Notifications";
+		SystemRows.IsVisible = _section == "System";
+		AboutView.IsVisible = _section == "About";
+
+		// У «О программе» заголовка нет: всё по центру.
+		SectionHead.IsVisible = _section != "About";
+		SectionTitle.Text = Localization.Get($"lang{_section}");
+		SectionHint.Text = Localization.Has($"lang{_section}Hint") ? Localization.Get($"lang{_section}Hint") : "";
+	}
+
+	/// <summary>Строки, которые собирает код: при смене языка — заново.</summary>
+	private void ShowTexts()
+	{
+		AboutNote.Text = Localization.Format("langAboutNote", Updates.Current);
+		AboutLine.Text = Localization.Format("langAboutLine", Updates.Current);
+		WhatsNew.Content = Localization.Format("langWhatsNew", Updates.Current);
+		ShowSection();
+		ShowRelease();
+	}
+
+	/// <summary>Узнали, есть ли новая версия: шестерня ставит метку.</summary>
+	public event Action<Release?>? ReleaseChanged;
 
 	private void ShowRelease(string? error = null)
 	{
@@ -253,70 +296,11 @@ internal partial class SettingsPanel : UserControl
 		var newer = error is null && _release?.State == UpdateState.Newer;
 		UpdateInstall.IsVisible = newer && OperatingSystem.IsWindows();
 		UpdateOpen.IsVisible = error is not null || (newer && !OperatingSystem.IsWindows());
+		UpdateLine.Classes.Set("newer", newer);
+
+		// В списке разделов: есть новая версия — у «Запуск и обновления», цветом.
+		SystemNote.Text = _release is { State: UpdateState.Newer } ? Localization.Format("langUpdateBadge", _release.Version) : Localization.Get("langSystemNote");
+		SystemNote.Classes.Set("newer", _release is { State: UpdateState.Newer });
+		ReleaseChanged?.Invoke(_release);
 	}
-
-	private void OnConnect(object? sender, RoutedEventArgs e)
-	{
-		if (sender is Control { DataContext: HookRow row })
-		{
-			ChangeHooks(row.Target, () => HookInstaller.Install(row.Target, Environment.ProcessPath!), $"hooks connected to {row.Title}");
-		}
-	}
-
-	private void OnDisconnect(object? sender, RoutedEventArgs e)
-	{
-		if (sender is Control { DataContext: HookRow row })
-		{
-			ChangeHooks(row.Target, () => HookInstaller.Uninstall(row.Target), $"hooks disconnected from {row.Title}");
-		}
-	}
-
-	private void OnBack(object? sender, RoutedEventArgs e) => Back?.Invoke();
-
-	private void OnExit(object? sender, RoutedEventArgs e) => ExitRequested?.Invoke();
-
-	private void ChangeHooks(HookTarget target, Action change, string journal)
-	{
-		try
-		{
-			change();
-			Journal.Add(journal);
-			ShowHooks();
-			Changed?.Invoke();
-		}
-		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException)
-		{
-			ShowHooks(target, exception.Message);
-		}
-	}
-
-	/// <param name="failed">Агент, которого не удалось подключить или отключить; error — почему.</param>
-	private void ShowHooks(HookTarget? failed = null, string? error = null) =>
-		HookRows.ItemsSource = AgentCatalog.Hooks
-			.Where(target => Directory.Exists(Path.GetDirectoryName(target.File)))
-			.Select(target => Row(target, target == failed ? error : null))
-			.ToList();
-
-	private static HookRow Row(HookTarget target, string? error)
-	{
-		var state = HookInstaller.Link(target, out var readError);
-		error ??= readError;
-
-		var text = error is not null
-			? Localization.Format("langHooksError", Path.GetFileName(target.File), error)
-			: Localization.Get(state switch
-			{
-				HookLink.Off => "langHooksOff",
-				HookLink.On => "langHooksOn",
-				HookLink.Moved => "langHooksMoved",
-			} + target.Agent);
-
-		return new(target, text, state != HookLink.On, state != HookLink.Off);
-	}
-}
-
-/// <summary>Строка агента в карточке «Живые сессии».</summary>
-internal sealed record HookRow(HookTarget Target, string State, bool CanConnect, bool CanDisconnect)
-{
-	public string Title => Target.Title;
 }

@@ -8,15 +8,31 @@ A tray companion for people who code with AI agents: how much of each agent's qu
 
 **Agent**:
 A coding assistant with its own CLI and sign-in whose quotas are watched: Claude Code, Codex, Gemini CLI, GitHub Copilot or Cursor. Gemini, Copilot and Cursor have no statistics and no live sessions.
-_Avoid_: tool, client, account, provider
+_Avoid_: tool, client, provider
 
 **Installed**:
 An agent is installed when there are signs of it on the computer — usually its sign-in file; installed agents are asked.
 _Avoid_: available, enabled
 
 **Visible**:
-An installed agent that has a tab: at once for most agents, but Copilot only after GitHub has confirmed it once, since its signs are on almost every computer with VS Code.
+An installed agent that has a tab: not switched off, and at once for most agents, but Copilot only after GitHub has confirmed it once, since its signs are on almost every computer with VS Code.
 _Avoid_: shown, enabled
+
+**Switched-off agent**:
+An installed agent the person chose not to watch on the Agents tab: it is not asked, has no tab, sends no toasts and does not colour the icon; its hooks stay in place.
+_Avoid_: hidden agent, disabled agent
+
+**Account**:
+One sign-in to an agent: for Claude a user in an organization, for Codex a ChatGPT account, for Copilot a GitHub login, for Cursor a Cursor user. An agent that does not tell who signed in has one unnamed account.
+_Avoid_: profile, user, login
+
+**Account in use**:
+The account whose sign-in the agent holds now; only it gets fresh data, and only it colours the icon and triggers quota toasts.
+_Avoid_: active account, current account
+
+**Remembered account**:
+An account the person signed in to before; it keeps the last data seen for it, and a toast tells when it is available again — when its last exhausted limiting window has reset.
+_Avoid_: saved account, inactive account
 
 **Plan**:
 What the person pays the agent's maker for, such as Pro or Max.

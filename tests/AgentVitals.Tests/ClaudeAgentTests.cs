@@ -198,4 +198,18 @@ public class ClaudeAgentTests
 	[InlineData("pro", "Pro")]
 	[InlineData(null, "")]
 	public void NamesItsPlanWithoutThePrefix(string? subscription, string expected) => Assert.Equal(expected, ClaudeAgent.Plan(subscription));
+
+	[Fact]
+	public void IdentityJoinsAccountAndOrganization() =>
+		Assert.Equal("a1/o1", ClaudeAgent.Identity("""{"oauthAccount":{"accountUuid":"a1","organizationUuid":"o1","emailAddress":"x@y.z"}}"""));
+
+	[Fact]
+	public void IdentityWithoutOrganizationIsAccount() =>
+		Assert.Equal("a1", ClaudeAgent.Identity("""{"oauthAccount":{"accountUuid":"a1"}}"""));
+
+	[Theory]
+	[InlineData("""{"oauthAccount":{"emailAddress":"x@y.z"}}""")]
+	[InlineData("{}")]
+	[InlineData("not json")]
+	public void IdentityWithoutAccountIsNull(string json) => Assert.Null(ClaudeAgent.Identity(json));
 }
