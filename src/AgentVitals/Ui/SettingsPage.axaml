@@ -342,6 +342,22 @@
                                         </Border>
                                     </Grid>
                                 </Border>
+                                <Border Name="NotchTurnRow" Classes="row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Classes="name" Text="{DynamicResource langNotchAgent}"/>
+                                            <TextBlock Classes="note" Text="{DynamicResource langNotchAgentHint}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
+                                            <StackPanel Name="NotchAgents" Orientation="Horizontal">
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="notchAgent" Tag="False"
+                                                             Content="{DynamicResource langNotchMain}" IsCheckedChanged="OnNotchAgents"/>
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="notchAgent" Tag="True"
+                                                             Content="{DynamicResource langNotchTurns}" IsCheckedChanged="OnNotchAgents"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
                                 <Border Name="ChipRow" Classes="row">
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                         <StackPanel VerticalAlignment="Center" Spacing="2">

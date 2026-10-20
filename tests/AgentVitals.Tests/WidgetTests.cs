@@ -81,6 +81,25 @@ public class WidgetTests
 	}
 
 	[Fact]
+	public void ClickWhileWaitingGoesToTheTerminal() // плашка говорит о ждущей сессии — щелчок сразу к её окну, без панели
+	{
+		Fake? made = null;
+		var host = new WidgetHost(kind => made = new Fake(kind) { Area = new(900, 0, 120, 4) });
+		var waiting = new Session("s", SessionState.Waiting, "Bash", "repo", null);
+		Session? chosen = null;
+		host.SessionChosen += session => chosen = session;
+		host.Render(View(WidgetState.Waiting) with { Waiting = waiting }, hide: false);
+		host.Apply(WidgetKind.Notch, default);
+		host.Tick(new PixelPoint(950, 2), _t);
+		host.Tick(new PixelPoint(950, 2), At(300));
+
+		made!.Click();
+
+		Assert.Same(waiting, chosen);
+		Assert.NotEqual(WidgetLook.Panel, made.Looks[^1].Look);
+	}
+
+	[Fact]
 	public void ClicksPassOnceTheCursorIsOff() // панель ещё видна полсекунды, но адресная строка под ней уже нажимается
 	{
 		Fake? made = null;

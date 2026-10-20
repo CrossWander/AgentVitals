@@ -1,7 +1,6 @@
 using System;
 using Avalonia;
 using Avalonia.Media.Transformation;
-using Avalonia.Threading;
 
 namespace AgentVitals;
 
@@ -12,15 +11,7 @@ internal partial class ChipWindow : WidgetWindow
 	// С полем под тень внутри окна — те же 12 точек от угла, что на макете.
 	private const double _margin = 4;
 
-	private static readonly TimeSpan _fade = TimeSpan.FromMilliseconds(180);
-
 	private bool _open;
-
-	// Чей агент сейчас на значке «по очереди»; null — значок не по очереди.
-	private string? _turn;
-
-	// Прежний агент гаснет: новый встанет, когда погаснет.
-	private bool _fading;
 
 	public ChipWindow()
 	{
@@ -49,7 +40,7 @@ internal partial class ChipWindow : WidgetWindow
 		Drawer.RenderTransform = TransformOperations.Parse(_open ? "translateY(0px)" : "translateY(8px)");
 	}
 
-	/// <summary>Надпись, агенты в ряд или один по очереди: «ждёт» и «закончил» — всегда надпись.</summary>
+	/// <summary>Все агенты в ряд или один — по очереди; «ждёт» и «закончил» — всегда надпись.</summary>
 	private void ShowAgents()
 	{
 		if (DataContext is not WidgetView view)
@@ -57,35 +48,9 @@ internal partial class ChipWindow : WidgetWindow
 			return;
 		}
 
-		var turns = view.ShowsAgents && Store.Current.ChipTurns;
-		var agent = turns ? view.Turn(DateTime.UtcNow) : null;
-
+		var turns = Store.Current.ChipTurns;
 		Row.IsVisible = view.ShowsAgents && !turns;
-		Turn.IsVisible = agent is not null;
-		Label.IsVisible = !Row.IsVisible && agent is null;
-
-		if (agent is null || _turn is null || agent.Name == _turn)
-		{
-			// Тот же агент — только свежие цифры; первый — сразу, без смены.
-			_turn = agent?.Name;
-
-			if (!_fading)
-			{
-				Turn.Content = agent;
-			}
-
-			return;
-		}
-
-		_turn = agent.Name;
-		_fading = true;
-		Turn.Opacity = 0;
-
-		DispatcherTimer.RunOnce(() =>
-		{
-			_fading = false;
-			Turn.Content = (DataContext as WidgetView)?.Turn(DateTime.UtcNow);
-			Turn.Opacity = 1;
-		}, _fade);
+		Single.IsVisible = !Row.IsVisible;
+		ShowFace(Single, turns ? view.Turned(DateTime.UtcNow) : view);
 	}
 }

@@ -158,6 +158,14 @@ internal sealed class WidgetHost(Func<WidgetKind, IWidgetWindow> make)
 		window.SessionChosen += session => SessionChosen?.Invoke(session);
 		window.Clicked += () =>
 		{
+			// Плашка говорит о ждущей сессии — щелчок сразу к её окну; панель — когда ждать некого.
+			if (_view?.Waiting is { } waiting)
+			{
+				SessionChosen?.Invoke(waiting);
+
+				return;
+			}
+
 			_hover.Click();
 
 			// Панель — сразу, не со следующим тиком.

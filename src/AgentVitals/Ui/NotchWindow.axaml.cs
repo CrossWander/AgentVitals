@@ -22,12 +22,35 @@ internal partial class NotchWindow : WidgetWindow
 		InitializeComponent();
 		Wire(Rows);
 		Opens(Top);
+		DataContextChanged += (_, _) => ShowAgent();
 
-		// Новый снимок — другая длина строки и число строк: размеры формы пересчитываются, когда привязки уже применены.
+		// Другие строки панели или другая надпись в шапке: размеры формы пересчитываются, когда привязки уже применены.
+		// Надпись меняется и после затухания — не по тику, а когда сменилась.
 		DataContextChanged += (_, _) => Dispatcher.UIThread.Post(Fit, DispatcherPriority.Loaded);
+		Top.DataContextChanged += (_, _) => Dispatcher.UIThread.Post(Fit, DispatcherPriority.Loaded);
 	}
 
 	protected override Visual Hit => Shape;
+
+	public override void Tick()
+	{
+		base.Tick();
+		ShowAgent();
+	}
+
+	/// <summary>Шапка — главный агент или по очереди, как в настройках. Полоска «по очереди» — цвет ближе всех к лимиту:
+	/// со сменой агента она не мигает.</summary>
+	private void ShowAgent()
+	{
+		if (DataContext is not WidgetView view)
+		{
+			return;
+		}
+
+		var turns = Store.Current.NotchTurns;
+		Strip.Background = turns ? view.LimitMeter ?? view.Meter : view.Meter;
+		ShowFace(Top, turns ? view.Turned(DateTime.UtcNow) : view);
+	}
 
 	protected override void Place(PixelRect anchor) => Placement.PlaceNotch(this, anchor);
 

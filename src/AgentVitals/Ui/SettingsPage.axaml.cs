@@ -56,6 +56,7 @@ internal partial class SettingsPage : UserControl
 		WidgetTab.IsVisible = OperatingSystem.IsWindows();
 		Select(WidgetKinds, Store.Current.Widget.ToString());
 		Select(NotchRests, Store.Current.NotchPill.ToString());
+		Select(NotchAgents, Store.Current.NotchTurns.ToString());
 		Select(ChipAgents, Store.Current.ChipTurns.ToString());
 		ShowWidgetOptions();
 		WaitingSoundToggle.IsChecked = Store.Current.WaitingSound;
@@ -197,6 +198,7 @@ internal partial class SettingsPage : UserControl
 	private void ShowWidgetOptions()
 	{
 		NotchRow.IsVisible = Store.Current.Widget == WidgetKind.Notch;
+		NotchTurnRow.IsVisible = NotchRow.IsVisible;
 		ChipRow.IsVisible = Store.Current.Widget == WidgetKind.Chip;
 		WidgetOptions.IsVisible = NotchRow.IsVisible || ChipRow.IsVisible;
 	}
@@ -206,6 +208,16 @@ internal partial class SettingsPage : UserControl
 		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string pill })
 		{
 			Store.Current.NotchPill = bool.Parse(pill);
+			Store.Save();
+			Changed?.Invoke();
+		}
+	}
+
+	private void OnNotchAgents(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string turns })
+		{
+			Store.Current.NotchTurns = bool.Parse(turns);
 			Store.Save();
 			Changed?.Invoke();
 		}

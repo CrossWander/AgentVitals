@@ -234,9 +234,13 @@
     <x:String x:Key="langWidgetDesktopNote">Under the windows, drag it with the mouse.</x:String>
     <x:String x:Key="langWidgetEye">With the eye on, the widget stays out of screenshots and screen sharing.</x:String>
     <x:String x:Key="langNotchRest">At rest</x:String>
-    <x:String x:Key="langNotchRestHint">A strip shows the quota colour; the pill shows every agent. Clicks pass through until the mouse stays.</x:String>
+    <x:String x:Key="langNotchRestHint">A strip shows the quota colour; the pill stays out whole. Clicks pass through until the mouse stays.</x:String>
     <x:String x:Key="langNotchStrip">Strip</x:String>
     <x:String x:Key="langNotchPill">Pill</x:String>
+    <x:String x:Key="langNotchAgent">Agent</x:String>
+    <x:String x:Key="langNotchAgentHint">Main: low on quota, else the one working, else the closest to its limit. In turn: each for 6 seconds. Every agent is in the panel by click.</x:String>
+    <x:String x:Key="langNotchMain">Main</x:String>
+    <x:String x:Key="langNotchTurns">In turn</x:String>
     <x:String x:Key="langChipAgents">Agents</x:String>
     <x:String x:Key="langChipAgentsHint">All in a row, or one at a time for 6 seconds with its reset time.</x:String>
     <x:String x:Key="langChipRow">All at once</x:String>

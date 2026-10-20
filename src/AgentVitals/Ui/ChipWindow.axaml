@@ -26,11 +26,23 @@
         <Border Name="Face" Classes="window" CornerRadius="17" Height="34" Padding="7,0,14,0" HorizontalAlignment="Right"
                 Cursor="Hand">
             <Panel>
-                <!-- «Ждёт», «закончил», нет агентов или данных — надпись -->
-                <StackPanel Name="Label" Orientation="Horizontal" Spacing="8">
-                    <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                <!-- Один агент — главный или по очереди; «ждёт», «закончил», нет агентов или данных — надпись -->
+                <StackPanel Name="Single" Orientation="Horizontal" Spacing="8">
+                    <StackPanel.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                        </Transitions>
+                    </StackPanel.Transitions>
+                    <Panel Width="22" Height="22" VerticalAlignment="Center" IsVisible="{Binding HasValue}">
+                        <Ellipse Stroke="{DynamicResource Track}" StrokeThickness="3"/>
+                        <Arc Stroke="{Binding Meter}" StrokeThickness="3" StrokeLineCap="Round"
+                             StartAngle="-90" SweepAngle="{Binding Sweep}"/>
+                    </Panel>
+                    <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center" Margin="4,0,0,0"
+                             IsVisible="{Binding !HasValue}"/>
                     <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"
                                MaxWidth="240" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Value}" FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding HasValue}"/>
                     <TextBlock Classes="faint" Text="{Binding Detail}" VerticalAlignment="Center"
                                MaxWidth="200" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
@@ -56,29 +68,6 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-
-                <!-- По очереди: один агент со временем до сброса; смена — гаснет и проявляется -->
-                <ContentControl Name="Turn" VerticalAlignment="Center">
-                    <ContentControl.Transitions>
-                        <Transitions>
-                            <DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="CubicEaseOut"/>
-                        </Transitions>
-                    </ContentControl.Transitions>
-                    <ContentControl.ContentTemplate>
-                        <DataTemplate x:DataType="local:WidgetAgent">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Panel Width="22" Height="22" VerticalAlignment="Center">
-                                    <Ellipse Stroke="{DynamicResource Track}" StrokeThickness="3"/>
-                                    <Arc Stroke="{Binding Meter}" StrokeThickness="3" StrokeLineCap="Round"
-                                         StartAngle="-90" SweepAngle="{Binding Sweep}"/>
-                                </Panel>
-                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding Value}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                <TextBlock Classes="faint" Text="{Binding Resets}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ContentControl.ContentTemplate>
-                </ContentControl>
             </Panel>
         </Border>
     </StackPanel>

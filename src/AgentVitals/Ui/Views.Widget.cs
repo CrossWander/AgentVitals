@@ -24,9 +24,11 @@ internal enum WidgetState
 /// <param name="Value">«46%» в режиме процентов; у «ждёт» и «закончил» и без данных — "".</param>
 /// <param name="Detail">Сброс «2 ч 50 мин»; у «ждёт» — «проект · инструмент», у «закончил» — проект; под глазом проектов нет.</param>
 /// <param name="Fill">Полоска и кольцо, 0–100, в режиме процентов.</param>
-/// <param name="Meter">Цвет квоты: полоска 4 px, кольцо, полоска плашки.</param>
+/// <param name="Meter">Цвет квоты показанного агента: полоска 4 px, кольцо, полоска плашки.</param>
 /// <param name="Dot">Цвет точки — общее состояние сессий, как у значка в трее.</param>
 /// <param name="Agent">Чья вкладка откроется щелчком; null — агентов нет.</param>
+/// <param name="LimitMeter">Цвет агента ближе всех к лимиту — полоска плашки «по очереди»: она не мигает со сменой агента.</param>
+/// <param name="Waiting">Сессия, о которой «ждёт разрешения»: щелчок по плашке — сразу её окно; null — никто не ждёт.</param>
 internal sealed record WidgetView(
 	WidgetState State,
 	string Title,
@@ -37,7 +39,9 @@ internal sealed record WidgetView(
 	IBrush Dot,
 	string? Agent,
 	IReadOnlyList<WidgetAgent> Agents,
-	IReadOnlyList<WidgetSession> Sessions)
+	IReadOnlyList<WidgetSession> Sessions,
+	IBrush? LimitMeter = null,
+	Session? Waiting = null)
 {
 	/// <summary>Плашка раскрывается сама; «мало квоты» и «работает» — только цветом полоски: квота бывает критичной
 	/// часами, и раскрытая плашка всё это время закрывала бы вкладки.</summary>
@@ -70,6 +74,11 @@ internal sealed record WidgetView(
 
 		return known.Count == 0 ? null : known[(int)(now.Ticks / _turn.Ticks % known.Count)];
 	}
+
+	/// <summary>Тот же снимок, но с агентом «по очереди» вместо главного; «ждёт», «закончил» и без данных — как есть.</summary>
+	public WidgetView Turned(DateTime now) => !Loud && Turn(now) is { } agent
+		? this with { Title = agent.Name, Value = agent.Value, Detail = agent.Resets, Fill = agent.Fill, Meter = agent.Meter, Agent = agent.Name }
+		: this;
 }
 
 /// <summary>Агент в панели и в колонке на рабочем столе.</summary>
@@ -95,16 +104,24 @@ internal static partial class Views
 	// Больше трёх строк сессий виджет не вмещает: остальные — в поповере.
 	private const int _widgetSessions = 3;
 
-	/// <summary>Что показать виджету: агента ближе всех к лимиту и его самое узкое окно, а важнее него — сессию, которая
-	/// ждёт человека или только что закончила ход.</summary>
+	/// <summary>Что показать виджету: главного агента и его самое узкое окно, а важнее него — сессию, которая ждёт
+	/// человека или только что закончила ход. Главный — с квотой «критично», иначе тот, чья сессия работает, иначе ближе
+	/// всех к лимиту.</summary>
 	/// <param name="agents">Видимые агенты в порядке вкладок.</param>
 	/// <param name="finished">Сессия, чей долгий ход закончился меньше 5 с назад; null — такой нет.</param>
 	/// <param name="hide">Показывают экран: проектов, веток и инструментов не видно.</param>
 	internal static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session> sessions, Session? finished, DateTime now, Thresholds levels, PercentMode percent, bool hide)
 	{
 		// Правило цвета значка в трее: самое узкое окно; при равенстве — первая вкладка (MaxBy берёт первого).
-		var top = agents.Where(state => state.Tightest(now) is not null).MaxBy(state => state.Tightest(now));
-		var window = top is null ? null : Quota.Bottleneck(top.Windows(now));
+		var known = agents.Where(state => state.Tightest(now) is not null).ToList();
+		var top = known.MaxBy(state => state.Tightest(now));
+		var limit = top is null ? Health.Unknown : Quota.Rate(top.Tightest(now)!.Value, levels);
+
+		// Работающий агент без данных не в счёт, как и для значка: показать у него нечего.
+		var working = sessions.Where(session => session.State == SessionState.Working).Select(session => session.Agent).ToHashSet();
+		var main = limit == Health.Critical ? top : known.Where(state => working.Contains(state.Agent.Name)).MaxBy(state => state.Tightest(now)) ?? top;
+
+		var window = main is null ? null : Quota.Bottleneck(main.Windows(now));
 		var health = window is null ? Health.Unknown : Quota.Rate(window.Used, levels);
 
 		List<string> order = [.. agents.Select(state => state.Agent.Name)];
@@ -124,7 +141,7 @@ internal static partial class Views
 			WidgetState.Waiting => Localization.Format("langToastWaiting", waiting!.Agent),
 			WidgetState.Finished => Localization.Format("langToastDone", finished!.Agent),
 			_ when agents.Count == 0 => Localization.Get("langNoAgents"),
-			_ => top?.Agent.Name ?? Localization.Get("langWidgetNoData"),
+			_ => main?.Agent.Name ?? Localization.Get("langWidgetNoData"),
 		};
 
 		var detail = state switch
@@ -144,7 +161,7 @@ internal static partial class Views
 			window is null ? 0 : Math.Min(Shown(window.Used, percent), 100),
 			Brush("Meter" + Level(health)),
 			Brush(Dot(SessionWatcher.Overall(sessions))),
-			(waiting ?? finished)?.Agent ?? top?.Agent.Name ?? agents.FirstOrDefault()?.Agent.Name,
+			(waiting ?? finished)?.Agent ?? main?.Agent.Name ?? agents.FirstOrDefault()?.Agent.Name,
 			[.. agents.Select(agent => WidgetRow(agent, now, levels, percent))],
 			[.. sessions
 				.OrderByDescending(session => session.State)
@@ -154,7 +171,9 @@ internal static partial class Views
 					hide ? "" : session.Branch ?? "",
 					Text.Session(session, now),
 					Brush(Dot(session.State)),
-					session))]);
+					session))],
+			Brush("Meter" + Level(limit)),
+			waiting);
 	}
 
 	private static WidgetAgent WidgetRow(AgentState agent, DateTime now, Thresholds levels, PercentMode percent)

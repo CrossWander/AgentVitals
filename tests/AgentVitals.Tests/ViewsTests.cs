@@ -252,6 +252,34 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void WorkingAgentIsTheMainOne()
+	{
+		var codex = new Session("s", SessionState.Working, "Edit", "repo", null) { Agent = "Codex" };
+
+		var view = Widget([Found("Claude", snapshot: Quotas(80)), Found("Codex", snapshot: Quotas(10))], [codex]);
+
+		Assert.Equal(("Codex", "10%", "Codex"), (view.Title, view.Value, view.Agent));
+	}
+
+	[Fact]
+	public void CriticalQuotaBeatsTheWorkingAgent()
+	{
+		var codex = new Session("s", SessionState.Working, "Edit", "repo", null) { Agent = "Codex" };
+
+		var view = Widget([Found("Claude", snapshot: Quotas(95)), Found("Codex", snapshot: Quotas(10))], [codex]);
+
+		Assert.Equal((WidgetState.Low, "Claude"), (view.State, view.Title));
+	}
+
+	[Fact]
+	public void WaitingSessionIsKnownForTheClick()
+	{
+		var waiting = new Session("s", SessionState.Waiting, "Bash", "repo", null);
+
+		Assert.Same(waiting, Widget([Found("Claude", snapshot: Quotas(40))], [waiting]).Waiting);
+	}
+
+	[Fact]
 	public void WidgetTieGoesToTheFirstTab() =>
 		Assert.Equal("Claude", Widget([Found("Claude", snapshot: Quotas(50)), Found("Codex", snapshot: Quotas(50))]).Title);
 
@@ -349,6 +377,25 @@ public class ViewsTests
 
 	[Fact]
 	public void NoTurnWithoutData() => Assert.Null(Widget([Found("Claude")]).Turn(_now));
+
+	[Fact]
+	public void TurnedViewShowsTheAgentOfItsTurn()
+	{
+		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Codex", snapshot: Quotas(10))]);
+
+		var shown = new[] { view.Turned(_now), view.Turned(_now.AddSeconds(6)) };
+
+		Assert.Equal(new[] { "Claude", "Codex" }, shown.Select(turned => turned.Title).Order());
+		Assert.All(shown, turned => Assert.Equal(view.Agents.Single(agent => agent.Name == turned.Title).Value, turned.Value));
+	}
+
+	[Fact]
+	public void WaitingDoesNotTurn()
+	{
+		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Codex", snapshot: Quotas(10))], [new Session("s", SessionState.Waiting, "Bash", "repo", null)]);
+
+		Assert.Same(view, view.Turned(_now.AddSeconds(6)));
+	}
 
 	private static Snapshot Quotas(double used) => new("Max", null, [new(WindowKind.Session, null, used, _now.AddHours(3), Limiting: true)], null);
 

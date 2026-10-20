@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using AgentVitals.Core.Sessions;
 using AgentVitals.Platform;
 
@@ -11,6 +12,8 @@ namespace AgentVitals;
 /// под ним, пока мышь не задержится над виджетом. Прячется, пока идёт полноэкранное приложение.</summary>
 internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 {
+	private static readonly TimeSpan _fade = TimeSpan.FromMilliseconds(180);
+
 	private PixelRect _anchor;
 	private PixelRect? _work;
 	private WidgetLook? _look;
@@ -19,6 +22,11 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 
 	// Открыто хозяином: спрятанное на время полноэкранного приложения возвращается, закрытое — нет.
 	private bool _open;
+
+	// Чей снимок в шапке — по заголовку; пока прежний гаснет, свежий ждёт в _next.
+	private string? _face;
+	private WidgetView? _next;
+	private bool _fading;
 
 	protected WidgetWindow() => Opened += (_, _) => ApplyStyle();
 
@@ -126,6 +134,37 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 			Clicked?.Invoke();
 		}
 	};
+
+	/// <summary>Снимок в шапке: тот же агент — свежие цифры сразу; другой — прежний гаснет, новый проявляется. Переход
+	/// Opacity — у части в разметке.</summary>
+	protected void ShowFace(Control face, WidgetView view)
+	{
+		var other = _face is not null && view.Title != _face;
+		_face = view.Title;
+		_next = view;
+
+		if (_fading)
+		{
+			return;
+		}
+
+		if (!other)
+		{
+			face.DataContext = view;
+
+			return;
+		}
+
+		_fading = true;
+		face.Opacity = 0;
+
+		DispatcherTimer.RunOnce(() =>
+		{
+			_fading = false;
+			face.DataContext = _next;
+			face.Opacity = 1;
+		}, _fade);
+	}
 
 	protected void Wire(WidgetPanel rows)
 	{
