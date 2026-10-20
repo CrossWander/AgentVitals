@@ -62,6 +62,29 @@ internal sealed class TrayApp
 		Interval = TimeSpan.FromMilliseconds(120),
 	};
 
+	// Окна виджета мышь не замечают — щелчки проходят насквозь: пока виджет включён, курсор опрашивается, как у карточки.
+	private readonly DispatcherTimer _widgetTimer = new()
+	{
+		Interval = TimeSpan.FromMilliseconds(150),
+	};
+
+	// «Закончил» на виджете держится столько же, сколько взгляд до него доходит.
+	private readonly DispatcherTimer _finishedTimer = new()
+	{
+		Interval = TimeSpan.FromSeconds(5),
+	};
+
+	private readonly WidgetHost _widget = new(kind => kind switch
+	{
+		WidgetKind.Notch => new NotchWindow(),
+		WidgetKind.Chip => new ChipWindow(),
+		WidgetKind.Desktop => new DeskWindow(),
+		WidgetKind.Off => throw new ArgumentOutOfRangeException(nameof(kind)),
+	});
+
+	// Сессия, чей долгий ход только что закончился: 5 с её видно на плашке и значке; null — такой нет.
+	private Session? _finished;
+
 	private Tray? _tray;
 	private IReadOnlyList<Session> _sessions = [];
 	private bool _darkTaskbar = true;
@@ -98,6 +121,17 @@ internal sealed class TrayApp
 		_updates.Tick += (_, _) => CheckUpdatesIfDue();
 		_frames.Tick += (_, _) => NextFrame();
 		Application.Current!.ActualThemeVariantChanged += (_, _) => Render();
+
+		_widget.AgentChosen += agent => OpenPopover(agent);
+		_widget.SessionChosen += GoTo;
+		_widgetTimer.Tick += (_, _) => WidgetTick();
+		_finishedTimer.Tick += (_, _) =>
+		{
+			_finishedTimer.Stop();
+			_finished = null;
+			Render();
+		};
+		_popover.Screens.Changed += (_, _) => _widget.Replace(Anchor());
 
 		if (OperatingSystem.IsWindows())
 		{
@@ -239,6 +273,28 @@ internal sealed class TrayApp
 		_popover.Render(vitals);
 		_card.Render(vitals);
 		ShowIcon();
+		ShowWidget();
+	}
+
+	/// <summary>Виджет из настроек — тем же снимком, что окна: без своих запросов к серверам.</summary>
+	private void ShowWidget()
+	{
+		var kind = OperatingSystem.IsWindows() ? Store.Current.Widget : WidgetKind.Off;
+		var view = Views.Widget([.. _poller.Visible], _sessions, _finished, DateTime.UtcNow, Store.Current.Thresholds, Store.Current.Percent, Store.Current.Private);
+
+		// Снимок до окна: новое окно сразу своего размера.
+		_widget.Render(view, Store.Current.Private);
+		_widget.Apply(kind, Anchor());
+		_widgetTimer.IsEnabled = kind != WidgetKind.Off;
+		_toast.Avoid = _widget.Chip;
+	}
+
+	private void WidgetTick()
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			_widget.Tick(Tray.Cursor(), DateTime.UtcNow);
+		}
 	}
 
 	/// <summary>Свежий снимок: «обновлено N мин назад» и «сброс через» сдвигаются со временем.</summary>
@@ -349,24 +405,34 @@ internal sealed class TrayApp
 		}
 	}
 
-	/// <summary>Тост, когда агент закончил долгий ход или ждёт разрешения, — пока человек в другом окне.</summary>
+	/// <summary>Агент закончил долгий ход или ждёт разрешения: тост, пока человек в другом окне, и «закончил» на виджете.</summary>
 	private void NotifySessions(IReadOnlyList<Session> before, IReadOnlyList<Session> after)
 	{
+		if (SessionAlarm.Check(before, after, TimeSpan.FromMinutes(Store.Current.TurnMinutes)) is not { } alert)
+		{
+			return;
+		}
+
+		// Виджет говорит о конце хода и при выключенных тостах: тот выключатель — только о тостах.
+		if (!alert.Waiting)
+		{
+			_finished = alert.Session;
+			_finishedTimer.Stop();
+			_finishedTimer.Start();
+		}
+
 		if (!Store.Current.SessionToasts)
 		{
 			return;
 		}
 
-		if (SessionAlarm.Check(before, after, TimeSpan.FromMinutes(Store.Current.TurnMinutes)) is { } alert)
-		{
-			var (title, message) = Text.SessionToast(alert);
-			_toast.Say(message, Anchor(), title, Views.Brush(alert.Waiting ? "Blue" : "Good"), Toast.Long, () => GoTo(alert.Session));
-			Journal.Add($"toast: {title}: {message}");
+		var (title, message) = Text.SessionToast(alert);
+		_toast.Say(message, Anchor(), title, Views.Brush(alert.Waiting ? "Blue" : "Good"), Toast.Long, () => GoTo(alert.Session));
+		Journal.Add($"toast: {title}: {message}");
 
-			if (SessionAlarm.Chimes(alert, Store.Current.WaitingSound, alert.Session is { Pid: { } pid, Cwd: { } cwd } && HostWindow.InFront(pid, cwd)))
-			{
-				Sound.Play(Sound.Chime);
-			}
+		if (SessionAlarm.Chimes(alert, Store.Current.WaitingSound, alert.Session is { Pid: { } pid, Cwd: { } cwd } && HostWindow.InFront(pid, cwd)))
+		{
+			Sound.Play(Sound.Chime);
 		}
 	}
 
@@ -476,7 +542,7 @@ internal sealed class TrayApp
 		_popover.Render(Gather());
 		_popover.Open(Anchor());
 
-		if (agent is not null && account is not null)
+		if (agent is not null)
 		{
 			_popover.Choose(agent, account);
 		}

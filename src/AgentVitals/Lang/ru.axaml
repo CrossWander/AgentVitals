@@ -233,6 +233,7 @@
     <x:String x:Key="langWidgetDesktop">На рабочем столе</x:String>
     <x:String x:Key="langWidgetDesktopNote">Под окнами, перетаскивается мышью.</x:String>
     <x:String x:Key="langWidgetEye">При включённом глазе виджет не попадает на снимки и в демонстрацию экрана.</x:String>
+    <x:String x:Key="langWidgetQuotas">КВОТЫ</x:String>
     <x:String x:Key="langSystem">Запуск и обновления</x:String>
     <x:String x:Key="langSystemNote">автозапуск, версии</x:String>
     <x:String x:Key="langSystemHint">Автозапуск и версии программы.</x:String>

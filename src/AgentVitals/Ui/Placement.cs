@@ -100,6 +100,28 @@ internal static class Placement
 		}
 	}
 
+	/// <summary>Плашка — по центру верхнего края рабочей области экрана со значком трея.</summary>
+	public static void PlaceNotch(Window window, PixelRect icon)
+	{
+		if (Screen(window, icon) is { } screen)
+		{
+			window.Position = Notch(screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling));
+		}
+	}
+
+	/// <summary>Значок над треем — в углу рабочей области у значка трея.</summary>
+	/// <param name="margin">Отступ от угла в точках интерфейса.</param>
+	public static void PlaceChip(Window window, PixelRect icon, double margin)
+	{
+		if (Screen(window, icon) is { } screen)
+		{
+			window.Position = Chip(icon, screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling), (int)Math.Round(margin * screen.Scaling));
+		}
+	}
+
+	/// <summary>Рабочая область экрана со значком: переехала панель задач — плашка и значок встают заново.</summary>
+	public static PixelRect? Work(Window window, PixelRect icon) => Screen(window, icon)?.WorkingArea;
+
 	private static Avalonia.Platform.Screen? Screen(Window window, PixelRect icon) =>
 		window.Screens.ScreenFromPoint(icon.Center) ?? window.Screens.Primary;
 }

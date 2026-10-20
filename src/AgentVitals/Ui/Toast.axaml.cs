@@ -91,7 +91,14 @@ internal partial class Toast : TrayWindow
 		_life.Start();
 	}
 
-	protected override void Place(PixelRect anchor) => Placement.PlaceInCorner(this, anchor, _margin);
+	/// <summary>Значок над треем на экране — тост встаёт над ним, а не на него; null — значка нет.</summary>
+	public PixelRect? Avoid { get; set; }
+
+	protected override void Place(PixelRect anchor)
+	{
+		Placement.PlaceInCorner(this, anchor, _margin);
+		Position = Placement.Above(Position, PixelSize.FromSize(ClientSize, RenderScaling), Avoid, (int)Math.Round(_margin * RenderScaling));
+	}
 
 	// Показ без активации не меняет порядок окон: открытое окно программы, активное, осталось бы поверх тоста.
 	private void Raise()

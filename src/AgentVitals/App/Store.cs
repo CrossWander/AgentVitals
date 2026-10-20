@@ -41,6 +41,11 @@ internal static class Store
 		// Виджет на экране кроме значка в трее; по умолчанию его нет — как до 1.5.0.
 		public WidgetKind Widget { get; set; } = WidgetKind.Off;
 
+		// Где оставили виджет на рабочем столе — верхний левый угол в точках экрана; null — не двигали.
+		public int? WidgetX { get; set; }
+
+		public int? WidgetY { get; set; }
+
 		// Пороги квоты, %: с них тосты «важно» и «критично», жёлтый и красный.
 		public int ImportantAt { get; set; } = 75;
 

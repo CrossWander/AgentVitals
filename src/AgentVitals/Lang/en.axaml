@@ -233,6 +233,7 @@
     <x:String x:Key="langWidgetDesktop">On the desktop</x:String>
     <x:String x:Key="langWidgetDesktopNote">Under the windows, drag it with the mouse.</x:String>
     <x:String x:Key="langWidgetEye">With the eye on, the widget stays out of screenshots and screen sharing.</x:String>
+    <x:String x:Key="langWidgetQuotas">QUOTAS</x:String>
     <x:String x:Key="langSystem">Startup and updates</x:String>
     <x:String x:Key="langSystemNote">autostart, versions</x:String>
     <x:String x:Key="langSystemHint">Autostart and app versions.</x:String>

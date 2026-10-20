@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:AgentVitals"
+             x:Class="AgentVitals.WidgetPanel"
+             x:ClassModifier="internal"
+             x:DataType="local:WidgetView">
+
+    <!-- Раскрытая панель плашки и значка над треем: агенты и до трёх сессий, строки нажимаются, кнопок нет -->
+    <UserControl.Styles>
+        <Style Selector="Border.line">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Border.line:pointerover">
+            <Setter Property="Background" Value="{DynamicResource CardHover}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="6">
+        <!-- Подписи окон разной длины: общая ширина столбца — полоски строк одной длины -->
+        <ItemsControl ItemsSource="{Binding Agents}" Grid.IsSharedSizeScope="True">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:WidgetAgent">
+                    <Border Classes="line" PointerReleased="OnAgent">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="64"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Window"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <ProgressBar Grid.Column="1" Theme="{StaticResource Meter}" Height="6" Value="{Binding Fill}"
+                                         Foreground="{Binding Meter}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="{Binding Value}" FontWeight="SemiBold" TextAlignment="Right"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Classes="faint" Text="{Binding Window}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Border Height="1" Margin="6,0" Background="{DynamicResource CardLine}" IsVisible="{Binding HasSessions}"/>
+
+        <ItemsControl ItemsSource="{Binding Sessions}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:WidgetSession">
+                    <Border Classes="line" PointerReleased="OnSession">
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
+                            <Ellipse Width="7" Height="7" Fill="{Binding Dot}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"
+                                       MaxWidth="160" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="2" Classes="faint" Text="{Binding Branch}" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="3" Classes="faint" Text="{Binding State}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

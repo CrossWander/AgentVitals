@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AgentVitals"
+        x:Class="AgentVitals.ChipWindow"
+        x:ClassModifier="internal"
+        x:DataType="local:WidgetView"
+        Title="AgentVitals"
+        SizeToContent="WidthAndHeight" CanResize="False"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True" ShowActivated="False">
+
+    <!-- Значок над треем: кольцо квоты, агент и время до сброса; панель раскрывается над ним. Поле — под тень -->
+    <StackPanel Name="Body" Margin="8" Spacing="8">
+        <Border Name="Drawer" Classes="window" CornerRadius="16" Padding="10" Width="360" IsVisible="False"
+                HorizontalAlignment="Right">
+            <local:WidgetPanel Name="Rows"/>
+        </Border>
+
+        <Border Classes="window" CornerRadius="17" Height="34" Padding="7,0,14,0" HorizontalAlignment="Right">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Panel Width="22" Height="22" VerticalAlignment="Center" IsVisible="{Binding HasValue}">
+                    <Ellipse Stroke="{DynamicResource Track}" StrokeThickness="3"/>
+                    <Arc Stroke="{Binding Meter}" StrokeThickness="3" StrokeLineCap="Round"
+                         StartAngle="-90" SweepAngle="{Binding Sweep}"/>
+                </Panel>
+                <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center" IsVisible="{Binding !HasValue}"/>
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"
+                           MaxWidth="240" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="{Binding Value}" FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding HasValue}"/>
+                <TextBlock Classes="faint" Text="{Binding Detail}" VerticalAlignment="Center"
+                           MaxWidth="200" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</Window>

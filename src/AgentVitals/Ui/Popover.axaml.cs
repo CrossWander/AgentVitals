@@ -170,11 +170,15 @@ internal partial class Popover : TrayWindow
 		ShowAgent();
 	}
 
-	/// <summary>Щелчок по тосту о запомненном аккаунте: его вкладка, и сверху — он.</summary>
-	public void Choose(string agent, string account)
+	/// <summary>Щелчок по тосту о запомненном аккаунте — его вкладка, и сверху он; по агенту в виджете — только вкладка.</summary>
+	public void Choose(string agent, string? account = null)
 	{
 		_selected = agent;
-		_accounts[agent] = account;
+
+		if (account is not null)
+		{
+			_accounts[agent] = account;
+		}
 
 		foreach (var tab in Tabs.Children.OfType<RadioButton>())
 		{

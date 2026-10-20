@@ -1,0 +1,66 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AgentVitals"
+        x:Class="AgentVitals.NotchWindow"
+        x:ClassModifier="internal"
+        x:DataType="local:WidgetView"
+        Title="AgentVitals"
+        SizeToContent="WidthAndHeight" CanResize="False"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True" ShowActivated="False"
+        RequestedThemeVariant="Dark">
+
+    <!-- Плашка вверху по центру: всегда чёрная, поэтому тёмная тема и для текста, и для панели.
+         Окно — размером с панель и прозрачное; внутри чёрная форма плавно растёт из полоски 4 px в плашку и в панель:
+         размер окна скачками не анимируется. Содержимое лежит в полную ширину, форма его обрезает и открывает -->
+    <Panel Name="Frame">
+        <Border Name="Shape" Width="120" Height="4" Background="#000000" CornerRadius="0,0,2,2" ClipToBounds="True"
+                HorizontalAlignment="Center" VerticalAlignment="Top">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Width" Duration="0:0:0.26" Easing="CubicEaseOut"/>
+                    <DoubleTransition Property="Height" Duration="0:0:0.26" Easing="CubicEaseOut"/>
+                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.26" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Border.Transitions>
+
+            <Panel>
+                <!-- В покое форма — цветная полоска; раскрываясь, она остаётся кромкой сверху и гаснет, а не заливает всю плашку -->
+                <Border Name="Strip" Height="4" VerticalAlignment="Top" Background="{Binding Meter}">
+                    <Border.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                        </Transitions>
+                    </Border.Transitions>
+                </Border>
+
+                <StackPanel Name="Body" Opacity="0" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <StackPanel.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                        </Transitions>
+                    </StackPanel.Transitions>
+
+                    <StackPanel Name="Header" Orientation="Horizontal" Height="30" Spacing="8" HorizontalAlignment="Center">
+                        <Ellipse Width="7" Height="7" Fill="{Binding Dot}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   MaxWidth="280" TextTrimming="CharacterEllipsis"/>
+                        <ProgressBar Theme="{StaticResource Meter}" Width="52" Height="4" Value="{Binding Fill}"
+                                     Foreground="{Binding Meter}" VerticalAlignment="Center" IsVisible="{Binding HasValue}"/>
+                        <TextBlock Text="{Binding Value}" FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding HasValue}"/>
+                        <TextBlock Classes="faint" Text="{Binding Detail}" VerticalAlignment="Center"
+                                   MaxWidth="240" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+
+                    <local:WidgetPanel Name="Rows" Width="400" Opacity="0" Margin="0,2,0,10" HorizontalAlignment="Center">
+                        <local:WidgetPanel.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.22" Easing="CubicEaseOut"/>
+                            </Transitions>
+                        </local:WidgetPanel.Transitions>
+                    </local:WidgetPanel>
+                </StackPanel>
+            </Panel>
+        </Border>
+    </Panel>
+</Window>

@@ -42,6 +42,14 @@ internal sealed record WidgetView(
 	/// <summary>Плашка раскрывается сама; «мало квоты» и «работает» — только цветом полоски: квота бывает критичной
 	/// часами, и раскрытая плашка всё это время закрывала бы вкладки.</summary>
 	public bool Loud => State is WidgetState.Waiting or WidgetState.Finished;
+
+	/// <summary>Дуга кольца у значка над треем, в градусах.</summary>
+	public double Sweep => Fill * 3.6;
+
+	/// <summary>Есть процент — есть и полоска: у «ждёт» и «закончил» её нет.</summary>
+	public bool HasValue => Value.Length > 0;
+
+	public bool HasSessions => Sessions.Count > 0;
 }
 
 /// <summary>Агент в панели и в колонке на рабочем столе.</summary>
