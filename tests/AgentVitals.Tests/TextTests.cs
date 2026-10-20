@@ -59,6 +59,16 @@ public class TextTests
 	}
 
 	[Fact]
+	public void ShortResetIsTimeLeftWithinADay()
+	{
+		var now = System.DateTime.UtcNow;
+
+		Assert.Equal("langHoursMinutes", Text.Short(now.AddHours(2.8), now));
+		Assert.Equal("langResetDone", Text.Short(now.AddMinutes(-1), now));
+		Assert.Equal("", Text.Short(null, now));
+	}
+
+	[Fact]
 	public void IdleShowsHowLongItRests()
 	{
 		var now = System.DateTime.UtcNow;

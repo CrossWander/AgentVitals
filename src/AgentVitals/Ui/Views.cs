@@ -211,7 +211,7 @@ internal sealed record Vitals(
 }
 
 /// <summary>Собирает представления из данных опроса и сессий. Кисти — из палитры текущей темы.</summary>
-internal static class Views
+internal static partial class Views
 {
 	/// <param name="agents">Установленные агенты.</param>
 	/// <param name="hooks">Подключены ли hooks — по агентам, у которых они есть.</param>

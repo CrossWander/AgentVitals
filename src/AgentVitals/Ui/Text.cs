@@ -164,7 +164,22 @@ internal static class Text
 			: Localization.Format("langAccountFreesIn", title, Span(left));
 	}
 
-	private static string Lower(string text) => text.Length > 0 ? char.ToLower(text[0], Localization.Culture) + text[1..] : text;
+	internal static string Lower(string text) => text.Length > 0 ? char.ToLower(text[0], Localization.Culture) + text[1..] : text;
+
+	/// <summary>Сброс коротко, для виджета: «2 ч 50 мин», дальше суток — «пн 10:00», дальше недели — «1 нояб».</summary>
+	public static string Short(DateTimeOffset? resets, DateTime now)
+	{
+		if (resets is not { } at)
+		{
+			return "";
+		}
+
+		var left = at.UtcDateTime - now;
+
+		return left <= TimeSpan.Zero ? Localization.Get("langResetDone")
+			: left > TimeSpan.FromDays(1) ? at.LocalDateTime.ToString(ResetPattern(left), Localization.Culture)
+			: Span(left);
+	}
 
 	/// <summary>Как переключиться на другой аккаунт агента: у Claude — «/login в Claude Code», у прочих — своя строка или общая.</summary>
 	/// <summary>Как сменить аккаунт агента — для подвала таблицы аккаунтов; `команда` в обратных кавычках.</summary>

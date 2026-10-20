@@ -42,6 +42,7 @@
     <x:String x:Key="langHealthUnknown">НЕТ ДАННЫХ</x:String>
     <x:String x:Key="langHealthExhausted">ИСЧЕРПАНО</x:String>
     <x:String x:Key="langNoAgents">Агенты не найдены. Установи Claude Code, Codex, Gemini CLI или Cursor; для Copilot войди в GitHub через git.</x:String>
+    <x:String x:Key="langWidgetNoData">нет данных</x:String>
     <x:String x:Key="langErrorExpired">Вход истёк. Данные вернутся после первого запроса в {0}</x:String>
     <x:String x:Key="langErrorMissing">Нет входа в {1}. Войдите в {1} — и данные появятся</x:String>
     <x:String x:Key="langErrorMissingCopilot">Нет входа GitHub. Войдите через git — например, git fetch в любом репозитории с GitHub — и данные появятся</x:String>

@@ -244,6 +244,86 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void WidgetShowsTheAgentClosestToItsLimit()
+	{
+		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Codex", snapshot: Quotas(80))]);
+
+		Assert.Equal((WidgetState.Idle, "Codex", "80%", "Codex"), (view.State, view.Title, view.Value, view.Agent));
+	}
+
+	[Fact]
+	public void WidgetTieGoesToTheFirstTab() =>
+		Assert.Equal("Claude", Widget([Found("Claude", snapshot: Quotas(50)), Found("Codex", snapshot: Quotas(50))]).Title);
+
+	[Fact]
+	public void WaitingBeatsEverything() // и критичная квота, и только что законченный ход
+	{
+		var waiting = new Session("w", SessionState.Waiting, "Bash", "repo", "main", Agent: "Codex");
+		var view = Widget([Found("Claude", snapshot: Quotas(95)), Found("Codex", snapshot: Quotas(10))], [waiting], finished: waiting with { Id = "f", State = SessionState.Idle });
+
+		Assert.Equal((WidgetState.Waiting, "langToastWaiting", "", "repo · Bash", "Codex", true), (view.State, view.Title, view.Value, view.Detail, view.Agent, view.Loud));
+	}
+
+	[Fact]
+	public void FinishedComesBeforeLowQuota()
+	{
+		var done = new Session("f", SessionState.Idle, null, "repo", "main");
+		var view = Widget([Found("Claude", snapshot: Quotas(95))], [done], done);
+
+		Assert.Equal((WidgetState.Finished, "langToastDone", "repo", true), (view.State, view.Title, view.Detail, view.Loud));
+	}
+
+	[Fact]
+	public void LowQuotaDoesNotOpenTheNotch() // критично часами — плашка закрывала бы вкладки
+	{
+		var view = Widget([Found("Claude", snapshot: Quotas(92))]);
+
+		Assert.Equal((WidgetState.Low, false), (view.State, view.Loud));
+	}
+
+	[Fact]
+	public void WorkingSessionShowsAsWorking() =>
+		Assert.Equal(WidgetState.Working, Widget([Found("Claude", snapshot: Quotas(40))], [new Session("s", SessionState.Working, "Edit", "repo", null)]).State);
+
+	[Fact]
+	public void EyeHidesProjectsInTheWidget()
+	{
+		var waiting = new Session("w", SessionState.Waiting, "Bash", "repo", "main");
+		var view = Widget([Found("Claude", snapshot: Quotas(40))], [waiting], hide: true);
+
+		Assert.Equal(("", "Claude", ""), (view.Detail, view.Sessions[0].Name, view.Sessions[0].Branch));
+	}
+
+	[Fact]
+	public void WidgetWithoutDataSaysSo()
+	{
+		Assert.Equal(("langWidgetNoData", ""), (Widget([Found("Claude")]).Title, Widget([Found("Claude")]).Value));
+		Assert.Equal(("langNoAgents", (string?)null), (Widget([]).Title, Widget([]).Agent));
+	}
+
+	[Fact]
+	public void WidgetListsWaitingFirstAndAtMostThree()
+	{
+		Session One(string id, SessionState state) => new(id, state, null, id, null);
+		var view = Widget([Found("Claude", snapshot: Quotas(40))], [One("a", SessionState.Idle), One("b", SessionState.Working), One("c", SessionState.Waiting), One("d", SessionState.Idle)]);
+
+		Assert.Equal(new[] { "c", "b", "a" }, view.Sessions.Select(session => session.Name));
+	}
+
+	[Fact]
+	public void WidgetFollowsThePercentMode()
+	{
+		var view = Widget([Found("Claude", snapshot: Quotas(46))], percent: PercentMode.Left);
+
+		Assert.Equal(("54%", 54.0, "54%"), (view.Value, view.Fill, view.Agents[0].Value));
+	}
+
+	private static Snapshot Quotas(double used) => new("Max", null, [new(WindowKind.Session, null, used, _now.AddHours(3), Limiting: true)], null);
+
+	private static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session>? sessions = null, Session? finished = null, bool hide = false, PercentMode percent = PercentMode.Used) =>
+		Views.Widget(agents, sessions ?? [], finished, _now, _levels, percent, hide);
+
+	[Fact]
 	public void AgentRowsNumberOnlyVisibleTabs() // номер — это Ctrl+N: у выключенного его нет, и соседи не сдвигаются
 	{
 		var rows = Views.AgentRows([Found("Claude"), Found("Codex", off: true), Found("Gemini")]);
