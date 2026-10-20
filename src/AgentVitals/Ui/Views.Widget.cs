@@ -51,7 +51,7 @@ internal sealed record WidgetView(
 
 	public bool HasSessions => Sessions.Count > 0;
 
-	/// <summary>Плашка и значок «все сразу» — агенты в ряд; «ждёт» и «закончил» занимают их целиком, без агентов — надпись.</summary>
+	/// <summary>Значок «все сразу» — агенты в ряд; «ждёт» и «закончил» занимают его целиком, без агентов — надпись.</summary>
 	public bool ShowsAgents => !Loud && Agents.Count > 0;
 
 	// Значок «по очереди»: столько показывается один агент.

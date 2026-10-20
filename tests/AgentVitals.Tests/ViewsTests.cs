@@ -319,7 +319,7 @@ public class ViewsTests
 	}
 
 	[Fact]
-	public void PillShowsEveryAgentUnlessSomeoneWaits()
+	public void ChipShowsEveryAgentUnlessSomeoneWaits()
 	{
 		var waiting = new Session("s", SessionState.Waiting, "Bash", "repo", null);
 
