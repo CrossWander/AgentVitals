@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <x:String x:Key="langSubtitle">AI agents monitor</x:String>
     <x:String x:Key="langUsed">used</x:String>
+    <x:String x:Key="langLeft">left</x:String>
     <x:String x:Key="langWindowSession">Session</x:String>
     <x:String x:Key="langWindowWeek">Week</x:String>
     <x:String x:Key="langWindowDay">Day</x:String>
@@ -23,6 +24,7 @@
     <x:String x:Key="langPaceSpare">room to spare</x:String>
     <x:String x:Key="langPaceRunout">lasts until {0}</x:String>
     <x:String x:Key="langPaceTip">The white mark is even pace: spending evenly until the reset, you would be at {0}% by now. You are at {1}%.</x:String>
+    <x:String x:Key="langPaceTipLeft">The white mark is even pace: spending evenly until the reset, you would have {0}% left by now. You have {1}%.</x:String>
     <x:String x:Key="langHoursMinutes">{0} h {1} min</x:String>
     <x:String x:Key="langMinutes">{0} min</x:String>
     <x:String x:Key="langMinutes1">1 min</x:String>
@@ -98,6 +100,10 @@
     <x:String x:Key="langThemeLight">Light</x:String>
     <x:String x:Key="langThemeDark">Dark</x:String>
     <x:String x:Key="langInterval">Check quotas every</x:String>
+    <x:String x:Key="langPercent">Quota percentages</x:String>
+    <x:String x:Key="langPercentHint">Same everywhere: window, widget, toasts and thresholds</x:String>
+    <x:String x:Key="langPercentUsed">Used</x:String>
+    <x:String x:Key="langPercentLeft">Left</x:String>
     <x:String x:Key="langAutostart">Start with Windows</x:String>
     <x:String x:Key="langNotifications">Notifications</x:String>
     <x:String x:Key="langChartModels">Models</x:String>
@@ -105,6 +111,8 @@
     <x:String x:Key="langCacheSaved">cache saved {0}</x:String>
     <x:String x:Key="langLevelImportant">Quota: important at</x:String>
     <x:String x:Key="langLevelCritical">Quota: critical at</x:String>
+    <x:String x:Key="langLevelImportantLeft">Quota: important when left</x:String>
+    <x:String x:Key="langLevelCriticalLeft">Quota: critical when left</x:String>
     <x:String x:Key="langLowSound">Play a sound when a quota is almost used up</x:String>
     <x:String x:Key="langSessionToasts">Tell me when an agent finishes or asks</x:String>
     <x:String x:Key="langWaitingSound">Play a sound when an agent asks for permission</x:String>
@@ -139,6 +147,7 @@
     <x:String x:Key="langAlertReset">Available again</x:String>
     <x:String x:Key="langAlertResetText">{0} · {1}: the quota has reset</x:String>
     <x:String x:Key="langAlertLeft">{0} · {1}: {2}% left</x:String>
+    <x:String x:Key="langAlertUsed">{0} · {1}: {2}% used</x:String>
     <x:String x:Key="langToastStatus">{0}: {1}</x:String>
     <x:String x:Key="langToastStatusOk">{0}: all systems operational again</x:String>
     <x:String x:Key="langToastDone">{0} is done</x:String>
@@ -207,7 +216,7 @@
     <x:String x:Key="langSettingsNote">language, notifications, updates</x:String>
     <x:String x:Key="langUpdateBadge">● version {0} is out</x:String>
     <x:String x:Key="langGeneral">General</x:String>
-    <x:String x:Key="langGeneralNote">language, appearance, checks</x:String>
+    <x:String x:Key="langGeneralNote">language, appearance, checks, percentages</x:String>
     <x:String x:Key="langGeneralHint">How the app looks and how often it asks for quotas.</x:String>
     <x:String x:Key="langNotificationsNote">quota levels, sounds, finished turns</x:String>
     <x:String x:Key="langNotificationsHint">When AgentVitals shows a notification and plays a sound.</x:String>

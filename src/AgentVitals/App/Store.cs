@@ -35,6 +35,9 @@ internal static class Store
 		// Глаз в окне: почта аккаунта и запросы сессий скрыты — экран показывают другим.
 		public bool Private { get; set; }
 
+		// Что значат проценты квот везде: израсходовано или осталось. Пороги хранятся израсходованными в любом режиме.
+		public PercentMode Percent { get; set; } = PercentMode.Used;
+
 		// Пороги квоты, %: с них тосты «важно» и «критично», жёлтый и красный.
 		public int ImportantAt { get; set; } = 75;
 

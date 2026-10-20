@@ -212,6 +212,38 @@ public class ViewsTests
 		new(new Named(name, installed)) { Off = off, Snapshot = snapshot };
 
 	[Fact]
+	public void LeftModeShowsWhatRemains() // 46% израсходовано — 54 осталось; полоска тает, метка темпа зеркальна
+	{
+		var window = new QuotaWindow(WindowKind.Session, null, 46, _now.AddHours(4), Limiting: true);
+		var state = Found("Claude", snapshot: new("Max", null, [window], null));
+		var used = Views.Agent(state, _now, _levels).Cards[0];
+		var left = Views.Agent(state, _now, _levels, percent: PercentMode.Left).Cards[0];
+
+		Assert.Equal(("46", "langUsed", 46.0), (used.Value, used.Note, used.Fill));
+		Assert.Equal(("54", "langLeft", 54.0), (left.Value, left.Note, left.Fill));
+		Assert.Equal(80, left.Pace!.Value, precision: 6); // ровный темп 20% израсходованного — 80% осталось
+		Assert.Equal("langPaceTipLeft", left.PaceTip);
+		Assert.Equal(used.Badge, left.Badge); // уровни — по израсходованному
+	}
+
+	[Fact]
+	public void LeftNeverGoesBelowZero() // израсходовано 120% — осталось 0, а не −20
+	{
+		var state = Found("Claude", snapshot: new("Max", null, [new(WindowKind.Session, null, 120, null, Limiting: true)], null));
+		var card = Views.Agent(state, _now, _levels, percent: PercentMode.Left).Cards[0];
+
+		Assert.Equal(("0", 0.0), (card.Value, card.Fill));
+	}
+
+	[Fact]
+	public void AccountNumbersFollowTheMode() // окно «Агенты»: «Сессия 60%» в режиме «осталось»
+	{
+		var state = Remembering(new Named("Claude", installed: true), "A", Signed("A", "Max", "a@x.z", used: 40));
+
+		Assert.Equal("60%", Views.AccountEdits(state, new Dictionary<string, string>(), hide: false, _now, PercentMode.Left)[0].Numbers[0].Percent);
+	}
+
+	[Fact]
 	public void AgentRowsNumberOnlyVisibleTabs() // номер — это Ctrl+N: у выключенного его нет, и соседи не сдвигаются
 	{
 		var rows = Views.AgentRows([Found("Claude"), Found("Codex", off: true), Found("Gemini")]);

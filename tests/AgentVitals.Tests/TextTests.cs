@@ -74,14 +74,34 @@ public class TextTests
 		var now = System.DateTime.UtcNow;
 		var window = new QuotaWindow(WindowKind.Session, null, 60, now.AddHours(2.5), Limiting: true);
 
-		Assert.Equal(("langAlertPace", "langAlertLeft, langPaceRunout, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window, QuotaLevel.Pace), now));
-		Assert.Equal(("langAlertImportant", "langAlertLeft, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window with { Used = 76, ResetsAt = now.AddHours(0.5) }, QuotaLevel.Important), now));
+		Assert.Equal(("langAlertPace", "langAlertLeft, langPaceRunout, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window, QuotaLevel.Pace), now, PercentMode.Left));
+		Assert.Equal(("langAlertImportant", "langAlertLeft, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window with { Used = 76, ResetsAt = now.AddHours(0.5) }, QuotaLevel.Important), now, PercentMode.Left));
 	}
 
 	[Fact]
 	public void ResetToastSaysTheWindowIsBack() =>
 		Assert.Equal(("langAlertReset", "langAlertResetText"),
-			Text.QuotaToast(new QuotaAlert("Claude", new QuotaWindow(WindowKind.Session, null, 0, null, Limiting: true), QuotaLevel.Reset), System.DateTime.UtcNow));
+			Text.QuotaToast(new QuotaAlert("Claude", new QuotaWindow(WindowKind.Session, null, 0, null, Limiting: true), QuotaLevel.Reset), System.DateTime.UtcNow, PercentMode.Left));
+
+	[Fact]
+	public void QuotaToastSpeaksInTheChosenMode() // «использовано 92%» или, как раньше, «осталось 8%»
+	{
+		var alert = new QuotaAlert("Claude", new QuotaWindow(WindowKind.Session, null, 92, null, Limiting: true), QuotaLevel.Critical);
+
+		Assert.Equal("langAlertUsed", Text.QuotaToast(alert, System.DateTime.UtcNow, PercentMode.Used).Message);
+		Assert.Equal("langAlertLeft", Text.QuotaToast(alert, System.DateTime.UtcNow, PercentMode.Left).Message);
+	}
+
+	// Режим — строкой: PercentMode внутренний, а метод теста открытый.
+	[Theory]
+	[InlineData(90, "Used", "90%")]
+	[InlineData(90, "Left", "10%")]
+	public void LevelShowsInTheChosenMode(int at, string percent, string expected) => Assert.Equal(expected, Text.Level(at, System.Enum.Parse<PercentMode>(percent)));
+
+	[Theory]
+	[InlineData(5, "Used", 5)]
+	[InlineData(5, "Left", -5)] // «+» у «осталось 10%» — 15% остатка, то есть 85% израсходованного
+	public void LevelButtonsMoveTheShownNumber(int step, string percent, int expected) => Assert.Equal(expected, SettingsPage.Step(step, System.Enum.Parse<PercentMode>(percent)));
 
 	[Fact]
 	public void SessionToastSaysWhatHappened()

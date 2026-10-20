@@ -190,16 +190,19 @@ internal static class Text
 	public static string Badge(double used, Thresholds levels) =>
 		Math.Round(used) >= 100 ? Localization.Get("langHealthExhausted") : HealthName(Quota.Rate(used, levels));
 
-	/// <summary>Тост о квоте: заголовок — насколько серьёзно, текст — что, сколько осталось, на сколько хватит и когда сброс.</summary>
-	public static (string Title, string Message) QuotaToast(QuotaAlert alert, DateTime now)
+	/// <summary>Тост о квоте: заголовок — насколько серьёзно, текст — что, сколько израсходовано или осталось, на сколько
+	/// хватит и когда сброс.</summary>
+	/// <param name="percent">Как в окне: «использовано 92%» или «осталось 8%».</param>
+	public static (string Title, string Message) QuotaToast(QuotaAlert alert, DateTime now, PercentMode percent)
 	{
 		if (alert.Level == QuotaLevel.Reset)
 		{
 			return (Localization.Get("langAlertReset"), Localization.Format("langAlertResetText", alert.Agent, Title(alert.Window)));
 		}
 
-		var left = Math.Max(0, 100 - Math.Round(alert.Window.Used));
-		var message = Localization.Format("langAlertLeft", alert.Agent, Title(alert.Window), left);
+		var message = percent == PercentMode.Left
+			? Localization.Format("langAlertLeft", alert.Agent, Title(alert.Window), Math.Max(0, 100 - Math.Round(alert.Window.Used)))
+			: Localization.Format("langAlertUsed", alert.Agent, Title(alert.Window), Math.Round(alert.Window.Used));
 
 		if (Quota.Runout(alert.Window, now) is { } runout)
 		{
@@ -218,6 +221,10 @@ internal static class Text
 			QuotaLevel.Important or QuotaLevel.Reset => "langAlertImportant",
 		}), message);
 	}
+
+	/// <summary>Порог в настройках так, как читаются проценты: «90%» израсходованного или «10%» остатка.</summary>
+	public static string Level(int at, PercentMode percent) =>
+		Views.Shown(at, percent).ToString(CultureInfo.InvariantCulture) + "%";
 
 	/// <summary>«хватит до 13:40», а не сегодня — «хватит до чт 13:40».</summary>
 	public static string Runout(DateTime at, DateTime now)

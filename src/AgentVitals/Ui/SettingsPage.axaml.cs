@@ -46,6 +46,7 @@ internal partial class SettingsPage : UserControl
 		Select(Languages, Localization.Current);
 		Select(Themes, Store.Current.Theme.ToString());
 		Select(Intervals, Store.Current.IntervalSeconds.ToString(CultureInfo.InvariantCulture));
+		Select(Percents, Store.Current.Percent.ToString());
 		Select(TurnMinutes, Store.Current.TurnMinutes.ToString(CultureInfo.InvariantCulture));
 		ShowLevels();
 		SessionToastsToggle.IsChecked = Store.Current.SessionToasts;
@@ -120,11 +121,23 @@ internal partial class SettingsPage : UserControl
 		}
 	}
 
+	private void OnPercent(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string name })
+		{
+			Store.Current.Percent = Enum.Parse<PercentMode>(name);
+			Store.Save();
+			ShowLevels();
+			Changed?.Invoke();
+		}
+	}
+
 	private void OnLevel(object? sender, RoutedEventArgs e)
 	{
 		if (sender is Button { Tag: string tag } && tag.Split(':') is [var which, var step])
 		{
-			Store.Current.Thresholds = QuotaAlarm.Shift(Store.Current.Thresholds, which == "critical", int.Parse(step, CultureInfo.InvariantCulture));
+			var delta = Step(int.Parse(step, CultureInfo.InvariantCulture), Store.Current.Percent);
+			Store.Current.Thresholds = QuotaAlarm.Shift(Store.Current.Thresholds, which == "critical", delta);
 			Store.Save();
 			ShowLevels();
 
@@ -133,10 +146,16 @@ internal partial class SettingsPage : UserControl
 		}
 	}
 
+	/// <summary>Сдвиг порога кнопкой: «+» прибавляет к показанному числу, а в режиме «осталось» это меньше израсходованного.</summary>
+	internal static int Step(int step, PercentMode percent) => percent == PercentMode.Left ? -step : step;
+
 	private void ShowLevels()
 	{
-		ImportantValue.Text = $"{Store.Current.ImportantAt}%";
-		CriticalValue.Text = $"{Store.Current.CriticalAt}%";
+		var left = Store.Current.Percent == PercentMode.Left;
+		ImportantName.Text = Localization.Get(left ? "langLevelImportantLeft" : "langLevelImportant");
+		CriticalName.Text = Localization.Get(left ? "langLevelCriticalLeft" : "langLevelCritical");
+		ImportantValue.Text = Text.Level(Store.Current.ImportantAt, Store.Current.Percent);
+		CriticalValue.Text = Text.Level(Store.Current.CriticalAt, Store.Current.Percent);
 	}
 
 	private void OnSessionToasts(object? sender, RoutedEventArgs e)
@@ -276,6 +295,7 @@ internal partial class SettingsPage : UserControl
 		AboutNote.Text = Localization.Format("langAboutNote", Updates.Current);
 		AboutLine.Text = Localization.Format("langAboutLine", Updates.Current);
 		WhatsNew.Content = Localization.Format("langWhatsNew", Updates.Current);
+		ShowLevels();
 		ShowSection();
 		ShowRelease();
 	}

@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <x:String x:Key="langSubtitle">Монітор AI-агентів</x:String>
     <x:String x:Key="langUsed">використано</x:String>
+    <x:String x:Key="langLeft">залишилось</x:String>
     <x:String x:Key="langWindowSession">Сесія</x:String>
     <x:String x:Key="langWindowWeek">Тиждень</x:String>
     <x:String x:Key="langWindowDay">День</x:String>
@@ -23,6 +24,7 @@
     <x:String x:Key="langPaceSpare">із запасом</x:String>
     <x:String x:Key="langPaceRunout">вистачить до {0}</x:String>
     <x:String x:Key="langPaceTip">Біла позначка — рівний темп: якщо витрачати рівномірно до скидання, зараз було б витрачено {0}%. У вас {1}%.</x:String>
+    <x:String x:Key="langPaceTipLeft">Біла позначка — рівний темп: якщо витрачати рівномірно до скидання, зараз залишалось би {0}%. У вас {1}%.</x:String>
     <x:String x:Key="langHoursMinutes">{0} год {1} хв</x:String>
     <x:String x:Key="langMinutes">{0} хв</x:String>
     <x:String x:Key="langMinutes1">1 хв</x:String>
@@ -98,6 +100,10 @@
     <x:String x:Key="langThemeLight">Світла</x:String>
     <x:String x:Key="langThemeDark">Темна</x:String>
     <x:String x:Key="langInterval">Перевіряти квоти кожні</x:String>
+    <x:String x:Key="langPercent">Відсотки квот</x:String>
+    <x:String x:Key="langPercentHint">Однаково всюди: вікно, віджет, тости й пороги</x:String>
+    <x:String x:Key="langPercentUsed">Використано</x:String>
+    <x:String x:Key="langPercentLeft">Залишилось</x:String>
     <x:String x:Key="langAutostart">Запускати разом з Windows</x:String>
     <x:String x:Key="langNotifications">Сповіщення</x:String>
     <x:String x:Key="langChartModels">Моделі</x:String>
@@ -105,6 +111,8 @@
     <x:String x:Key="langCacheSaved">кеш заощадив {0}</x:String>
     <x:String x:Key="langLevelImportant">Квота: «важливо» з</x:String>
     <x:String x:Key="langLevelCritical">Квота: «критично» з</x:String>
+    <x:String x:Key="langLevelImportantLeft">Квота: «важливо», коли залишилось</x:String>
+    <x:String x:Key="langLevelCriticalLeft">Квота: «критично», коли залишилось</x:String>
     <x:String x:Key="langLowSound">Звук, коли квоту майже вичерпано</x:String>
     <x:String x:Key="langSessionToasts">Повідомляти про кінець ходу й питання</x:String>
     <x:String x:Key="langWaitingSound">Звук, коли агент чекає дозволу</x:String>
@@ -139,6 +147,7 @@
     <x:String x:Key="langAlertReset">Знову доступно</x:String>
     <x:String x:Key="langAlertResetText">{0} · {1}: квоту оновлено</x:String>
     <x:String x:Key="langAlertLeft">{0} · {1}: залишилось {2}%</x:String>
+    <x:String x:Key="langAlertUsed">{0} · {1}: використано {2}%</x:String>
     <x:String x:Key="langToastStatus">{0}: {1}</x:String>
     <x:String x:Key="langToastStatusOk">{0}: усе знову працює</x:String>
     <x:String x:Key="langToastDone">{0} закінчив</x:String>
@@ -207,7 +216,7 @@
     <x:String x:Key="langSettingsNote">мова, сповіщення, оновлення</x:String>
     <x:String x:Key="langUpdateBadge">● доступна версія {0}</x:String>
     <x:String x:Key="langGeneral">Загальні</x:String>
-    <x:String x:Key="langGeneralNote">мова, вигляд, перевірка</x:String>
+    <x:String x:Key="langGeneralNote">мова, вигляд, перевірка, відсотки</x:String>
     <x:String x:Key="langGeneralHint">Як виглядає програма і як часто вона питає квоти.</x:String>
     <x:String x:Key="langNotificationsNote">пороги квот, звуки, кінець ходу</x:String>
     <x:String x:Key="langNotificationsHint">Коли AgentVitals показує сповіщення і подає звук.</x:String>

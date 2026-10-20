@@ -153,6 +153,23 @@
                                     </Border>
                                 </Grid>
                             </Border>
+                            <!-- Смысл процентов во всей программе; Tag — PercentMode -->
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Classes="name" Text="{DynamicResource langPercent}"/>
+                                        <TextBlock Classes="note" Text="{DynamicResource langPercentHint}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
+                                        <StackPanel Name="Percents" Orientation="Horizontal">
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="percent" Tag="Used"
+                                                         Content="{DynamicResource langPercentUsed}" IsCheckedChanged="OnPercent"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="percent" Tag="Left"
+                                                         Content="{DynamicResource langPercentLeft}" IsCheckedChanged="OnPercent"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
                         </StackPanel>
                     </Border>
 
@@ -161,7 +178,7 @@
                             <!-- Пороги тостов о квоте: Tag — какой порог и шаг; границы и порядок держит QuotaAlarm.Shift -->
                             <Border Classes="row">
                                 <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                                    <TextBlock Classes="name" Text="{DynamicResource langLevelImportant}"/>
+                                    <TextBlock Name="ImportantName" Classes="name"/>
                                     <Button Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
                                             VerticalAlignment="Center" Tag="important:-5" Click="OnLevel"/>
                                     <TextBlock Grid.Column="2" Name="ImportantValue" Width="48" TextAlignment="Center"
@@ -172,7 +189,7 @@
                             </Border>
                             <Border Classes="row">
                                 <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                                    <TextBlock Classes="name" Text="{DynamicResource langLevelCritical}"/>
+                                    <TextBlock Name="CriticalName" Classes="name"/>
                                     <Button Grid.Column="1" Theme="{StaticResource Round}" Width="26" Height="26" Content="−"
                                             VerticalAlignment="Center" Tag="critical:-5" Click="OnLevel"/>
                                     <TextBlock Grid.Column="2" Name="CriticalValue" Width="48" TextAlignment="Center"

@@ -250,7 +250,8 @@ internal sealed class TrayApp
 			DateTime.UtcNow,
 			Store.Current.Thresholds,
 			Store.Current.Private,
-			Store.Current.AccountNames);
+			Store.Current.AccountNames,
+			Store.Current.Percent);
 
 	private void ReadSessions()
 	{
@@ -301,7 +302,7 @@ internal sealed class TrayApp
 
 		if (_alarm.Check(_poller.Visible.Select(state => (state.Agent.Name, state.Key ?? "", state.Windows(now))), Store.Current.Thresholds, now) is { } alert)
 		{
-			var (title, message) = Text.QuotaToast(alert, now);
+			var (title, message) = Text.QuotaToast(alert, now, Store.Current.Percent);
 			var brush = alert.Level switch
 			{
 				QuotaLevel.Reset => "Good",
