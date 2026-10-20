@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 
@@ -47,6 +49,29 @@ internal static class Placement
 	/// <summary>Верхний левый угол окна в правом нижнем углу рабочей области — там, где Windows показывает уведомления.</summary>
 	public static PixelPoint Corner(PixelRect work, PixelSize window, int margin) =>
 		new(work.Right - window.Width - margin, work.Bottom - window.Height - margin);
+
+	/// <summary>Плашка: по центру верхнего края рабочей области — под панелью задач, если та наверху.</summary>
+	public static PixelPoint Notch(PixelRect work, PixelSize window) =>
+		new(work.X + ((work.Width - window.Width) / 2), work.Y);
+
+	/// <summary>Значок над треем: угол рабочей области на стороне значка трея по обеим осям.</summary>
+	public static PixelPoint Chip(PixelRect icon, PixelRect work, PixelSize window, int margin) =>
+		new(icon.Center.X < work.Center.X ? work.X + margin : work.Right - window.Width - margin,
+			icon.Center.Y < work.Center.Y ? work.Y + margin : work.Bottom - window.Height - margin);
+
+	/// <summary>Виджет на рабочем столе: где его оставили, пока тот экран на месте; иначе — правый верхний угол главного.</summary>
+	/// <param name="saved">Запомненный верхний левый угол; null — ещё не двигали.</param>
+	/// <param name="screens">Границы всех экранов.</param>
+	public static PixelPoint Desk(PixelPoint? saved, IReadOnlyList<PixelRect> screens, PixelRect primaryWork, PixelSize window, int margin) =>
+		saved is { } place && screens.Any(screen => screen.Contains(place))
+			? place
+			: new(primaryWork.Right - window.Width - margin, primaryWork.Y + margin);
+
+	/// <summary>Тост, который лёг бы на значок над треем, встаёт над ним.</summary>
+	public static PixelPoint Above(PixelPoint at, PixelSize window, PixelRect? obstacle, int margin) =>
+		obstacle is { } over && new PixelRect(at, window).Intersects(over)
+			? new(at.X, over.Y - window.Height - margin)
+			: at;
 
 	/// <summary>Окно не выше рабочей области экрана со значком: что не влезло, прокручивается внутри окна.</summary>
 	public static void Fit(Window window, PixelRect icon)
