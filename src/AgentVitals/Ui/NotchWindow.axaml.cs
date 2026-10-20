@@ -4,7 +4,7 @@ using Avalonia.Threading;
 
 namespace AgentVitals;
 
-/// <summary>Плашка вверху по центру экрана с треем: полоска, под мышью — плашка, после задержки — панель. Переходы плавные:
+/// <summary>Плашка вверху по центру экрана с треем: полоска, под мышью — плашка, щелчком — панель. Переходы плавные:
 /// форма меняет размер и скругление, содержимое проявляется.</summary>
 internal partial class NotchWindow : WidgetWindow
 {
@@ -21,6 +21,7 @@ internal partial class NotchWindow : WidgetWindow
 	{
 		InitializeComponent();
 		Wire(Rows);
+		Opens(Top);
 
 		// Новый снимок — другая длина строки и число строк: размеры формы пересчитываются, когда привязки уже применены.
 		DataContextChanged += (_, _) => Dispatcher.UIThread.Post(Fit, DispatcherPriority.Loaded);

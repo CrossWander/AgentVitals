@@ -55,6 +55,9 @@ internal partial class SettingsPage : UserControl
 		// Виджет держится на Win32: на других системах раздела нет.
 		WidgetTab.IsVisible = OperatingSystem.IsWindows();
 		Select(WidgetKinds, Store.Current.Widget.ToString());
+		Select(NotchRests, Store.Current.NotchPill.ToString());
+		Select(ChipAgents, Store.Current.ChipTurns.ToString());
+		ShowWidgetOptions();
 		WaitingSoundToggle.IsChecked = Store.Current.WaitingSound;
 		WaitingSoundToggle.IsEnabled = Store.Current.SessionToasts;
 
@@ -183,8 +186,37 @@ internal partial class SettingsPage : UserControl
 			Store.Current.Widget = Enum.Parse<WidgetKind>(name);
 			Store.Save();
 			TurnPanel.IsEnabled = TurnEnabled(Store.Current.SessionToasts, Store.Current.Widget);
+			ShowWidgetOptions();
 
 			// Виджет включается и меняет вид сразу, без перезапуска.
+			Changed?.Invoke();
+		}
+	}
+
+	// Свои настройки есть у плашки и значка; у выключенного и рабочего стола строки нет.
+	private void ShowWidgetOptions()
+	{
+		NotchRow.IsVisible = Store.Current.Widget == WidgetKind.Notch;
+		ChipRow.IsVisible = Store.Current.Widget == WidgetKind.Chip;
+		WidgetOptions.IsVisible = NotchRow.IsVisible || ChipRow.IsVisible;
+	}
+
+	private void OnNotchRest(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string pill })
+		{
+			Store.Current.NotchPill = bool.Parse(pill);
+			Store.Save();
+			Changed?.Invoke();
+		}
+	}
+
+	private void OnChipAgents(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string turns })
+		{
+			Store.Current.ChipTurns = bool.Parse(turns);
+			Store.Save();
 			Changed?.Invoke();
 		}
 	}

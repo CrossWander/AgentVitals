@@ -318,6 +318,38 @@ public class ViewsTests
 		Assert.Equal(("54%", 54.0, "54%"), (view.Value, view.Fill, view.Agents[0].Value));
 	}
 
+	[Fact]
+	public void PillShowsEveryAgentUnlessSomeoneWaits()
+	{
+		var waiting = new Session("s", SessionState.Waiting, "Bash", "repo", null);
+
+		Assert.Equal(
+			(true, false, false),
+			(Widget([Found("Claude", snapshot: Quotas(46))]).ShowsAgents, Widget([Found("Claude", snapshot: Quotas(46))], [waiting]).ShowsAgents, Widget([]).ShowsAgents));
+	}
+
+	[Fact]
+	public void TurnsSkipAgentsWithoutData()
+	{
+		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Copilot"), Found("Codex", snapshot: Quotas(10))]);
+
+		var shown = Enumerable.Range(0, 4).Select(slot => view.Turn(_now.AddSeconds(6 * slot))!.Name).ToList();
+
+		Assert.Equal(new[] { "Claude", "Codex" }, shown.Distinct().Order());
+		Assert.NotEqual(shown[0], shown[1]);
+	}
+
+	[Fact]
+	public void TurnsStopOnTheAgentLowOnQuota()
+	{
+		var view = Widget([Found("Claude", snapshot: Quotas(10)), Found("Codex", snapshot: Quotas(95))]);
+
+		Assert.Equal(new[] { "Codex", "Codex" }, new[] { view.Turn(_now)!.Name, view.Turn(_now.AddSeconds(6))!.Name });
+	}
+
+	[Fact]
+	public void NoTurnWithoutData() => Assert.Null(Widget([Found("Claude")]).Turn(_now));
+
 	private static Snapshot Quotas(double used) => new("Max", null, [new(WindowKind.Session, null, used, _now.AddHours(3), Limiting: true)], null);
 
 	private static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session>? sessions = null, Session? finished = null, bool hide = false, PercentMode percent = PercentMode.Used) =>

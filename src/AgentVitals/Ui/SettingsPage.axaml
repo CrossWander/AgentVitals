@@ -321,6 +321,45 @@
                                 </StackPanel>
                             </RadioButton>
                         </UniformGrid>
+
+                        <!-- Строка выбранного вида: у плашки — что видно в покое, у значка — как показать нескольких агентов.
+                             Tag — значение bool -->
+                        <Border Name="WidgetOptions" Classes="rows">
+                            <StackPanel>
+                                <Border Name="NotchRow" Classes="row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Classes="name" Text="{DynamicResource langNotchRest}"/>
+                                            <TextBlock Classes="note" Text="{DynamicResource langNotchRestHint}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
+                                            <StackPanel Name="NotchRests" Orientation="Horizontal">
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="notch" Tag="False"
+                                                             Content="{DynamicResource langNotchStrip}" IsCheckedChanged="OnNotchRest"/>
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="notch" Tag="True"
+                                                             Content="{DynamicResource langNotchPill}" IsCheckedChanged="OnNotchRest"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                                <Border Name="ChipRow" Classes="row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Classes="name" Text="{DynamicResource langChipAgents}"/>
+                                            <TextBlock Classes="note" Text="{DynamicResource langChipAgentsHint}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
+                                            <StackPanel Name="ChipAgents" Orientation="Horizontal">
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="chip" Tag="False"
+                                                             Content="{DynamicResource langChipRow}" IsCheckedChanged="OnChipAgents"/>
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="chip" Tag="True"
+                                                             Content="{DynamicResource langChipTurns}" IsCheckedChanged="OnChipAgents"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
                         <TextBlock Classes="note" Text="{DynamicResource langWidgetEye}" TextWrapping="Wrap"/>
                     </StackPanel>
 

@@ -13,7 +13,7 @@ internal enum WidgetKind
 	Desktop,
 }
 
-/// <summary>Как раскрыт виджет: в покое (у плашки — полоска), целиком под мышью, панель после задержки.</summary>
+/// <summary>Как раскрыт виджет: в покое (у плашки — полоска), плашка целиком, панель по щелчку.</summary>
 internal enum WidgetLook
 {
 	Rest,
@@ -21,27 +21,61 @@ internal enum WidgetLook
 	Panel,
 }
 
-/// <summary>Наведение: мышь над виджетом — целиком; держится полсекунды — панель; ушла — покой. Мимоходом к вкладке
-/// браузера мышь над полоской задерживается меньше — панель её не перехватит.</summary>
+/// <summary>Наведение: мышь задержалась над виджетом на 0,3 с — плашка выезжает и ловит щелчки; щелчок открывает и
+/// закрывает панель; мышь ушла — раскрытое держится ещё полсекунды. Мимоходом к вкладке браузера мышь над полоской
+/// задерживается меньше — щелчок проходит насквозь.</summary>
 internal sealed class WidgetHover
 {
-	public static readonly TimeSpan Hold = TimeSpan.FromMilliseconds(500);
+	public static readonly TimeSpan Arm = TimeSpan.FromMilliseconds(300);
+
+	public static readonly TimeSpan Linger = TimeSpan.FromMilliseconds(500);
 
 	// С какого момента мышь над виджетом; null — её там нет.
-	private DateTime? _since;
+	private DateTime? _over;
+
+	// Когда мышь ушла с раскрытого; null — не уходила.
+	private DateTime? _left;
+
+	private bool _armed;
+	private bool _panel;
+
+	/// <summary>Раскрыт ли виджет мышью: тогда он нажимается, пока курсор над ним.</summary>
+	public bool Armed => _armed;
+
+	public WidgetLook Look => !_armed ? WidgetLook.Rest : _panel ? WidgetLook.Panel : WidgetLook.Peek;
 
 	public WidgetLook Next(bool over, DateTime now)
 	{
-		if (!over)
+		if (over)
 		{
-			_since = null;
+			_left = null;
+			_over ??= now;
+			_armed |= now - _over >= Arm;
+		}
+		else
+		{
+			// Ушла с раскрытого только что — промах на пару точек его не закрывает; мимоходом — сразу всё заново.
+			_left ??= now;
 
-			return WidgetLook.Rest;
+			if (!_armed || now - _left >= Linger)
+			{
+				_over = null;
+				_left = null;
+				_armed = false;
+				_panel = false;
+			}
 		}
 
-		_since ??= now;
+		return Look;
+	}
 
-		return now - _since >= Hold ? WidgetLook.Panel : WidgetLook.Peek;
+	/// <summary>Щелчок по плашке или значку. Пока виджет не раскрыт, щелчки до него не доходят; запоздавший — ничего.</summary>
+	public void Click()
+	{
+		if (_armed)
+		{
+			_panel = !_panel;
+		}
 	}
 }
 
@@ -52,6 +86,9 @@ internal interface IWidgetWindow
 
 	event Action<Session>? SessionChosen;
 
+	/// <summary>Щелчок по плашке или значку, не по строке панели.</summary>
+	event Action? Clicked;
+
 	/// <summary>Где окно сейчас, в точках экрана: над ним ли мышь, не закрыть ли его тостом.</summary>
 	PixelRect Area { get; }
 
@@ -60,7 +97,8 @@ internal interface IWidgetWindow
 
 	void Render(WidgetView view);
 
-	void Show(WidgetLook look);
+	/// <param name="clickable">Ловит ли окно щелчки; нет — они проходят насквозь к окну под ним.</param>
+	void Show(WidgetLook look, bool clickable);
 
 	/// <summary>Глаз: окно не попадает на снимки и в демонстрацию экрана.</summary>
 	void Private(bool hide);
@@ -80,7 +118,13 @@ internal sealed class WidgetHost(Func<WidgetKind, IWidgetWindow> make)
 	private WidgetView? _view;
 	private bool _hide;
 
+	// Курсор над виджетом в последний тик.
+	private bool _over;
+
 	public WidgetKind Kind { get; private set; }
+
+	/// <summary>Плашка видна целиком и в покое — настройка «В покое: плашка»; щелчки проходят, пока мышь не задержится.</summary>
+	public bool Pinned { get; set; }
 
 	/// <summary>Щелчок по агенту — поповер на его вкладке.</summary>
 	public event Action<string>? AgentChosen;
@@ -112,6 +156,16 @@ internal sealed class WidgetHost(Func<WidgetKind, IWidgetWindow> make)
 		var window = make(kind);
 		window.AgentChosen += agent => AgentChosen?.Invoke(agent);
 		window.SessionChosen += session => SessionChosen?.Invoke(session);
+		window.Clicked += () =>
+		{
+			_hover.Click();
+
+			// Панель — сразу, не со следующим тиком.
+			if (_window == window)
+			{
+				Show(window);
+			}
+		};
 		window.Private(_hide);
 
 		// Снимок до показа: окно сразу своего размера и встаёт на место без скачка.
@@ -149,14 +203,23 @@ internal sealed class WidgetHost(Func<WidgetKind, IWidgetWindow> make)
 			return;
 		}
 
-		var look = _hover.Next(window.Area.Contains(cursor), now);
+		_over = window.Area.Contains(cursor);
+		_hover.Next(_over, now);
+		Show(window);
+		window.Tick();
+	}
 
-		if (look == WidgetLook.Rest && _view is { Loud: true })
+	// Нажимается только раскрытый мышью виджет и только под курсором: ушла мышь — адресная строка под панелью
+	// нажимается сразу, хотя панель ещё видна.
+	private void Show(IWidgetWindow window)
+	{
+		var look = _hover.Look;
+
+		if (look == WidgetLook.Rest && (Pinned || _view is { Loud: true }))
 		{
 			look = WidgetLook.Peek;
 		}
 
-		window.Show(look);
-		window.Tick();
+		window.Show(look, _over && _hover.Armed);
 	}
 }

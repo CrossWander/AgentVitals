@@ -50,13 +50,40 @@ internal sealed record WidgetView(
 	public bool HasValue => Value.Length > 0;
 
 	public bool HasSessions => Sessions.Count > 0;
+
+	/// <summary>Плашка и значок «все сразу» — агенты в ряд; «ждёт» и «закончил» занимают их целиком, без агентов — надпись.</summary>
+	public bool ShowsAgents => !Loud && Agents.Count > 0;
+
+	// Значок «по очереди»: столько показывается один агент.
+	private static readonly TimeSpan _turn = TimeSpan.FromSeconds(6);
+
+	/// <summary>Агент значка «по очереди»: каждые 6 с следующий из тех, у кого есть данные; квота на исходе — смена
+	/// замирает на нём. Без данных ни у кого — null.</summary>
+	public WidgetAgent? Turn(DateTime now)
+	{
+		if (State == WidgetState.Low)
+		{
+			return Agents.FirstOrDefault(agent => agent.Name == Agent);
+		}
+
+		List<WidgetAgent> known = [.. Agents.Where(agent => agent.Known)];
+
+		return known.Count == 0 ? null : known[(int)(now.Ticks / _turn.Ticks % known.Count)];
+	}
 }
 
 /// <summary>Агент в панели и в колонке на рабочем столе.</summary>
 /// <param name="Value">«46%»; нет данных — «—».</param>
 /// <param name="Window">«сессия · 2 ч 50 мин» — строка панели.</param>
 /// <param name="Resets">«2 ч 50 мин» — под колонкой на рабочем столе.</param>
-internal sealed record WidgetAgent(string Name, string Value, double Fill, IBrush Meter, string Window, string Resets);
+internal sealed record WidgetAgent(string Name, string Value, double Fill, IBrush Meter, string Window, string Resets)
+{
+	/// <summary>Без данных у агента нет и окна квоты.</summary>
+	public bool Known => Window.Length > 0;
+
+	/// <summary>Дуга кольца на значке, в градусах.</summary>
+	public double Sweep => Fill * 3.6;
+}
 
 /// <summary>Сессия в панели и на рабочем столе; по щелчку поднимается её окно.</summary>
 /// <param name="Name">Проект; под глазом — имя агента.</param>

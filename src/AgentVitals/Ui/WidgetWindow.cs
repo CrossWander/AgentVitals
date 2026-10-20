@@ -1,17 +1,20 @@
 using System;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
 using AgentVitals.Core.Sessions;
 using AgentVitals.Platform;
 
 namespace AgentVitals;
 
-/// <summary>Окно плашки или значка над треем: на экране трея, поверх окон, без фокуса. В покое и под мышью щелчки
-/// проходят насквозь к окну под ним; панель после задержки — нажимается. Прячется, пока идёт полноэкранное приложение.</summary>
+/// <summary>Окно плашки или значка над треем: на экране трея, поверх окон, без фокуса. Щелчки проходят насквозь к окну
+/// под ним, пока мышь не задержится над виджетом. Прячется, пока идёт полноэкранное приложение.</summary>
 internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 {
 	private PixelRect _anchor;
 	private PixelRect? _work;
 	private WidgetLook? _look;
+	private bool _clickable;
 	private bool _hidden;
 
 	// Открыто хозяином: спрятанное на время полноэкранного приложения возвращается, закрытое — нет.
@@ -22,6 +25,8 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 	public event Action<string>? AgentChosen;
 
 	public event Action<Session>? SessionChosen;
+
+	public event Action? Clicked;
 
 	/// <summary>Видимая часть: окно не бывает ниже 39 точек, а полоска — 4; мышь над прозрачным остатком — над вкладками
 	/// браузера, а не над виджетом. Спрятанное окно мышь не раскрывает.</summary>
@@ -46,19 +51,22 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 
 	public void Render(WidgetView view) => DataContext = view;
 
-	public void Show(WidgetLook look)
+	public void Show(WidgetLook look, bool clickable)
 	{
-		if (look == _look)
+		if (look != _look)
 		{
-			return;
+			_look = look;
+			Look(look);
 		}
 
-		_look = look;
-		Look(look);
-
-		if (OperatingSystem.IsWindows() && TryGetPlatformHandle() is { } handle)
+		if (clickable != _clickable)
 		{
-			WindowStyle.ClickThrough(handle.Handle, look != WidgetLook.Panel);
+			_clickable = clickable;
+
+			if (OperatingSystem.IsWindows() && TryGetPlatformHandle() is { } handle)
+			{
+				WindowStyle.ClickThrough(handle.Handle, !clickable);
+			}
 		}
 	}
 
@@ -72,7 +80,7 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 		}
 	}
 
-	public void Tick()
+	public virtual void Tick()
 	{
 		if (!_open || !OperatingSystem.IsWindows() || TryGetPlatformHandle() is not { } handle)
 		{
@@ -110,6 +118,15 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 	/// <summary>Показать вид: полоску, плашку или панель.</summary>
 	protected abstract void Look(WidgetLook look);
 
+	/// <summary>Щелчок левой кнопкой по этому открывает и закрывает панель.</summary>
+	protected void Opens(Control face) => face.PointerReleased += (_, e) =>
+	{
+		if (e.InitialPressMouseButton == MouseButton.Left)
+		{
+			Clicked?.Invoke();
+		}
+	};
+
 	protected void Wire(WidgetPanel rows)
 	{
 		rows.AgentChosen += agent => AgentChosen?.Invoke(agent);
@@ -121,7 +138,7 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 		if (OperatingSystem.IsWindows() && TryGetPlatformHandle() is { } handle)
 		{
 			WindowStyle.Quiet(handle.Handle);
-			WindowStyle.ClickThrough(handle.Handle, _look != WidgetLook.Panel);
+			WindowStyle.ClickThrough(handle.Handle, !_clickable);
 			WindowStyle.Private(handle.Handle, _hidden);
 		}
 	}

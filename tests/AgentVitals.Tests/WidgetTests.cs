@@ -10,19 +10,101 @@ namespace AgentVitals.Tests;
 /// <summary>Хозяин виджета и наведение — с подставными окнами: настоящие держатся на Win32 и проверяются на машине.</summary>
 public class WidgetTests
 {
+	private static readonly DateTime _t = new(2026, 10, 20, 12, 0, 0, DateTimeKind.Utc);
+
 	[Fact]
-	public void HoverPeeksThenOpensThePanel()
+	public void PillWaitsForTheMouseToStay() // мимоходом к вкладке браузера плашка не выезжает, а панель сама не раскрывается
 	{
 		var hover = new WidgetHover();
-		var t = new DateTime(2026, 10, 20, 12, 0, 0, DateTimeKind.Utc);
 
 		Assert.Equal(
-			new[] { WidgetLook.Rest, WidgetLook.Peek, WidgetLook.Peek, WidgetLook.Panel, WidgetLook.Panel, WidgetLook.Rest, WidgetLook.Peek },
-			new[]
-			{
-				hover.Next(false, t), hover.Next(true, t), hover.Next(true, t.AddMilliseconds(300)), hover.Next(true, t.AddMilliseconds(500)),
-				hover.Next(true, t.AddSeconds(5)), hover.Next(false, t.AddSeconds(6)), hover.Next(true, t.AddSeconds(7)),
-			});
+			new[] { WidgetLook.Rest, WidgetLook.Rest, WidgetLook.Peek, WidgetLook.Peek },
+			new[] { hover.Next(true, _t), hover.Next(true, At(200)), hover.Next(true, At(300)), hover.Next(true, At(5000)) });
+	}
+
+	[Fact]
+	public void ClickOpensAndClosesThePanel()
+	{
+		var hover = Armed();
+
+		hover.Click();
+		var open = hover.Next(true, At(400));
+		hover.Click();
+
+		Assert.Equal((WidgetLook.Panel, WidgetLook.Peek), (open, hover.Next(true, At(500))));
+	}
+
+	[Fact]
+	public void ClickBeforeThePillDoesNothing()
+	{
+		var hover = new WidgetHover();
+		hover.Next(true, _t);
+
+		hover.Click();
+
+		Assert.Equal(WidgetLook.Peek, hover.Next(true, At(300)));
+	}
+
+	[Fact]
+	public void PassingByStartsOver() // мышь пробежала по полоске: следующий заход снова ждёт 0,3 с
+	{
+		var hover = new WidgetHover();
+		hover.Next(true, _t);
+		hover.Next(true, At(200));
+
+		Assert.Equal((WidgetLook.Rest, WidgetLook.Rest), (hover.Next(false, At(250)), hover.Next(true, At(300))));
+	}
+
+	[Fact]
+	public void PanelStaysAMomentAfterTheMouseLeaves()
+	{
+		var hover = Armed();
+		hover.Click();
+
+		Assert.Equal(
+			new[] { WidgetLook.Panel, WidgetLook.Panel, WidgetLook.Rest },
+			new[] { hover.Next(false, At(1000)), hover.Next(false, At(1400)), hover.Next(false, At(1500)) });
+	}
+
+	[Fact]
+	public void ClickOnTheWidgetOpensThePanelAtOnce()
+	{
+		Fake? made = null;
+		var host = new WidgetHost(kind => made = new Fake(kind) { Area = new(900, 0, 120, 4) });
+		host.Apply(WidgetKind.Notch, default);
+		host.Tick(new PixelPoint(950, 2), _t);
+		host.Tick(new PixelPoint(950, 2), At(300));
+
+		made!.Click();
+
+		Assert.Equal(new[] { (WidgetLook.Rest, false), (WidgetLook.Peek, true), (WidgetLook.Panel, true) }, made.Looks);
+	}
+
+	[Fact]
+	public void ClicksPassOnceTheCursorIsOff() // панель ещё видна полсекунды, но адресная строка под ней уже нажимается
+	{
+		Fake? made = null;
+		var host = new WidgetHost(kind => made = new Fake(kind) { Area = new(900, 0, 120, 4) });
+		host.Apply(WidgetKind.Notch, default);
+		host.Tick(new PixelPoint(950, 2), _t);
+		host.Tick(new PixelPoint(950, 2), At(300));
+		made!.Click();
+
+		host.Tick(new PixelPoint(950, 300), At(400));
+
+		Assert.Equal((WidgetLook.Panel, false), made.Looks[^1]);
+	}
+
+	[Fact]
+	public void PinnedPillStaysOutAndLetsClicksThrough()
+	{
+		Fake? made = null;
+		var host = new WidgetHost(kind => made = new Fake(kind) { Area = new(900, 0, 120, 4) }) { Pinned = true };
+		host.Apply(WidgetKind.Notch, default);
+
+		host.Tick(new PixelPoint(10, 500), _t);
+
+		Assert.Equal((WidgetLook.Peek, false), made!.Looks[^1]);
 	}
 
 	[Fact]
@@ -67,11 +149,11 @@ public class WidgetTests
 
 		host.Render(View(WidgetState.Waiting), hide: false);
 		host.Tick(new PixelPoint(10, 500), DateTime.UtcNow);
-		Assert.Equal(WidgetLook.Peek, made!.Looks[^1]);
+		Assert.Equal((WidgetLook.Peek, false), made!.Looks[^1]);
 
 		host.Render(View(WidgetState.Idle), hide: false);
 		host.Tick(new PixelPoint(10, 500), DateTime.UtcNow);
-		Assert.Equal(WidgetLook.Rest, made.Looks[^1]);
+		Assert.Equal((WidgetLook.Rest, false), made.Looks[^1]);
 	}
 
 	[Fact]
@@ -102,6 +184,18 @@ public class WidgetTests
 
 	private static WidgetView View(WidgetState state) => new(state, "", "", "", 0, Brushes.Gray, Brushes.Gray, null, [], []);
 
+	private static DateTime At(int milliseconds) => _t.AddMilliseconds(milliseconds);
+
+	/// <summary>Мышь простояла над виджетом 0,3 с: плашка выехала и нажимается.</summary>
+	private static WidgetHover Armed()
+	{
+		var hover = new WidgetHover();
+		hover.Next(true, _t);
+		hover.Next(true, At(300));
+
+		return hover;
+	}
+
 	/// <summary>Окно, которое только записывает, что с ним делали.</summary>
 	private sealed class Fake(WidgetKind kind) : IWidgetWindow
 	{
@@ -109,13 +203,16 @@ public class WidgetTests
 
 		public event Action<Session>? SessionChosen;
 
+		public event Action? Clicked;
+
 		public WidgetKind Kind => kind;
 
 		public bool Closed { get; private set; }
 
 		public bool Hidden { get; private set; }
 
-		public List<WidgetLook> Looks { get; } = [];
+		/// <summary>Каждый новый вид и нажимается ли он; повтор того же не пишется — как настоящее окно его пропускает.</summary>
+		public List<(WidgetLook Look, bool Clickable)> Looks { get; } = [];
 
 		public PixelRect Area { get; init; }
 
@@ -127,7 +224,15 @@ public class WidgetTests
 		{
 		}
 
-		public void Show(WidgetLook look) => Looks.Add(look);
+		public void Show(WidgetLook look, bool clickable)
+		{
+			if (Looks.Count == 0 || Looks[^1] != (look, clickable))
+			{
+				Looks.Add((look, clickable));
+			}
+		}
+
+		public void Click() => Clicked?.Invoke();
 
 		public void Private(bool hide) => Hidden = hide;
 

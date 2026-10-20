@@ -284,6 +284,7 @@ internal sealed class TrayApp
 
 		// Снимок до окна: новое окно сразу своего размера.
 		_widget.Render(view, Store.Current.Private);
+		_widget.Pinned = Store.Current.NotchPill;
 		_widget.Apply(kind, Anchor());
 		_widgetTimer.IsEnabled = kind != WidgetKind.Off;
 		_toast.Avoid = _widget.Chip;

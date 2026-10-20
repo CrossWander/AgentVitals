@@ -41,16 +41,33 @@
                         </Transitions>
                     </StackPanel.Transitions>
 
-                    <StackPanel Name="Header" Orientation="Horizontal" Height="30" Spacing="8" HorizontalAlignment="Center">
-                        <Ellipse Width="7" Height="7" Fill="{Binding Dot}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"
-                                   MaxWidth="280" TextTrimming="CharacterEllipsis"/>
-                        <ProgressBar Theme="{StaticResource Meter}" Width="52" Height="4" Value="{Binding Fill}"
-                                     Foreground="{Binding Meter}" VerticalAlignment="Center" IsVisible="{Binding HasValue}"/>
-                        <TextBlock Text="{Binding Value}" FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding HasValue}"/>
-                        <TextBlock Classes="faint" Text="{Binding Detail}" VerticalAlignment="Center"
-                                   MaxWidth="240" TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
+                    <!-- Шапка во всю ширину — щелчок по ней открывает и закрывает панель. Агенты в ряд; «ждёт» и «закончил» —
+                         надпись целиком -->
+                    <Border Name="Top" Height="30" Background="Transparent" Cursor="Hand">
+                        <StackPanel Name="Header" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <Ellipse Width="7" Height="7" Fill="{Binding Dot}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding !ShowsAgents}"
+                                       MaxWidth="280" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Classes="faint" Text="{Binding Detail}" VerticalAlignment="Center" IsVisible="{Binding !ShowsAgents}"
+                                       MaxWidth="240" TextTrimming="CharacterEllipsis"/>
+                            <ItemsControl ItemsSource="{Binding Agents}" VerticalAlignment="Center" IsVisible="{Binding ShowsAgents}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="14"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:WidgetAgent">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Value}" Foreground="{Binding Meter}" FontWeight="SemiBold"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
 
                     <local:WidgetPanel Name="Rows" Width="400" Opacity="0" Margin="0,2,0,10" HorizontalAlignment="Center">
                         <local:WidgetPanel.Transitions>

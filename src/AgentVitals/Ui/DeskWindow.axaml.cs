@@ -33,6 +33,13 @@ internal partial class DeskWindow : Window, IWidgetWindow
 
 	public event Action<Session>? SessionChosen;
 
+	// Раскрывать нечего: щелчок по агенту или сессии — сразу их окно.
+	public event Action? Clicked
+	{
+		add { }
+		remove { }
+	}
+
 	public PixelRect Area => IsVisible ? new(Position, PixelSize.FromSize(ClientSize, RenderScaling)) : default;
 
 	public void Open(PixelRect anchor)
@@ -50,8 +57,8 @@ internal partial class DeskWindow : Window, IWidgetWindow
 
 	public void Render(WidgetView view) => DataContext = view;
 
-	// Один вид: ни полоски, ни панели.
-	public void Show(WidgetLook look)
+	// Один вид: ни полоски, ни панели; нажимается всегда — его таскают мышью.
+	public void Show(WidgetLook look, bool clickable)
 	{
 	}
 
