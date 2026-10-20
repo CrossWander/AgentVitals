@@ -110,6 +110,13 @@ public class TextTests
 		Assert.Equal("langAlertLeft", Text.QuotaToast(alert, System.DateTime.UtcNow, PercentMode.Left).Message);
 	}
 
+	[Theory]
+	[InlineData(true, "Off", true)]
+	[InlineData(false, "Off", false)]
+	[InlineData(false, "Notch", true)] // тосты выключены, а «закончил» на плашке — по тому же порогу
+	public void TurnLengthStaysWhileTheWidgetUsesIt(bool toasts, string widget, bool enabled) =>
+		Assert.Equal(enabled, SettingsPage.TurnEnabled(toasts, System.Enum.Parse<WidgetKind>(widget)));
+
 	// Режим — строкой: PercentMode внутренний, а метод теста открытый.
 	[Theory]
 	[InlineData(90, "Used", "90%")]

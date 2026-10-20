@@ -48,6 +48,30 @@
             <Setter Property="Stroke" Value="{DynamicResource TextDim}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
+        <!-- Карточка вида виджета: выбранная — синей рамкой -->
+        <Style Selector="RadioButton.look">
+            <Setter Property="Margin" Value="0,0,6,6"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource CardLine}"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="RadioButton.look:checked">
+            <Setter Property="BorderBrush" Value="{DynamicResource Blue}"/>
+        </Style>
+        <Style Selector="RadioButton.look TextBlock.name">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Border.screen">
+            <Setter Property="Height" Value="92"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="#22303F"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+        </Style>
+        <Style Selector="Border.taskbar">
+            <Setter Property="Height" Value="10"/>
+            <Setter Property="Background" Value="#0E1216"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+        </Style>
     </UserControl.Styles>
 
     <Grid ColumnDefinitions="270,*" ColumnSpacing="14">
@@ -69,6 +93,15 @@
                         <StackPanel Grid.Column="1">
                             <TextBlock Classes="section" Text="{DynamicResource langNotifications}"/>
                             <TextBlock Classes="note" Text="{DynamicResource langNotificationsNote}"/>
+                        </StackPanel>
+                    </Grid>
+                </RadioButton>
+                <RadioButton Name="WidgetTab" Theme="{StaticResource ListRow}" GroupName="section" Tag="Widget" IsCheckedChanged="OnSection">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <Path Classes="icon section" Data="{StaticResource IconWidget}"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Classes="section" Text="{DynamicResource langWidget}"/>
+                            <TextBlock Classes="note" Text="{DynamicResource langWidgetNote}"/>
                         </StackPanel>
                     </Grid>
                 </RadioButton>
@@ -230,6 +263,66 @@
                             </Border>
                         </StackPanel>
                     </Border>
+
+                    <!-- Вид виджета: четыре карточки с картинкой, включён один. Tag — WidgetKind; картинки — как на доске
+                         «Настройки → Виджет», цвета у них свои: это рисунок экрана, а не часть темы -->
+                    <StackPanel Name="WidgetRows" IsVisible="False" Spacing="12">
+                        <UniformGrid Name="WidgetKinds" Columns="2">
+                            <RadioButton Classes="look" Theme="{StaticResource ListRow}" GroupName="widget" Tag="Off" IsCheckedChanged="OnWidget">
+                                <StackPanel Spacing="8">
+                                    <Border Classes="screen">
+                                        <Border Classes="taskbar"/>
+                                    </Border>
+                                    <TextBlock Classes="name" Text="{DynamicResource langWidgetOff}"/>
+                                    <TextBlock Classes="note" Text="{DynamicResource langWidgetOffNote}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton Classes="look" Theme="{StaticResource ListRow}" GroupName="widget" Tag="Notch" IsCheckedChanged="OnWidget">
+                                <StackPanel Spacing="8">
+                                    <Border Classes="screen">
+                                        <Panel>
+                                            <Border Width="76" Height="3" CornerRadius="0,0,2,2" Background="#34D399"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                                            <Border Classes="taskbar"/>
+                                        </Panel>
+                                    </Border>
+                                    <TextBlock Classes="name" Text="{DynamicResource langWidgetNotch}"/>
+                                    <TextBlock Classes="note" Text="{DynamicResource langWidgetNotchNote}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton Classes="look" Theme="{StaticResource ListRow}" GroupName="widget" Tag="Chip" IsCheckedChanged="OnWidget">
+                                <StackPanel Spacing="8">
+                                    <Border Classes="screen">
+                                        <Panel>
+                                            <Border Width="54" Height="16" CornerRadius="8" Margin="0,0,8,16" Background="#F21C1C1E"
+                                                    BorderBrush="#33FFFFFF" BorderThickness="1"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                                            <Border Classes="taskbar"/>
+                                        </Panel>
+                                    </Border>
+                                    <TextBlock Classes="name" Text="{DynamicResource langWidgetChip}"/>
+                                    <TextBlock Classes="note" Text="{DynamicResource langWidgetChipNote}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton Classes="look" Theme="{StaticResource ListRow}" GroupName="widget" Tag="Desktop" IsCheckedChanged="OnWidget">
+                                <StackPanel Spacing="8">
+                                    <Border Classes="screen">
+                                        <Panel>
+                                            <Border Width="96" Height="58" CornerRadius="8" Margin="0,14,18,0" Background="#990A0E14"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                                            <Border Width="150" Height="72" CornerRadius="4" Margin="14,10,0,0" Background="#1E1E1E"
+                                                    BorderBrush="#343A40" BorderThickness="1"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                            <Border Classes="taskbar"/>
+                                        </Panel>
+                                    </Border>
+                                    <TextBlock Classes="name" Text="{DynamicResource langWidgetDesktop}"/>
+                                    <TextBlock Classes="note" Text="{DynamicResource langWidgetDesktopNote}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </RadioButton>
+                        </UniformGrid>
+                        <TextBlock Classes="note" Text="{DynamicResource langWidgetEye}" TextWrapping="Wrap"/>
+                    </StackPanel>
 
                     <Border Name="SystemRows" Classes="rows" IsVisible="False">
                         <StackPanel>

@@ -13,6 +13,8 @@
     <!-- Разделы настроек. Каждый рисунок квадратный по фигурам с площадью — см. робота выше -->
     <StreamGeometry x:Key="IconToggles">M7,4 H17 A3,3 0 0 1 17,10 H7 A3,3 0 0 1 7,4 Z M7,14 H17 A3,3 0 0 1 17,20 H7 A3,3 0 0 1 7,14 Z M7,5.5 A1.5,1.5 0 1 0 7.01,5.5 Z M17,15.5 A1.5,1.5 0 1 0 17.01,15.5 Z</StreamGeometry>
     <StreamGeometry x:Key="IconBell">M12,3 A6.5,6.5 0 0 1 18.5,9.5 V14 L21,17 H3 L5.5,14 V9.5 A6.5,6.5 0 0 1 12,3 Z M9.5,19 H14.5 A2.5,2.5 0 0 1 9.5,19 Z</StreamGeometry>
+    <!-- Виджет: окошко с полоской квоты -->
+    <StreamGeometry x:Key="IconWidget">M4,6 H20 A2,2 0 0 1 22,8 V16 A2,2 0 0 1 20,18 H4 A2,2 0 0 1 2,16 V8 A2,2 0 0 1 4,6 Z M6,12 H14</StreamGeometry>
     <StreamGeometry x:Key="IconInfo">M12,3 A9,9 0 1 0 12.01,3 Z M12,11 V16.5 M12,7.6 L12.01,7.6</StreamGeometry>
     <StreamGeometry x:Key="IconArrowUp">M12,18 V6 M6,12 L12,6 L18,12</StreamGeometry>
     <StreamGeometry x:Key="IconClose">M6,6 L18,18 M18,6 L6,18</StreamGeometry>

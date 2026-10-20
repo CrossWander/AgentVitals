@@ -38,6 +38,9 @@ internal static class Store
 		// Что значат проценты квот везде: израсходовано или осталось. Пороги хранятся израсходованными в любом режиме.
 		public PercentMode Percent { get; set; } = PercentMode.Used;
 
+		// Виджет на экране кроме значка в трее; по умолчанию его нет — как до 1.5.0.
+		public WidgetKind Widget { get; set; } = WidgetKind.Off;
+
 		// Пороги квоты, %: с них тосты «важно» и «критично», жёлтый и красный.
 		public int ImportantAt { get; set; } = 75;
 

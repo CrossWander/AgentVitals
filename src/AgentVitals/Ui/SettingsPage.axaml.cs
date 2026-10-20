@@ -23,7 +23,7 @@ internal partial class SettingsPage : UserControl
 	// Последний ответ GitHub — от кнопки или автопроверки; null — ещё не спрашивали.
 	private Release? _release;
 
-	// Открытый раздел — Tag его строки слева: General, Notifications, System, About.
+	// Открытый раздел — Tag его строки слева: General, Notifications, Widget, System, About.
 	private string _section = "General";
 
 	public SettingsPage()
@@ -50,7 +50,11 @@ internal partial class SettingsPage : UserControl
 		Select(TurnMinutes, Store.Current.TurnMinutes.ToString(CultureInfo.InvariantCulture));
 		ShowLevels();
 		SessionToastsToggle.IsChecked = Store.Current.SessionToasts;
-		TurnPanel.IsEnabled = Store.Current.SessionToasts;
+		TurnPanel.IsEnabled = TurnEnabled(Store.Current.SessionToasts, Store.Current.Widget);
+
+		// Виджет держится на Win32: на других системах раздела нет.
+		WidgetTab.IsVisible = OperatingSystem.IsWindows();
+		Select(WidgetKinds, Store.Current.Widget.ToString());
 		WaitingSoundToggle.IsChecked = Store.Current.WaitingSound;
 		WaitingSoundToggle.IsEnabled = Store.Current.SessionToasts;
 
@@ -163,9 +167,25 @@ internal partial class SettingsPage : UserControl
 		if (!_loading)
 		{
 			Store.Current.SessionToasts = SessionToastsToggle.IsChecked == true;
-			TurnPanel.IsEnabled = Store.Current.SessionToasts;
+			TurnPanel.IsEnabled = TurnEnabled(Store.Current.SessionToasts, Store.Current.Widget);
 			WaitingSoundToggle.IsEnabled = Store.Current.SessionToasts;
 			Store.Save();
+		}
+	}
+
+	/// <summary>Порог «ход дольше» нужен, пока о конце хода говорит хоть кто-то: тост или виджет.</summary>
+	internal static bool TurnEnabled(bool toasts, WidgetKind widget) => toasts || widget != WidgetKind.Off;
+
+	private void OnWidget(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string name })
+		{
+			Store.Current.Widget = Enum.Parse<WidgetKind>(name);
+			Store.Save();
+			TurnPanel.IsEnabled = TurnEnabled(Store.Current.SessionToasts, Store.Current.Widget);
+
+			// Виджет включается и меняет вид сразу, без перезапуска.
+			Changed?.Invoke();
 		}
 	}
 
@@ -280,6 +300,7 @@ internal partial class SettingsPage : UserControl
 	{
 		GeneralRows.IsVisible = _section == "General";
 		NotificationsRows.IsVisible = _section == "Notifications";
+		WidgetRows.IsVisible = _section == "Widget";
 		SystemRows.IsVisible = _section == "System";
 		AboutView.IsVisible = _section == "About";
 
