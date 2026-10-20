@@ -84,7 +84,7 @@ public static class SessionWatcher
 			sessions.Add(new(
 				Path.GetFileNameWithoutExtension(file),
 				state,
-				state == SessionState.Working ? session.Tool : null,
+				state == SessionState.Idle ? null : session.Tool,
 				Folder(session.Cwd),
 				Branch(session.Cwd),
 				state == SessionState.Idle ? null : turn,
@@ -94,7 +94,8 @@ public static class SessionWatcher
 				session.Pid,
 				session.Cwd,
 				agent,
-				session.Prompt));
+				session.Prompt,
+				state == SessionState.Idle ? session.Time : null));
 		}
 
 		return sessions;

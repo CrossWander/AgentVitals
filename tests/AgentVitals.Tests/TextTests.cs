@@ -59,6 +59,14 @@ public class TextTests
 	}
 
 	[Fact]
+	public void IdleShowsHowLongItRests()
+	{
+		var now = System.DateTime.UtcNow;
+
+		Assert.Equal("langSessionIdle · langMinutes", Text.Session(new Session("s", SessionState.Idle, null, "repo", null, IdleSince: now.AddMinutes(-12)), now));
+	}
+
+	[Fact]
 	public void TurnShowsHowLongItRuns() // «работает · 3 мин»; первую минуту — без таймера
 	{
 		var now = System.DateTime.UtcNow;

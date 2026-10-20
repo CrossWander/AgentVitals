@@ -242,7 +242,7 @@ internal static class Text
 		Health.Critical => "langHealthCritical",
 	});
 
-	/// <summary>Состояние сессии, а у идущего хода — и сколько он длится: «работает · 3 мин». Первую минуту таймера нет.</summary>
+	/// <summary>Состояние сессии и сколько оно длится: «работает · 3 мин», «простой · 12 мин». Первую минуту таймера нет.</summary>
 	public static string Session(Session session, DateTime now)
 	{
 		var state = session.State switch
@@ -252,7 +252,7 @@ internal static class Text
 			SessionState.Waiting => Localization.Get("langSessionWaiting"),
 		};
 
-		return session.TurnStarted is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
+		return (session.TurnStarted ?? session.IdleSince) is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
 	}
 
 	/// <summary>Тост о сессии: заголовок — кто и что, текст — где и сколько ход занял.</summary>

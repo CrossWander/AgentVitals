@@ -33,7 +33,9 @@ internal sealed record SessionRecord(SessionState State, string? Tool, string Cw
 /// <remarks>Pid и Cwd — процесс Claude Code и полный путь папки: по ним находится окно, где идёт сессия.</remarks>
 /// <remarks>Agent — имя агента: по нему сессия попадает на свою вкладку и в подпись тоста.</remarks>
 /// <remarks>Prompt — первый запрос; null — сессия начата до обновления или запроса ещё не было.</remarks>
-public sealed record Session(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? TurnStarted = null, TimeSpan? TurnDuration = null, int? Pid = null, string? Cwd = null, string Agent = "Claude", string? Prompt = null);
+/// <remarks>Tool — инструмент, который работает или ждёт разрешения; у простоя — null.</remarks>
+/// <remarks>IdleSince — с какого момента сессия простаивает (последнее событие); у работающей и ждущей — null.</remarks>
+public sealed record Session(string Id, SessionState State, string? Tool, string Folder, string? Branch, DateTime? TurnStarted = null, TimeSpan? TurnDuration = null, int? Pid = null, string? Cwd = null, string Agent = "Claude", string? Prompt = null, DateTime? IdleSince = null);
 
 /// <summary>О чём сказать тостом: ход закончился или сессия ждёт разрешения.</summary>
 public sealed record SessionAlert(Session Session, bool Waiting);

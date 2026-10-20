@@ -52,6 +52,25 @@ public class HookWriterTests
 		HookWriter.Apply(new JsonObject { ["session_id"] = "s1", ["hook_event_name"] = "UserPromptSubmit", ["cwd"] = @"C:\x", ["prompt"] = text }, temp.Path, at.Ticks);
 
 	[Fact]
+	public void WaitingKeepsItsTool() // «HyperXAudioGuard · Bash» на плашке: что ждёт разрешения
+	{
+		using var temp = new TempDirectory();
+		HookWriter.Apply(JsonNode.Parse("""{ "session_id": "s1", "hook_event_name": "PermissionRequest", "tool_name": "Bash", "cwd": "C:\\x" }"""), temp.Path, at: 100);
+
+		Assert.Equal("Bash", HookWriter.Read(Path.Combine(temp.Path, "s1.json"))!.Tool);
+	}
+
+	[Fact]
+	public void PermissionNotificationKeepsTheToolBeforeIt() // у Notification нет tool_name — инструмент от PreToolUse
+	{
+		using var temp = new TempDirectory();
+		HookWriter.Apply(JsonNode.Parse("""{ "session_id": "s1", "hook_event_name": "PreToolUse", "tool_name": "Bash", "cwd": "C:\\x" }"""), temp.Path, at: 100);
+		HookWriter.Apply(JsonNode.Parse("""{ "session_id": "s1", "hook_event_name": "Notification", "notification_type": "permission_prompt", "cwd": "C:\\x" }"""), temp.Path, at: 2_000_000);
+
+		Assert.Equal("Bash", HookWriter.Read(Path.Combine(temp.Path, "s1.json"))!.Tool);
+	}
+
+	[Fact]
 	public void SessionKeepsItsFirstPrompt() // по нему различают сессии в одной папке; «да» и «продолжай» потом — не название
 	{
 		using var temp = new TempDirectory();

@@ -79,7 +79,14 @@ public static class HookWriter
 				? new SessionRecord(SessionState.Idle, null, cwd, at, Ended: true, Agent: agent)
 				: new SessionRecord(
 					state.Value,
-					state == SessionState.Working ? (string?)payload["tool_name"] : null,
+
+					// Ждущий — тот инструмент, о котором спрашивают; у уведомления его нет — от PreToolUse перед ним.
+					state.Value switch
+					{
+						SessionState.Working => (string?)payload["tool_name"],
+						SessionState.Waiting => (string?)payload["tool_name"] ?? recorded?.Tool,
+						SessionState.Idle => null,
+					},
 					cwd,
 					at,
 
