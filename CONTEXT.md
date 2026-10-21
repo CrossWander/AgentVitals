@@ -117,6 +117,35 @@ _Avoid_: run, request
 **Hooks**:
 AgentVitals' entries in an agent's own settings (Claude Code's settings.json, Codex's hooks.json) through which live sessions report their state; they are On, Off or Moved (pointing at an old copy of the program). Codex runs new hooks only after the person trusts them in /hooks.
 
+### Widget
+
+**Widget**:
+AgentVitals' window that stays on the screen besides the tray icon; it has one of three looks — the notch, the chip or the desktop widget — and is off until the person picks one.
+_Avoid_: overlay, HUD
+
+**Notch**:
+The widget as a black shape at the top centre of the screen with the tray; it rests as the strip and comes out as a pill when the mouse rests on it or a live session waits or finishes.
+
+**Strip**:
+The notch at rest: a thin line in the colour of the shown agent's quota; clicks go through it to the window below.
+
+**Chip**:
+The widget in the corner of the screen next to the tray: every agent in a row, or one agent.
+
+**Desktop widget**:
+The widget under all windows, seen on the desktop: a column for every visible agent and a few live sessions; it is dragged anywhere and keeps its place.
+
+**Panel**:
+The opened notch or chip: every visible agent and up to three live sessions; a click on the notch or the chip opens and closes it.
+
+**Glow**:
+The light of the notch and the chip on an event: a pulse while a session waits, one flash when a turn ends, a slow pulse while the shown agent's quota is Critical; never at rest.
+_Avoid_: animation, highlight
+
+**Percent mode**:
+Whether quota percentages everywhere say how much is used or how much is left; thresholds and health still count the used share.
+_Avoid_: display mode
+
 ### Alerts
 
 **Status page**:

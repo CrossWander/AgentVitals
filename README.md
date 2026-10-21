@@ -45,12 +45,13 @@ scrolls.
 | Tray icon | A pulse line coloured by the limit closest to running out; it beats while an agent works, and a blue dot blinks while one waits for you |
 | Alerts | Toasts at 75% and 90% of a limit (adjustable from 50% to 95%), when a limit won't last until its reset at this pace, when a critical limit resets, when a long turn ends, when an agent asks for permission and when an agent's service status changes; two soft sounds you can turn on — for permission and for *critical* |
 | Live sessions | Every open Claude Code and Codex session, on its agent's tab, with its folder, git branch, state and turn timer → [more](#live-sessions) |
+| Widget | Quotas and sessions on the screen without hovering the tray icon: a notch at the top, a chip by the tray or a card on the desktop; clicks go through to the window below → [more](#widget) |
 | Accounts | Every account you have signed in to stays on its agent's tab with its last numbers, and a toast says when a remembered one is available again → [more](#accounts) |
 | Usage statistics | For Claude and Codex: today's cost, tokens and working time next to yesterday's; a 30-day chart of cost, tokens, cache or models → [more](#usage-statistics) |
 | Service status | Each tab shows its agent's: status.claude.com for Claude, the Codex group of status.openai.com for Codex (the whole OpenAI page only if that group disappears), the Copilot component of githubstatus.com for Copilot, status.cursor.com for Cursor; a toast when one changes |
 | After sleep | Asks again as soon as the PC wakes; a window whose reset time has passed shows 0% instead of stale numbers |
 | Updates | Checks GitHub at start and once a day and toasts a new version once; **Update** in settings downloads it, checks its SHA-256 and swaps the exe in place → [more](#updates) |
-| Screen sharing | The eye at the end of the plan line hides the account email and session prompts, in the window and the hover card |
+| Screen sharing | The eye at the end of the plan line hides the account email and session prompts, in the window, the hover card and the widget |
 | Languages and themes | English, Ukrainian and Russian; light, dark or as in Windows |
 | Keyboard | Esc closes the window, F5 or Ctrl+R refreshes, Ctrl+1, Ctrl+2… switch the agent tabs in their order |
 
@@ -58,9 +59,11 @@ scrolls.
 
 The gear button at the bottom of the window, or *Settings* in the right-click menu, opens the
 AgentVitals window on its *Settings* tab. It is laid out like the [Agents tab](#agents-tab): sections on
-the left, their rows on the right. *General* holds the language, theme and how often to check quotas;
+the left, their rows on the right. *General* holds the language, theme, how often to check quotas and
+*Quota percentages*: *Used* or *Left*, the same in the window, the widget, toasts and thresholds;
 *Notifications* — the *important* and *critical* levels, session toasts and their two sounds;
-*Startup and updates* — start with Windows and updates; *About* — the author, the version and links.
+*Widget* — which [widget](#widget) to show and how; *Startup and updates* — start with Windows and
+updates; *About* — the author, the version and links.
 Which agents to watch, the order of their tabs, live sessions and account names are on the
 [Agents tab](#agents-tab).
 
@@ -222,6 +225,42 @@ session into `sessions\` next to the exe. **Disconnect** removes only AgentVital
   only after you trust it: open `/hooks` in Codex once after connecting, and again after moving the
   exe. Esc in Codex fires its own `Interrupt` hook, so the session goes idle at once. Codex sessions
   show on the Codex tab, Claude Code sessions on the Claude tab.
+
+## Widget
+
+*Settings → Widget* keeps quotas and sessions on the screen, so you don't have to hover the tray icon.
+There are three looks and one is on at a time; until you pick one, there is no widget.
+
+| Notch | Chip | Desktop |
+|---|---|---|
+| <img src="docs/widget-notch.png" width="300" alt="Notch at the top with its panel open"> | <img src="docs/widget-chip.png" width="270" alt="Chip by the tray with its panel open"> | <img src="docs/widget-desktop.png" width="260" alt="Widget on the desktop"> |
+
+- **Notch at the top** — a black shape at the top centre of the screen with the tray. At rest it is a
+  thin strip in the colour of the quota, so the browser tabs under it stay usable. Rest the mouse on it
+  and the pill comes out: the agent, its percentage and the time to reset. *At rest → Pill* keeps the
+  pill out all the time, and clicks still go through it.
+- **Chip by the tray** — in the corner next to the tray: a ring and a percentage for every agent, or one
+  agent with its reset time.
+- **On the desktop** — a card under all windows, with a column for every agent and up to three
+  sessions. It stays after Win+D; drag it anywhere and it keeps its place. A click on an agent opens its
+  tab, a click on a session brings up its terminal.
+- **Clicks go through.** The notch and the chip catch the mouse only after it has rested on them for
+  0.3 s: a quick click on a browser tab under the strip reaches the tab. Then a click opens the panel
+  with every agent and up to three sessions, and another click closes it. In the panel, a click on an
+  agent opens its tab, a click on a session brings up its terminal.
+- **Which agent.** *Agent* picks the one the notch and the chip show, or *In turn* — every agent with
+  data for 6 seconds; the chip also has *All at once*. An agent whose quota turns critical takes turns
+  with the chosen one every 10 seconds.
+- **Waiting and done.** When a session asks for permission, the notch comes out by itself with
+  *Claude needs your permission*, the project and the tool; a click on it brings up that session's
+  terminal to answer. After a long turn it shows *Claude is done* for 5 seconds. The chip does the same.
+- **Glow.** The notch and the chip light up on events only: a blue pulse while a session waits, one
+  green flash when a turn ends, a slow red pulse while the shown agent's quota is critical. *Glow*
+  picks a halo, a sheen that runs across or a tint, or turns it off.
+- **Eye and full screen.** With the eye on, the widget stays out of screenshots and screen sharing
+  (Windows 10 2004 and later) and shows no project, branch or tool names; emails and prompts never
+  show in it. While a full-screen app runs on that screen, the notch and the chip hide, even when a
+  session waits.
 
 ## Usage statistics
 
