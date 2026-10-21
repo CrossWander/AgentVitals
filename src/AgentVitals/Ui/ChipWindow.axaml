@@ -9,9 +9,9 @@
         WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
         ShowInTaskbar="False" Topmost="True" ShowActivated="False">
 
-    <!-- Значок над треем: кольцо квоты, агент и процент; щелчком над ним выезжает панель. Поле — под тень.
+    <!-- Значок над треем: кольцо квоты, агент и процент; щелчком над ним выезжает панель. Поле — под тень и ореол.
          Панель всегда в разметке, только прозрачна: окно не меняет размер, и панель выезжает плавно, а не выскакивает -->
-    <StackPanel Name="Body" Margin="8" Spacing="8">
+    <StackPanel Name="Body" Margin="20" Spacing="8">
         <Border Name="Drawer" Classes="window" CornerRadius="16" Padding="10" Width="360" HorizontalAlignment="Right"
                 Opacity="0" IsHitTestVisible="False" RenderTransform="translateY(8px)">
             <Border.Transitions>
@@ -23,10 +23,25 @@
             <local:WidgetPanel Name="Rows"/>
         </Border>
 
-        <Border Name="Face" Classes="window" CornerRadius="17" Height="34" Padding="7,0,14,0" HorizontalAlignment="Right"
-                Cursor="Hand">
+        <!-- Подложка-ореол того же размера под значком: на события светится её тень -->
+        <Panel HorizontalAlignment="Right">
+        <Border Name="Halo" CornerRadius="17" Background="{DynamicResource Window}" Opacity="0" IsHitTestVisible="False"/>
+        <Border Name="Face" Classes="window" CornerRadius="17" Height="34" Padding="7,0,14,0" Cursor="Hand">
             <Panel>
-                <!-- Один агент — главный или по очереди; «ждёт», «закончил», нет агентов или данных — надпись -->
+                <!-- Свечение «цветом» и «блик»: заливка и отблеск во весь значок, за поля. Обрезает их своя рамка —
+                     обрезка у самого значка срезала бы ему тень -->
+                <Border Name="Lights" Margin="-7,0,-14,0" CornerRadius="17" ClipToBounds="True" IsHitTestVisible="False">
+                    <Panel>
+                        <Border Name="Wash" Opacity="0"/>
+                        <Border Name="Glint" Width="48" HorizontalAlignment="Left" Opacity="0">
+                            <Border.RenderTransform>
+                                <TranslateTransform X="-48"/>
+                            </Border.RenderTransform>
+                        </Border>
+                    </Panel>
+                </Border>
+
+                <!-- Один агент — выбранный в настройках или по очереди; «ждёт», «закончил», нет агентов или данных — надпись -->
                 <StackPanel Name="Single" Orientation="Horizontal" Spacing="8">
                     <StackPanel.Transitions>
                         <Transitions>
@@ -70,5 +85,6 @@
                 </ItemsControl>
             </Panel>
         </Border>
+        </Panel>
     </StackPanel>
 </Window>

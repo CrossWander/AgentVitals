@@ -322,8 +322,8 @@
                             </RadioButton>
                         </UniformGrid>
 
-                        <!-- Строка выбранного вида: у плашки — что видно в покое, у значка — как показать нескольких агентов.
-                             Tag — значение bool -->
+                        <!-- Строки выбранного вида: у плашки — что видно в покое и кого показывать, у значка — кого показывать;
+                             у обоих — свечение. Списки агентов заполняет код: в них видимые агенты -->
                         <Border Name="WidgetOptions" Classes="rows">
                             <StackPanel>
                                 <Border Name="NotchRow" Classes="row">
@@ -342,20 +342,14 @@
                                         </Border>
                                     </Grid>
                                 </Border>
-                                <Border Name="NotchTurnRow" Classes="row">
+                                <Border Name="NotchAgentRow" Classes="row">
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                         <StackPanel VerticalAlignment="Center" Spacing="2">
                                             <TextBlock Classes="name" Text="{DynamicResource langNotchAgent}"/>
                                             <TextBlock Classes="note" Text="{DynamicResource langNotchAgentHint}" TextWrapping="Wrap"/>
                                         </StackPanel>
-                                        <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
-                                            <StackPanel Name="NotchAgents" Orientation="Horizontal">
-                                                <RadioButton Theme="{StaticResource Segment}" GroupName="notchAgent" Tag="False"
-                                                             Content="{DynamicResource langNotchMain}" IsCheckedChanged="OnNotchAgents"/>
-                                                <RadioButton Theme="{StaticResource Segment}" GroupName="notchAgent" Tag="True"
-                                                             Content="{DynamicResource langNotchTurns}" IsCheckedChanged="OnNotchAgents"/>
-                                            </StackPanel>
-                                        </Border>
+                                        <ComboBox Name="NotchAgents" Grid.Column="1" MinWidth="150" VerticalAlignment="Center"
+                                                  SelectionChanged="OnWidgetAgent"/>
                                     </Grid>
                                 </Border>
                                 <Border Name="ChipRow" Classes="row">
@@ -364,12 +358,26 @@
                                             <TextBlock Classes="name" Text="{DynamicResource langChipAgents}"/>
                                             <TextBlock Classes="note" Text="{DynamicResource langChipAgentsHint}" TextWrapping="Wrap"/>
                                         </StackPanel>
+                                        <ComboBox Name="ChipAgents" Grid.Column="1" MinWidth="150" VerticalAlignment="Center"
+                                                  SelectionChanged="OnWidgetAgent"/>
+                                    </Grid>
+                                </Border>
+                                <Border Name="GlowRow" Classes="row">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Classes="name" Text="{DynamicResource langGlow}"/>
+                                            <TextBlock Classes="note" Text="{DynamicResource langGlowHint}" TextWrapping="Wrap"/>
+                                        </StackPanel>
                                         <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
-                                            <StackPanel Name="ChipAgents" Orientation="Horizontal">
-                                                <RadioButton Theme="{StaticResource Segment}" GroupName="chip" Tag="False"
-                                                             Content="{DynamicResource langChipRow}" IsCheckedChanged="OnChipAgents"/>
-                                                <RadioButton Theme="{StaticResource Segment}" GroupName="chip" Tag="True"
-                                                             Content="{DynamicResource langChipTurns}" IsCheckedChanged="OnChipAgents"/>
+                                            <StackPanel Name="Glows" Orientation="Horizontal">
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="glow" Tag="Off"
+                                                             Content="{DynamicResource langGlowOff}" IsCheckedChanged="OnGlow"/>
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="glow" Tag="Halo"
+                                                             Content="{DynamicResource langGlowHalo}" IsCheckedChanged="OnGlow"/>
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="glow" Tag="Sheen"
+                                                             Content="{DynamicResource langGlowSheen}" IsCheckedChanged="OnGlow"/>
+                                                <RadioButton Theme="{StaticResource Segment}" GroupName="glow" Tag="Wash"
+                                                             Content="{DynamicResource langGlowWash}" IsCheckedChanged="OnGlow"/>
                                             </StackPanel>
                                         </Border>
                                     </Grid>

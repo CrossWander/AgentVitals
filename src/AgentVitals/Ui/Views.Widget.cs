@@ -9,7 +9,7 @@ using AgentVitals.Core.Sessions;
 
 namespace AgentVitals;
 
-/// <summary>Что главное для плашки и значка, по важности.</summary>
+/// <summary>Что главное для плашки и значка, по важности. Low — у показанного агента квота «критично».</summary>
 internal enum WidgetState
 {
 	Waiting,
@@ -19,10 +19,20 @@ internal enum WidgetState
 	Idle,
 }
 
+/// <summary>Свечение плашки и значка — только на события: ждёт — пульс, закончил — вспышка, мало квоты — медленный пульс.</summary>
+internal enum WidgetGlow
+{
+	None,
+	Pulse,
+	Flash,
+	Slow,
+}
+
 /// <summary>Всё, что рисуют три вида виджета, одним снимком.</summary>
-/// <param name="Title">«Claude» в покое; «Claude ждёт разрешения», «Claude закончил».</param>
+/// <param name="Title">«Claude» в покое — первый агент, другого выбирает <see cref="Pick"/>; «Claude ждёт разрешения», «Claude закончил».</param>
 /// <param name="Value">«46%» в режиме процентов; у «ждёт» и «закончил» и без данных — "".</param>
-/// <param name="Detail">Сброс «2 ч 50 мин»; у «ждёт» — «проект · инструмент», у «закончил» — проект; под глазом проектов нет.</param>
+/// <param name="Detail">Сброс «2 ч 50 мин», без данных — «нет данных»; у «ждёт» — «проект · инструмент», у «закончил» — проект;
+/// под глазом проектов нет.</param>
 /// <param name="Fill">Полоска и кольцо, 0–100, в режиме процентов.</param>
 /// <param name="Meter">Цвет квоты показанного агента: полоска 4 px, кольцо, полоска плашки.</param>
 /// <param name="Dot">Цвет точки — общее состояние сессий, как у значка в трее.</param>
@@ -58,34 +68,80 @@ internal sealed record WidgetView(
 	/// <summary>Значок «все сразу» — агенты в ряд; «ждёт» и «закончил» занимают его целиком, без агентов — надпись.</summary>
 	public bool ShowsAgents => !Loud && Agents.Count > 0;
 
-	// Значок «по очереди»: столько показывается один агент.
+	public WidgetGlow Glow => State switch
+	{
+		WidgetState.Waiting => WidgetGlow.Pulse,
+		WidgetState.Finished => WidgetGlow.Flash,
+		WidgetState.Low => WidgetGlow.Slow,
+		_ => WidgetGlow.None,
+	};
+
+	/// <summary>Настройка «Агент»: по очереди.</summary>
+	public const string Turns = "turns";
+
+	/// <summary>Настройка «Агент» у значка: все сразу в ряд.</summary>
+	public const string All = "all";
+
+	// «По очереди»: столько показывается один агент.
 	private static readonly TimeSpan _turn = TimeSpan.FromSeconds(6);
 
-	/// <summary>Агент значка «по очереди»: каждые 6 с следующий из тех, у кого есть данные; квота на исходе — смена
-	/// замирает на нём. Без данных ни у кого — null.</summary>
-	public WidgetAgent? Turn(DateTime now)
+	// Агент с квотой на исходе чередуется с выбранным: столько показывается каждый.
+	private static readonly TimeSpan _alarm = TimeSpan.FromSeconds(10);
+
+	/// <summary>Что показать по настройке «Агент»: выбранного (нет такого — первого), а у кого квота «критично» — по
+	/// очереди с ним каждые 10 с; «По очереди» — всех с данными по 6 с; «Все сразу» — ряд. «Ждёт» и «закончил» — как есть.</summary>
+	/// <param name="choice">Имя агента, <see cref="Turns"/>, <see cref="All"/>; null — первый.</param>
+	public WidgetView Pick(string? choice, DateTime now)
 	{
-		if (State == WidgetState.Low)
+		if (Loud || Agents.Count == 0)
 		{
-			return Agents.FirstOrDefault(agent => agent.Name == Agent);
+			return this;
 		}
 
+		if (choice == All)
+		{
+			return Agents.Any(agent => agent.Low) ? this with { State = WidgetState.Low } : this;
+		}
+
+		if (choice == Turns)
+		{
+			return Turn(now) is { } turn ? With(turn) : this;
+		}
+
+		var chosen = Agents.FirstOrDefault(agent => agent.Name == choice) ?? Agents[0];
+		List<WidgetAgent> shown = [chosen, .. Agents.Where(agent => agent.Low && agent != chosen)];
+
+		return With(shown[(int)(now.Ticks / _alarm.Ticks % shown.Count)]);
+	}
+
+	/// <summary>Агент «по очереди»: каждые 6 с следующий из тех, у кого есть данные; квота «критично» смену не останавливает —
+	/// агент под 100% неделями держал бы её. Без данных ни у кого — null.</summary>
+	public WidgetAgent? Turn(DateTime now)
+	{
 		List<WidgetAgent> known = [.. Agents.Where(agent => agent.Known)];
 
 		return known.Count == 0 ? null : known[(int)(now.Ticks / _turn.Ticks % known.Count)];
 	}
 
-	/// <summary>Тот же снимок, но с агентом «по очереди» вместо главного; «ждёт», «закончил» и без данных — как есть.</summary>
-	public WidgetView Turned(DateTime now) => !Loud && Turn(now) is { } agent
-		? this with { Title = agent.Name, Value = agent.Value, Detail = agent.Resets, Fill = agent.Fill, Meter = agent.Meter, Agent = agent.Name }
-		: this;
+	/// <summary>Тот же снимок с этим агентом в шапке; «мало квоты» — по самому агенту.</summary>
+	internal WidgetView With(WidgetAgent agent) => this with
+	{
+		State = agent.Low ? WidgetState.Low : State == WidgetState.Low ? WidgetState.Idle : State,
+		Title = agent.Name,
+		Value = agent.Known ? agent.Value : "",
+		Detail = agent.Known ? agent.Resets : Localization.Get("langWidgetNoData"),
+		Fill = agent.Fill,
+		Meter = agent.Meter,
+		Agent = agent.Name,
+	};
 }
 
 /// <summary>Агент в панели и в колонке на рабочем столе.</summary>
 /// <param name="Value">«46%»; нет данных — «—».</param>
 /// <param name="Window">«сессия · 2 ч 50 мин» — строка панели.</param>
 /// <param name="Resets">«2 ч 50 мин» — под колонкой на рабочем столе.</param>
-internal sealed record WidgetAgent(string Name, string Value, double Fill, IBrush Meter, string Window, string Resets)
+/// <param name="Low">Квота «критично».</param>
+internal sealed record WidgetAgent(string Name, string Value, double Fill, IBrush Meter, string Window, string Resets, bool Low = false)
 {
 	/// <summary>Без данных у агента нет и окна квоты.</summary>
 	public bool Known => Window.Length > 0;
@@ -104,25 +160,16 @@ internal static partial class Views
 	// Больше трёх строк сессий виджет не вмещает: остальные — в поповере.
 	private const int _widgetSessions = 3;
 
-	/// <summary>Что показать виджету: главного агента и его самое узкое окно, а важнее него — сессию, которая ждёт
-	/// человека или только что закончила ход. Главный — с квотой «критично», иначе тот, чья сессия работает, иначе ближе
-	/// всех к лимиту.</summary>
+	/// <summary>Что показать виджету: агентов и сессии, а важнее агента — сессию, которая ждёт человека или только что
+	/// закончила ход. Какого агента показать в шапке, решает <see cref="WidgetView.Pick"/> по настройке; снимок — с первым.</summary>
 	/// <param name="agents">Видимые агенты в порядке вкладок.</param>
 	/// <param name="finished">Сессия, чей долгий ход закончился меньше 5 с назад; null — такой нет.</param>
 	/// <param name="hide">Показывают экран: проектов, веток и инструментов не видно.</param>
 	internal static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session> sessions, Session? finished, DateTime now, Thresholds levels, PercentMode percent, bool hide)
 	{
 		// Правило цвета значка в трее: самое узкое окно; при равенстве — первая вкладка (MaxBy берёт первого).
-		var known = agents.Where(state => state.Tightest(now) is not null).ToList();
-		var top = known.MaxBy(state => state.Tightest(now));
+		var top = agents.Where(state => state.Tightest(now) is not null).MaxBy(state => state.Tightest(now));
 		var limit = top is null ? Health.Unknown : Quota.Rate(top.Tightest(now)!.Value, levels);
-
-		// Работающий агент без данных не в счёт, как и для значка: показать у него нечего.
-		var working = sessions.Where(session => session.State == SessionState.Working).Select(session => session.Agent).ToHashSet();
-		var main = limit == Health.Critical ? top : known.Where(state => working.Contains(state.Agent.Name)).MaxBy(state => state.Tightest(now)) ?? top;
-
-		var window = main is null ? null : Quota.Bottleneck(main.Windows(now));
-		var health = window is null ? Health.Unknown : Quota.Rate(window.Used, levels);
 
 		List<string> order = [.. agents.Select(state => state.Agent.Name)];
 		var waiting = sessions
@@ -132,7 +179,6 @@ internal static partial class Views
 
 		var state = waiting is not null ? WidgetState.Waiting
 			: finished is not null ? WidgetState.Finished
-			: health == Health.Critical ? WidgetState.Low
 			: sessions.Any(session => session.State == SessionState.Working) ? WidgetState.Working
 			: WidgetState.Idle;
 
@@ -140,29 +186,28 @@ internal static partial class Views
 		{
 			WidgetState.Waiting => Localization.Format("langToastWaiting", waiting!.Agent),
 			WidgetState.Finished => Localization.Format("langToastDone", finished!.Agent),
-			_ when agents.Count == 0 => Localization.Get("langNoAgents"),
-			_ => main?.Agent.Name ?? Localization.Get("langWidgetNoData"),
+			_ => Localization.Get("langNoAgents"),
 		};
 
 		var detail = state switch
 		{
 			WidgetState.Waiting => hide ? "" : Join(waiting!.Folder, waiting.Tool),
 			WidgetState.Finished => hide ? "" : finished!.Folder,
-			_ => window is null ? "" : Text.Short(window.ResetsAt, now),
+			_ => "",
 		};
 
-		var loud = state is WidgetState.Waiting or WidgetState.Finished;
+		List<WidgetAgent> rows = [.. agents.Select(agent => WidgetRow(agent, now, levels, percent))];
 
-		return new(
+		var view = new WidgetView(
 			state,
 			title,
-			loud || window is null ? "" : Percent(window.Used, percent),
+			"",
 			detail,
-			window is null ? 0 : Math.Min(Shown(window.Used, percent), 100),
-			Brush("Meter" + Level(health)),
+			0,
+			Brush("MeterMuted"),
 			Brush(Dot(SessionWatcher.Overall(sessions))),
-			(waiting ?? finished)?.Agent ?? main?.Agent.Name ?? agents.FirstOrDefault()?.Agent.Name,
-			[.. agents.Select(agent => WidgetRow(agent, now, levels, percent))],
+			(waiting ?? finished)?.Agent ?? rows.FirstOrDefault()?.Name,
+			rows,
 			[.. sessions
 				.OrderByDescending(session => session.State)
 				.Take(_widgetSessions)
@@ -174,6 +219,9 @@ internal static partial class Views
 					session))],
 			Brush("Meter" + Level(limit)),
 			waiting);
+
+		// Снимок — с первым агентом; «мало квоты» решает выбор в Pick, а не снимок.
+		return view.Loud || rows.Count == 0 ? view : view.With(rows[0]) with { State = state };
 	}
 
 	private static WidgetAgent WidgetRow(AgentState agent, DateTime now, Thresholds levels, PercentMode percent)
@@ -185,14 +233,16 @@ internal static partial class Views
 		}
 
 		var resets = Text.Short(window.ResetsAt, now);
+		var health = Quota.Rate(window.Used, levels);
 
 		return new(
 			agent.Agent.Name,
 			Percent(window.Used, percent),
 			Math.Min(Shown(window.Used, percent), 100),
-			Brush("Meter" + Level(Quota.Rate(window.Used, levels))),
+			Brush("Meter" + Level(health)),
 			Join(Text.Lower(Text.Title(window)), resets),
-			resets);
+			resets,
+			health == Health.Critical);
 	}
 
 	private static string Percent(double used, PercentMode percent) =>

@@ -57,7 +57,11 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 		}
 	}
 
-	public void Render(WidgetView view) => DataContext = view;
+	public void Render(WidgetView view)
+	{
+		DataContext = view;
+		Rendered();
+	}
 
 	public void Show(WidgetLook look, bool clickable)
 	{
@@ -125,6 +129,10 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 
 	/// <summary>Показать вид: полоску, плашку или панель.</summary>
 	protected abstract void Look(WidgetLook look);
+
+	/// <summary>Пришёл снимок — шапка выбирает, кого показать. Не из DataContextChanged: внутри него снимок, который шапка
+	/// и так наследует («ждёт» показывается как есть), привязки её строк не будит — шапка оставалась пустой.</summary>
+	protected abstract void Rendered();
 
 	/// <summary>Щелчок левой кнопкой по этому открывает и закрывает панель.</summary>
 	protected void Opens(Control face) => face.PointerReleased += (_, e) =>

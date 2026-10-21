@@ -9,20 +9,25 @@ namespace AgentVitals;
 internal partial class NotchWindow : WidgetWindow
 {
 	private const double _stripWidth = 120;
-	private const double _stripHeight = 4;
+	private const double _stripHeight = 6;
 	private const double _headerHeight = 30;
 
 	// Поля плашки по бокам: содержимое не прижимается к скруглению.
 	private const double _sides = 28;
+
+	// Поле вокруг формы под ореол: тень за краем окна обрезалась бы.
+	private const double _halo = 20;
+
+	private readonly Glow _glow;
 
 	private WidgetLook _shown = WidgetLook.Rest;
 
 	public NotchWindow()
 	{
 		InitializeComponent();
+		_glow = new Glow(Halo, Wash, Glint, () => Shape.Width);
 		Wire(Rows);
 		Opens(Top);
-		DataContextChanged += (_, _) => ShowAgent();
 
 		// Другие строки панели или другая надпись в шапке: размеры формы пересчитываются, когда привязки уже применены.
 		// Надпись меняется и после затухания — не по тику, а когда сменилась.
@@ -38,8 +43,10 @@ internal partial class NotchWindow : WidgetWindow
 		ShowAgent();
 	}
 
-	/// <summary>Шапка — главный агент или по очереди, как в настройках. Полоска «по очереди» — цвет ближе всех к лимиту:
-	/// со сменой агента она не мигает.</summary>
+	protected override void Rendered() => ShowAgent();
+
+	/// <summary>Шапка — агент из настроек или по очереди. Полоска «по очереди» — цвет ближе всех к лимиту: со сменой агента
+	/// она не мигает.</summary>
 	private void ShowAgent()
 	{
 		if (DataContext is not WidgetView view)
@@ -47,9 +54,11 @@ internal partial class NotchWindow : WidgetWindow
 			return;
 		}
 
-		var turns = Store.Current.NotchTurns;
-		Strip.Background = turns ? view.LimitMeter ?? view.Meter : view.Meter;
-		ShowFace(Top, turns ? view.Turned(DateTime.UtcNow) : view);
+		var choice = Store.Current.NotchAgent;
+		var shown = view.Pick(choice, DateTime.UtcNow);
+		Strip.Background = choice == WidgetView.Turns ? view.LimitMeter ?? shown.Meter : shown.Meter;
+		ShowFace(Top, shown);
+		_glow.Show(Store.Current.Glow, shown.Glow);
 	}
 
 	protected override void Place(PixelRect anchor) => Placement.PlaceNotch(this, anchor);
@@ -74,8 +83,8 @@ internal partial class NotchWindow : WidgetWindow
 
 		// Содержимое — в полную ширину панели: пока форма растёт, текст не переносится и не обрезается троеточием.
 		Body.Width = panel.Width;
-		Frame.Width = panel.Width;
-		Frame.Height = panel.Height;
+		Frame.Width = panel.Width + 2 * _halo;
+		Frame.Height = panel.Height + _halo;
 
 		var size = _shown switch
 		{
@@ -86,6 +95,6 @@ internal partial class NotchWindow : WidgetWindow
 
 		Shape.Width = size.Width;
 		Shape.Height = size.Height;
-		Shape.CornerRadius = _shown == WidgetLook.Rest ? new CornerRadius(0, 0, 2, 2) : new CornerRadius(0, 0, 14, 14);
+		Shape.CornerRadius = _shown == WidgetLook.Rest ? new CornerRadius(0, 0, 3, 3) : new CornerRadius(0, 0, 14, 14);
 	}
 }

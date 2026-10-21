@@ -13,6 +13,15 @@ internal enum WidgetKind
 	Desktop,
 }
 
+/// <summary>Как светятся плашка и значок на события; Off — не светятся.</summary>
+internal enum GlowStyle
+{
+	Off,
+	Halo,
+	Sheen,
+	Wash,
+}
+
 /// <summary>Как раскрыт виджет: в покое (у плашки — полоска), плашка целиком, панель по щелчку.</summary>
 internal enum WidgetLook
 {

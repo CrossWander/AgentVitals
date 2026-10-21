@@ -11,11 +11,14 @@
         RequestedThemeVariant="Dark">
 
     <!-- Плашка вверху по центру: всегда чёрная, поэтому тёмная тема и для текста, и для панели.
-         Окно — размером с панель и прозрачное; внутри чёрная форма плавно растёт из полоски 4 px в плашку и в панель:
-         размер окна скачками не анимируется. Содержимое лежит в полную ширину, форма его обрезает и открывает -->
+         Окно — размером с панель и полем под ореол, прозрачное; внутри чёрная форма плавно растёт из полоски 6 px в плашку
+         и в панель: размер окна скачками не анимируется. Содержимое лежит в полную ширину, форма его обрезает и открывает -->
     <Panel Name="Frame">
-        <Border Name="Shape" Width="120" Height="4" Background="#000000" CornerRadius="0,0,2,2" ClipToBounds="True"
-                HorizontalAlignment="Center" VerticalAlignment="Top">
+      <!-- Подложка-ореол — того же размера, что форма, под ней: её тень светится на события, сама она не видна -->
+      <Panel HorizontalAlignment="Center" VerticalAlignment="Top">
+        <Border Name="Halo" CornerRadius="{Binding #Shape.CornerRadius}" Background="#000000" Opacity="0"
+                IsHitTestVisible="False"/>
+        <Border Name="Shape" Width="120" Height="6" Background="#000000" CornerRadius="0,0,3,3" ClipToBounds="True">
             <Border.Transitions>
                 <Transitions>
                     <DoubleTransition Property="Width" Duration="0:0:0.26" Easing="CubicEaseOut"/>
@@ -26,13 +29,21 @@
 
             <Panel>
                 <!-- В покое форма — цветная полоска; раскрываясь, она остаётся кромкой сверху и гаснет, а не заливает всю плашку -->
-                <!-- Цвет — из кода: у главного агента его цвет, «по очереди» — ближе всех к лимиту, чтобы не мигал -->
-                <Border Name="Strip" Height="4" VerticalAlignment="Top">
+                <!-- Цвет — из кода: у показанного агента его цвет, «по очереди» — ближе всех к лимиту, чтобы не мигал -->
+                <Border Name="Strip" Height="6" VerticalAlignment="Top">
                     <Border.Transitions>
                         <Transitions>
                             <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
                         </Transitions>
                     </Border.Transitions>
+                </Border>
+
+                <!-- Свечение «цветом» и «блик»: заливка и отблеск внутри формы, форма их обрезает -->
+                <Border Name="Wash" Opacity="0" IsHitTestVisible="False"/>
+                <Border Name="Glint" Width="48" HorizontalAlignment="Left" Opacity="0" IsHitTestVisible="False">
+                    <Border.RenderTransform>
+                        <TranslateTransform X="-48"/>
+                    </Border.RenderTransform>
                 </Border>
 
                 <StackPanel Name="Body" Opacity="0" HorizontalAlignment="Center" VerticalAlignment="Top">
@@ -43,7 +54,7 @@
                     </StackPanel.Transitions>
 
                     <!-- Шапка во всю ширину — щелчок по ней открывает и закрывает панель со всеми агентами. В шапке один
-                         агент — главный или по очереди; «ждёт» и «закончил» — надпись -->
+                         агент — выбранный в настройках или по очереди; «ждёт» и «закончил» — надпись -->
                     <Border Name="Top" Height="30" Background="Transparent" Cursor="Hand">
                         <Border.Transitions>
                             <Transitions>
@@ -72,5 +83,6 @@
                 </StackPanel>
             </Panel>
         </Border>
+      </Panel>
     </Panel>
 </Window>

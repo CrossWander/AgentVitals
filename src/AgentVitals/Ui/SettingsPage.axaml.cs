@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -39,6 +40,9 @@ internal partial class SettingsPage : UserControl
 
 	public event Action? ExitRequested;
 
+	/// <summary>Видимые агенты в порядке вкладок — кого выбрать для плашки и значка; спрашивается при каждом открытии.</summary>
+	public Func<IEnumerable<string>> AgentNames { get; init; } = () => [];
+
 	public void Load()
 	{
 		_loading = true;
@@ -56,8 +60,7 @@ internal partial class SettingsPage : UserControl
 		WidgetTab.IsVisible = OperatingSystem.IsWindows();
 		Select(WidgetKinds, Store.Current.Widget.ToString());
 		Select(NotchRests, Store.Current.NotchPill.ToString());
-		Select(NotchAgents, Store.Current.NotchTurns.ToString());
-		Select(ChipAgents, Store.Current.ChipTurns.ToString());
+		Select(Glows, Store.Current.Glow.ToString());
 		ShowWidgetOptions();
 		WaitingSoundToggle.IsChecked = Store.Current.WaitingSound;
 		WaitingSoundToggle.IsEnabled = Store.Current.SessionToasts;
@@ -198,9 +201,27 @@ internal partial class SettingsPage : UserControl
 	private void ShowWidgetOptions()
 	{
 		NotchRow.IsVisible = Store.Current.Widget == WidgetKind.Notch;
-		NotchTurnRow.IsVisible = NotchRow.IsVisible;
+		NotchAgentRow.IsVisible = NotchRow.IsVisible;
 		ChipRow.IsVisible = Store.Current.Widget == WidgetKind.Chip;
-		WidgetOptions.IsVisible = NotchRow.IsVisible || ChipRow.IsVisible;
+		WidgetOptions.IsVisible = GlowRow.IsVisible = NotchRow.IsVisible || ChipRow.IsVisible;
+	}
+
+	/// <summary>Списки «Агент»: видимые агенты, «По очереди», у значка ещё «Все сразу». Сохранённого среди них нет
+	/// (агента выключили) — отмечается первый: его виджет и покажет.</summary>
+	private void ShowAgentChoices()
+	{
+		var loading = _loading;
+		_loading = true;
+		Fill(NotchAgents, Store.Current.NotchAgent, [(Localization.Get("langNotchTurns"), WidgetView.Turns)]);
+		Fill(ChipAgents, Store.Current.ChipAgent, [(Localization.Get("langChipTurns"), WidgetView.Turns), (Localization.Get("langChipRow"), WidgetView.All)]);
+		_loading = loading;
+	}
+
+	private void Fill(ComboBox box, string? chosen, List<(string Name, string Value)> modes)
+	{
+		List<(string Name, string Value)> items = [.. AgentNames().Select(name => (name, name)), .. modes];
+		box.ItemsSource = items.Select(item => new ComboBoxItem { Content = item.Name, Tag = item.Value }).ToList();
+		box.SelectedIndex = Math.Max(0, items.FindIndex(item => item.Value == chosen));
 	}
 
 	private void OnNotchRest(object? sender, RoutedEventArgs e)
@@ -213,23 +234,29 @@ internal partial class SettingsPage : UserControl
 		}
 	}
 
-	private void OnNotchAgents(object? sender, RoutedEventArgs e)
+	private void OnWidgetAgent(object? sender, SelectionChangedEventArgs e)
 	{
-		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string turns })
+		if (!_loading && sender is ComboBox { SelectedItem: ComboBoxItem { Tag: string choice } } box)
 		{
-			Store.Current.NotchTurns = bool.Parse(turns);
+			if (box == NotchAgents)
+			{
+				Store.Current.NotchAgent = choice;
+			}
+			else
+			{
+				Store.Current.ChipAgent = choice;
+			}
+
 			Store.Save();
-			Changed?.Invoke();
 		}
 	}
 
-	private void OnChipAgents(object? sender, RoutedEventArgs e)
+	private void OnGlow(object? sender, RoutedEventArgs e)
 	{
-		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string turns })
+		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string name })
 		{
-			Store.Current.ChipTurns = bool.Parse(turns);
+			Store.Current.Glow = Enum.Parse<GlowStyle>(name);
 			Store.Save();
-			Changed?.Invoke();
 		}
 	}
 
@@ -360,6 +387,7 @@ internal partial class SettingsPage : UserControl
 		AboutNote.Text = Localization.Format("langAboutNote", Updates.Current);
 		AboutLine.Text = Localization.Format("langAboutLine", Updates.Current);
 		WhatsNew.Content = Localization.Format("langWhatsNew", Updates.Current);
+		ShowAgentChoices();
 		ShowLevels();
 		ShowSection();
 		ShowRelease();

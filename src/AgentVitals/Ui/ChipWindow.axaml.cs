@@ -4,21 +4,23 @@ using Avalonia.Media.Transformation;
 
 namespace AgentVitals;
 
-/// <summary>Значок над треем: в углу у трея, в полоску не сжимается; щелчком над ним выезжает панель. Агенты — все сразу
-/// или по очереди, как в настройках.</summary>
+/// <summary>Значок над треем: в углу у трея, в полоску не сжимается; щелчком над ним выезжает панель. Агенты — все сразу,
+/// выбранный или по очереди, как в настройках.</summary>
 internal partial class ChipWindow : WidgetWindow
 {
-	// С полем под тень внутри окна — те же 12 точек от угла, что на макете.
-	private const double _margin = 4;
+	// С полем под тень и ореол внутри окна (20 точек) — те же 12 точек от угла, что на макете.
+	private const double _margin = -8;
+
+	private readonly Glow _glow;
 
 	private bool _open;
 
 	public ChipWindow()
 	{
 		InitializeComponent();
+		_glow = new Glow(Halo, Wash, Glint, () => Lights.Bounds.Width);
 		Wire(Rows);
 		Opens(Face);
-		DataContextChanged += (_, _) => ShowAgents();
 	}
 
 	// Закрытая панель прозрачна, но место в окне занимает: мышь над ним — не над значком.
@@ -30,6 +32,8 @@ internal partial class ChipWindow : WidgetWindow
 		ShowAgents();
 	}
 
+	protected override void Rendered() => ShowAgents();
+
 	protected override void Place(PixelRect anchor) => Placement.PlaceChip(this, anchor, _margin);
 
 	protected override void Look(WidgetLook look)
@@ -40,7 +44,7 @@ internal partial class ChipWindow : WidgetWindow
 		Drawer.RenderTransform = TransformOperations.Parse(_open ? "translateY(0px)" : "translateY(8px)");
 	}
 
-	/// <summary>Все агенты в ряд или один — по очереди; «ждёт» и «закончил» — всегда надпись.</summary>
+	/// <summary>Все агенты в ряд или один — выбранный или по очереди; «ждёт» и «закончил» — всегда надпись.</summary>
 	private void ShowAgents()
 	{
 		if (DataContext is not WidgetView view)
@@ -48,9 +52,11 @@ internal partial class ChipWindow : WidgetWindow
 			return;
 		}
 
-		var turns = Store.Current.ChipTurns;
-		Row.IsVisible = view.ShowsAgents && !turns;
+		var choice = Store.Current.ChipAgent;
+		var shown = view.Pick(choice, DateTime.UtcNow);
+		Row.IsVisible = view.ShowsAgents && choice == WidgetView.All;
 		Single.IsVisible = !Row.IsVisible;
-		ShowFace(Single, turns ? view.Turned(DateTime.UtcNow) : view);
+		ShowFace(Single, shown);
+		_glow.Show(Store.Current.Glow, shown.Glow);
 	}
 }
