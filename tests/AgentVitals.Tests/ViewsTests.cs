@@ -297,6 +297,7 @@ public class ViewsTests
 		var view = Widget([Found("Claude", snapshot: Quotas(95))], [done], done);
 
 		Assert.Equal((WidgetState.Finished, "langToastDone", "repo", true), (view.State, view.Title, view.Detail, view.Loud));
+		Assert.Same(done, view.Finished); // следующее «закончил» — новая вспышка, даже с той же надписью
 	}
 
 	[Fact]
@@ -410,20 +411,7 @@ public class ViewsTests
 	{
 		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Copilot", snapshot: Quotas(95))]).Pick(WidgetView.All, _now);
 
-		Assert.Equal((true, WidgetGlow.Slow), (view.ShowsAgents, view.Glow));
-	}
-
-	[Fact]
-	public void GlowFollowsTheEvent()
-	{
-		AgentState[] agents = [Found("Claude", snapshot: Quotas(46))];
-		var waiting = new Session("w", SessionState.Waiting, "Bash", "repo", null);
-		var done = new Session("f", SessionState.Idle, null, "repo", null);
-		var working = new Session("s", SessionState.Working, "Edit", "repo", null);
-
-		Assert.Equal(
-			new[] { WidgetGlow.Pulse, WidgetGlow.Flash, WidgetGlow.None, WidgetGlow.None },
-			new[] { Widget(agents, [waiting]), Widget(agents, [done], done), Widget(agents), Widget(agents, [working]) }.Select(view => view.Pick(null, _now).Glow));
+		Assert.Equal((true, WidgetState.Low), (view.ShowsAgents, view.State));
 	}
 
 	[Fact]

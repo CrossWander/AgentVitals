@@ -22,10 +22,13 @@ internal partial class NotchWindow : WidgetWindow
 
 	private WidgetLook _shown = WidgetLook.Rest;
 
+	// Ширина, к которой идёт форма: Width под Transitions ещё в пути, а блику нужен весь путь.
+	private double _width = _stripWidth;
+
 	public NotchWindow()
 	{
 		InitializeComponent();
-		_glow = new Glow(Halo, Wash, Glint, () => Shape.Width);
+		_glow = new Glow(Halo, Wash, Glint, () => _width);
 		Wire(Rows);
 		Opens(Top);
 
@@ -58,7 +61,7 @@ internal partial class NotchWindow : WidgetWindow
 		var shown = view.Pick(choice, DateTime.UtcNow);
 		Strip.Background = choice == WidgetView.Turns ? view.LimitMeter ?? shown.Meter : shown.Meter;
 		ShowFace(Top, shown);
-		_glow.Show(Store.Current.Glow, shown.Glow);
+		_glow.Show(Store.Current.Glow, shown);
 
 		// Работает показанный агент: в покое от полоски расходится рябь, у выехавшей плашки — маяк у точки.
 		Frame.Classes.Set("moving", Store.Current.WorkMotion);
@@ -102,7 +105,7 @@ internal partial class NotchWindow : WidgetWindow
 			WidgetLook.Panel => panel,
 		};
 
-		Shape.Width = size.Width;
+		_width = Shape.Width = size.Width;
 		Shape.Height = size.Height;
 		Shape.CornerRadius = _shown == WidgetLook.Rest ? new CornerRadius(0, 0, 3, 3) : new CornerRadius(0, 0, 14, 14);
 	}

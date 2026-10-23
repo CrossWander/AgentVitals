@@ -19,15 +19,6 @@ internal enum WidgetState
 	Idle,
 }
 
-/// <summary>Свечение плашки и значка — только на события: ждёт — пульс, закончил — вспышка, мало квоты — медленный пульс.</summary>
-internal enum WidgetGlow
-{
-	None,
-	Pulse,
-	Flash,
-	Slow,
-}
-
 /// <summary>Всё, что рисуют три вида виджета, одним снимком.</summary>
 /// <param name="Title">«Claude» в покое — первый агент, другого выбирает <see cref="Pick"/>; «Claude ждёт разрешения», «Claude закончил».</param>
 /// <param name="Value">«46%» в режиме процентов; у «ждёт» и «закончил» и без данных — "".</param>
@@ -39,6 +30,7 @@ internal enum WidgetGlow
 /// <param name="Agent">Чья вкладка откроется щелчком; null — агентов нет.</param>
 /// <param name="LimitMeter">Цвет агента ближе всех к лимиту — полоска плашки «по очереди»: она не мигает со сменой агента.</param>
 /// <param name="Waiting">Сессия, о которой «ждёт разрешения»: щелчок по плашке — сразу её окно; null — никто не ждёт.</param>
+/// <param name="Finished">Сессия, о которой «закончил»: другая — новая вспышка, даже с той же надписью; null — такой нет.</param>
 internal sealed record WidgetView(
 	WidgetState State,
 	string Title,
@@ -51,7 +43,8 @@ internal sealed record WidgetView(
 	IReadOnlyList<WidgetAgent> Agents,
 	IReadOnlyList<WidgetSession> Sessions,
 	IBrush? LimitMeter = null,
-	Session? Waiting = null)
+	Session? Waiting = null,
+	Session? Finished = null)
 {
 	/// <summary>Плашка раскрывается сама; «мало квоты» и «работает» — только цветом полоски: квота бывает критичной
 	/// часами, и раскрытая плашка всё это время закрывала бы вкладки.</summary>
@@ -70,14 +63,6 @@ internal sealed record WidgetView(
 
 	/// <summary>У показанного агента работает сессия — плашка и значок тихо движутся. «Ждёт» и «закончил» светятся сами.</summary>
 	public bool Busy => !Loud && Agents.Any(agent => agent.Name == Agent && agent.Working);
-
-	public WidgetGlow Glow => State switch
-	{
-		WidgetState.Waiting => WidgetGlow.Pulse,
-		WidgetState.Finished => WidgetGlow.Flash,
-		WidgetState.Low => WidgetGlow.Slow,
-		_ => WidgetGlow.None,
-	};
 
 	/// <summary>Настройка «Агент»: по очереди.</summary>
 	public const string Turns = "turns";
@@ -225,7 +210,8 @@ internal static partial class Views
 					Brush(Dot(session.State)),
 					session))],
 			Brush("Meter" + Level(limit)),
-			waiting);
+			waiting,
+			finished);
 
 		// Снимок — с первым агентом; «мало квоты» решает выбор в Pick, а не снимок.
 		return view.Loud || rows.Count == 0 ? view : view.With(rows[0]) with { State = state };

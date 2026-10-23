@@ -57,7 +57,7 @@ internal partial class ChipWindow : WidgetWindow
 		Row.IsVisible = view.ShowsAgents && choice == WidgetView.All;
 		Single.IsVisible = !Row.IsVisible;
 		ShowFace(Single, shown);
-		_glow.Show(Store.Current.Glow, shown.Glow);
+		_glow.Show(Store.Current.Glow, shown);
 
 		// Работает агент — от его кольца (в ряду — от кольца каждого работающего) расходится рябь; без кольца — от точки.
 		Face.Classes.Set("moving", Store.Current.WorkMotion);
