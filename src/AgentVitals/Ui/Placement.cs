@@ -59,11 +59,12 @@ internal static class Placement
 		new(icon.Center.X < work.Center.X ? work.X + margin : work.Right - window.Width - margin,
 			icon.Center.Y < work.Center.Y ? work.Y + margin : work.Bottom - window.Height - margin);
 
-	/// <summary>Виджет на рабочем столе: где его оставили, пока тот экран на месте; иначе — правый верхний угол главного.</summary>
+	/// <summary>Виджет на рабочем столе: где его оставили, пока тот экран на месте; иначе — правый верхний угол главного.
+	/// Экран ищется по центру окна: у прижатой к краю карточки угол окна с полем под тень — за экраном.</summary>
 	/// <param name="saved">Запомненный верхний левый угол; null — ещё не двигали.</param>
 	/// <param name="screens">Границы всех экранов.</param>
 	public static PixelPoint Desk(PixelPoint? saved, IReadOnlyList<PixelRect> screens, PixelRect primaryWork, PixelSize window, int margin) =>
-		saved is { } place && screens.Any(screen => screen.Contains(place))
+		saved is { } place && screens.Any(screen => screen.Contains(new PixelRect(place, window).Center))
 			? place
 			: new(primaryWork.Right - window.Width - margin, primaryWork.Y + margin);
 

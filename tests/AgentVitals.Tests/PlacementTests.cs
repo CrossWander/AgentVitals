@@ -121,6 +121,12 @@ public class PlacementTests
 	}
 
 	[Fact]
+	public void DeskStaysPressedToTheEdge() // поле под тень: карточка у левого и верхнего края — угол окна за экраном
+	{
+		Assert.Equal(new PixelPoint(-8, -8), Placement.Desk(new PixelPoint(-8, -8), [new(0, 0, 1920, 1080)], _work, new PixelSize(400, 200), 24));
+	}
+
+	[Fact]
 	public void ToastRisesAboveTheChip()
 	{
 		var chip = new PixelRect(1708, 994, 200, 34);
