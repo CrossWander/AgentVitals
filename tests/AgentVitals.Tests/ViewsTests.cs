@@ -321,6 +321,14 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void EyeHidesTheToolOfAWorkingSession()
+	{
+		var working = new Session("s", SessionState.Working, "mcp__db__query", "repo", "main");
+
+		Assert.Equal("langSessionWorking", Widget([Found("Claude", snapshot: Quotas(40))], [working], hide: true).Sessions[0].State);
+	}
+
+	[Fact]
 	public void WidgetWithoutDataSaysSo()
 	{
 		var view = Widget([Found("Claude")]).Pick(null, _now);

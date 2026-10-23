@@ -221,7 +221,7 @@ internal static partial class Views
 				.Select(session => new WidgetSession(
 					hide ? session.Agent : session.Folder,
 					hide ? "" : session.Branch ?? "",
-					Text.Session(session, now),
+					Text.Session(hide ? session with { Tool = null } : session, now),
 					Brush(Dot(session.State)),
 					session))],
 			Brush("Meter" + Level(limit)),
