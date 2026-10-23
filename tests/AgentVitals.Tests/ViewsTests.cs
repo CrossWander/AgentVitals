@@ -284,6 +284,23 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void WaitingFollowsTheTabOrder() // ждут двое — плашка о том, чья вкладка первая, а не о первом файле
+	{
+		var view = Widget([Found("Claude", snapshot: Quotas(40)), Found("Codex", snapshot: Quotas(10))],
+			[new Session("x", SessionState.Waiting, "Bash", "repo", null, Agent: "Codex"), new Session("y", SessionState.Waiting, "Edit", "repo", null)]);
+
+		Assert.Equal("Claude", view.Agent);
+	}
+
+	[Fact]
+	public void ChosenAgentWithoutDataStillTakesTurnsWithALowOne()
+	{
+		var view = Widget([Found("Claude"), Found("Copilot", snapshot: Quotas(95))]);
+
+		Assert.Equal(new[] { "Claude", "Copilot" }, new[] { view.Pick("Claude", _now).Title, view.Pick("Claude", _now.AddSeconds(10)).Title }.Order());
+	}
+
+	[Fact]
 	public void FinishedComesBeforeLowQuota()
 	{
 		var done = new Session("f", SessionState.Idle, null, "repo", "main");
