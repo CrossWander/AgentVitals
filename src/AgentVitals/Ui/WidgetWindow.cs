@@ -20,7 +20,7 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 	private bool _clickable;
 	private bool _hidden;
 
-	// Открыто хозяином: спрятанное на время полноэкранного приложения возвращается, закрытое — нет.
+	// Уже открыто хозяином: новое место после смены экранов берёт тик.
 	private bool _open;
 
 	// Чей снимок в шапке — по заголовку; пока прежний гаснет, свежий ждёт в _next.
@@ -48,6 +48,15 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 	public void Open(PixelRect anchor)
 	{
 		_anchor = anchor;
+
+		// Сменились экраны: показ мимо тика вывел бы окно поверх полноэкранного приложения — тик сперва смотрит на него.
+		if (_open)
+		{
+			_work = null;
+
+			return;
+		}
+
 		_open = true;
 		ShowAt(anchor);
 
@@ -94,7 +103,7 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 
 	public virtual void Tick()
 	{
-		if (!_open || !OperatingSystem.IsWindows() || TryGetPlatformHandle() is not { } handle)
+		if (!OperatingSystem.IsWindows() || TryGetPlatformHandle() is not { } handle)
 		{
 			return;
 		}
@@ -119,12 +128,6 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 			_work = work;
 			Place(_anchor);
 		}
-	}
-
-	public new void Close()
-	{
-		_open = false;
-		base.Close();
 	}
 
 	/// <summary>Показать вид: полоску, плашку или панель.</summary>

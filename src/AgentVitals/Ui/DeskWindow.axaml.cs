@@ -15,7 +15,6 @@ internal partial class DeskWindow : Window, IWidgetWindow
 	private const double _margin = 24;
 
 	private bool _hidden;
-	private bool _open;
 
 	// Впереди рабочий стол (Win+D): виджет на это время поверх, иначе его закрыл бы сам рабочий стол.
 	private bool _front;
@@ -44,8 +43,6 @@ internal partial class DeskWindow : Window, IWidgetWindow
 
 	public void Open(PixelRect anchor)
 	{
-		_open = true;
-
 		if (!IsVisible)
 		{
 			Show();
@@ -76,7 +73,7 @@ internal partial class DeskWindow : Window, IWidgetWindow
 	/// отличить Win+D от щелчка по обоям — если это будет мешать.</remarks>
 	public void Tick()
 	{
-		if (!_open || !OperatingSystem.IsWindows() || TryGetPlatformHandle() is not { } handle)
+		if (!OperatingSystem.IsWindows() || TryGetPlatformHandle() is not { } handle)
 		{
 			return;
 		}
@@ -98,12 +95,6 @@ internal partial class DeskWindow : Window, IWidgetWindow
 		{
 			WindowStyle.Bottom(handle.Handle);
 		}
-	}
-
-	public new void Close()
-	{
-		_open = false;
-		base.Close();
 	}
 
 	private void Place()
