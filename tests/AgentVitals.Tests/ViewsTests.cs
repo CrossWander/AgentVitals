@@ -273,14 +273,6 @@ public class ViewsTests
 	}
 
 	[Fact]
-	public void WaitingSessionIsKnownForTheClick()
-	{
-		var waiting = new Session("s", SessionState.Waiting, "Bash", "repo", null);
-
-		Assert.Same(waiting, Widget([Found("Claude", snapshot: Quotas(40))], [waiting]).Waiting);
-	}
-
-	[Fact]
 	public void WaitingBeatsEverything() // и критичная квота, и только что законченный ход, и выбранный агент
 	{
 		var waiting = new Session("w", SessionState.Waiting, "Bash", "repo", "main", Agent: "Codex");
@@ -288,6 +280,7 @@ public class ViewsTests
 
 		Assert.Equal((WidgetState.Waiting, "langToastWaiting", "", "repo · Bash", "Codex", true), (view.State, view.Title, view.Value, view.Detail, view.Agent, view.Loud));
 		Assert.Same(view, view.Pick("Claude", _now));
+		Assert.Same(waiting, view.Waiting); // щелчок — сразу к окну этой сессии
 	}
 
 	[Fact]
@@ -381,22 +374,14 @@ public class ViewsTests
 	{
 		var view = Widget([Found("Claude", snapshot: Quotas(10)), Found("Codex", snapshot: Quotas(95))]);
 
-		Assert.Equal(new[] { "Claude", "Codex" }, new[] { view.Pick(WidgetView.Rotation, _now).Title, view.Pick(WidgetView.Rotation, _now.AddSeconds(6)).Title }.Order());
+		var shown = new[] { view.Pick(WidgetView.Rotation, _now), view.Pick(WidgetView.Rotation, _now.AddSeconds(6)) };
+
+		Assert.Equal(new[] { "Claude", "Codex" }, shown.Select(next => next.Title).Order());
+		Assert.All(shown, next => Assert.Equal(view.Agents.Single(agent => agent.Name == next.Title).Value, next.Value)); // цифры — того, чей черёд
 	}
 
 	[Fact]
 	public void NoRotationWithoutData() => Assert.Null(Widget([Found("Claude")]).Rotate(_now));
-
-	[Fact]
-	public void TurnShowsTheAgentOfItsTurn()
-	{
-		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Codex", snapshot: Quotas(10))]);
-
-		var shown = new[] { view.Pick(WidgetView.Rotation, _now), view.Pick(WidgetView.Rotation, _now.AddSeconds(6)) };
-
-		Assert.Equal(new[] { "Claude", "Codex" }, shown.Select(turned => turned.Title).Order());
-		Assert.All(shown, turned => Assert.Equal(view.Agents.Single(agent => agent.Name == turned.Title).Value, turned.Value));
-	}
 
 	[Fact]
 	public void WaitingDoesNotRotate()
