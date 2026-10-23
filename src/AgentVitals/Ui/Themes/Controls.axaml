@@ -186,7 +186,10 @@
                                                   ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                                   Foreground="{TemplateBinding Foreground}" FontWeight="SemiBold"
                                                   VerticalAlignment="Center"/>
-                                <Path Name="Arrow" Grid.Column="1" Classes="icon" Width="9" Height="9" Data="M1,1 L6,6 L11,1"
+                                <!-- Стрелка в своих точках и без класса icon: стиль Path.icon сильнее значений из шаблона,
+                                     его 13×13 с растяжением прижимали стрелку к верху -->
+                                <Path Name="Arrow" Grid.Column="1" Width="10" Height="6" Data="M1,1 L5,5 L9,1"
+                                      StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"
                                       Stroke="{DynamicResource TextDim}" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
