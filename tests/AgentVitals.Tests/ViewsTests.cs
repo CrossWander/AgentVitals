@@ -254,7 +254,7 @@ public class ViewsTests
 	}
 
 	[Fact]
-	public void LowAgentTakesTurnsWithTheChosenOne() // выбран Claude, у Copilot квота на исходе — по 10 с каждому
+	public void LowAgentAlternatesWithTheChosenOne() // выбран Claude, у Copilot квота на исходе — по 10 с каждому
 	{
 		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Copilot", snapshot: Quotas(95))]);
 
@@ -293,7 +293,7 @@ public class ViewsTests
 	}
 
 	[Fact]
-	public void ChosenAgentWithoutDataStillTakesTurnsWithALowOne()
+	public void ChosenAgentWithoutDataStillAlternatesWithALowOne()
 	{
 		var view = Widget([Found("Claude"), Found("Copilot", snapshot: Quotas(95))]);
 
