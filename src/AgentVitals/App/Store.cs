@@ -53,6 +53,9 @@ internal static class Store
 		// Свечение плашки и значка на события: ждёт, закончил, мало квоты.
 		public GlowStyle Glow { get; set; } = GlowStyle.Halo;
 
+		// Пока агент работает, плашка и значок тихо движутся: рябь у полоски и кольца, маяк у точки.
+		public bool WorkMotion { get; set; } = true;
+
 		// Где оставили виджет на рабочем столе — верхний левый угол в точках экрана; null — не двигали.
 		public int? WidgetX { get; set; }
 

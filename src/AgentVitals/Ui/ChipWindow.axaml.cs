@@ -58,5 +58,10 @@ internal partial class ChipWindow : WidgetWindow
 		Single.IsVisible = !Row.IsVisible;
 		ShowFace(Single, shown);
 		_glow.Show(Store.Current.Glow, shown.Glow);
+
+		// Работает агент — от его кольца (в ряду — от кольца каждого работающего) расходится рябь; без кольца — от точки.
+		Face.Classes.Set("moving", Store.Current.WorkMotion);
+		Ripple.Classes.Set("on", shown.Busy && Single.IsVisible && shown.HasValue);
+		DotRipple.Classes.Set("on", shown.Busy && Single.IsVisible && !shown.HasValue);
 	}
 }

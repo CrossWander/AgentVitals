@@ -257,6 +257,9 @@ There are three looks and one is on at a time; until you pick one, there is no w
 - **Glow.** The notch and the chip light up on events only: a blue pulse while a session waits, one
   green flash when a turn ends, a slow red pulse while the shown agent's quota is critical. *Glow*
   picks a halo, a sheen that runs across or a tint, or turns it off.
+- **Motion while working.** While an agent works, a soft ripple runs down from the strip, the dot in
+  the pill sends out rings like a beacon and a ring spreads from the chip's quota ring. Only the agent
+  that is working moves. *Motion while an agent works* turns it off.
 - **Eye and full screen.** With the eye on, the widget stays out of screenshots and screen sharing
   (Windows 10 2004 and later) and shows no project, branch or tool names; emails and prompts never
   show in it. While a full-screen app runs on that screen, the notch and the chip hide, even when a

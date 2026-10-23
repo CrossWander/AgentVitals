@@ -250,6 +250,8 @@
     <x:String x:Key="langGlowHalo">Halo</x:String>
     <x:String x:Key="langGlowSheen">Sheen</x:String>
     <x:String x:Key="langGlowWash">Tint</x:String>
+    <x:String x:Key="langWorkMotion">Motion while an agent works</x:String>
+    <x:String x:Key="langWorkMotionHint">A quiet ripple from the strip and the chip, a beacon at the dot in the pill — only for the agent that is working.</x:String>
     <x:String x:Key="langWidgetQuotas">QUOTAS</x:String>
     <x:String x:Key="langSystem">Startup and updates</x:String>
     <x:String x:Key="langSystemNote">autostart, versions</x:String>

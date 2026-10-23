@@ -68,6 +68,9 @@ internal sealed record WidgetView(
 	/// <summary>Значок «все сразу» — агенты в ряд; «ждёт» и «закончил» занимают его целиком, без агентов — надпись.</summary>
 	public bool ShowsAgents => !Loud && Agents.Count > 0;
 
+	/// <summary>У показанного агента работает сессия — плашка и значок тихо движутся. «Ждёт» и «закончил» светятся сами.</summary>
+	public bool Busy => !Loud && Agents.Any(agent => agent.Name == Agent && agent.Working);
+
 	public WidgetGlow Glow => State switch
 	{
 		WidgetState.Waiting => WidgetGlow.Pulse,
@@ -141,7 +144,8 @@ internal sealed record WidgetView(
 /// <param name="Window">«сессия · 2 ч 50 мин» — строка панели.</param>
 /// <param name="Resets">«2 ч 50 мин» — под колонкой на рабочем столе.</param>
 /// <param name="Low">Квота «критично».</param>
-internal sealed record WidgetAgent(string Name, string Value, double Fill, IBrush Meter, string Window, string Resets, bool Low = false)
+/// <param name="Working">У агента работает сессия.</param>
+internal sealed record WidgetAgent(string Name, string Value, double Fill, IBrush Meter, string Window, string Resets, bool Low = false, bool Working = false)
 {
 	/// <summary>Без данных у агента нет и окна квоты.</summary>
 	public bool Known => Window.Length > 0;
@@ -196,7 +200,10 @@ internal static partial class Views
 			_ => "",
 		};
 
-		List<WidgetAgent> rows = [.. agents.Select(agent => WidgetRow(agent, now, levels, percent))];
+		List<WidgetAgent> rows = [.. agents.Select(agent => WidgetRow(agent, now, levels, percent) with
+		{
+			Working = sessions.Any(session => session.Agent == agent.Agent.Name && session.State == SessionState.Working),
+		})];
 
 		var view = new WidgetView(
 			state,

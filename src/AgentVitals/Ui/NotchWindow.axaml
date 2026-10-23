@@ -10,12 +10,60 @@
         ShowInTaskbar="False" Topmost="True" ShowActivated="False"
         RequestedThemeVariant="Dark">
 
+    <!-- Движение, пока показанный агент работает: класс moving — настройка, on — работает и видно -->
+    <Window.Styles>
+        <!-- Рябь: от полоски вниз расходится и гаснет отсвет её цвета -->
+        <Style Selector=".moving Border.ripple.on">
+            <Style.Animations>
+                <Animation Duration="0:0:2" IterationCount="Infinite" Easing="SineEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.9"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1.12"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="4"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <!-- Маяк: от точки состояния расходится круг -->
+        <Style Selector=".moving Ellipse.beacon.on">
+            <Style.Animations>
+                <Animation Duration="0:0:1.8" IterationCount="Infinite" Easing="SineEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.7"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="3.2"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="3.2"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </Window.Styles>
+
     <!-- Плашка вверху по центру: всегда чёрная, поэтому тёмная тема и для текста, и для панели.
          Окно — размером с панель и полем под ореол, прозрачное; внутри чёрная форма плавно растёт из полоски 6 px в плашку
          и в панель: размер окна скачками не анимируется. Содержимое лежит в полную ширину, форма его обрезает и открывает -->
     <Panel Name="Frame">
       <!-- Подложка-ореол — того же размера, что форма, под ней: её тень светится на события, сама она не видна -->
       <Panel HorizontalAlignment="Center" VerticalAlignment="Top">
+        <!-- Рябь — копия полоски под формой, чуть размыта: мягкий отсвет, а не коробка. Цвет из кода, как у полоски -->
+        <Border Name="Ripple" Classes="ripple" Width="120" Height="6" CornerRadius="0,0,3,3" Opacity="0"
+                HorizontalAlignment="Center" VerticalAlignment="Top" RenderTransformOrigin="50%,0%" IsHitTestVisible="False">
+            <Border.RenderTransform>
+                <ScaleTransform/>
+            </Border.RenderTransform>
+            <Border.Effect>
+                <BlurEffect Radius="1.5"/>
+            </Border.Effect>
+        </Border>
         <Border Name="Halo" CornerRadius="{Binding #Shape.CornerRadius}" Background="#000000" Opacity="0"
                 IsHitTestVisible="False"/>
         <Border Name="Shape" Width="120" Height="6" Background="#000000" CornerRadius="0,0,3,3" ClipToBounds="True">
@@ -62,7 +110,14 @@
                             </Transitions>
                         </Border.Transitions>
                         <StackPanel Name="Header" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                            <Ellipse Width="7" Height="7" Fill="{Binding Dot}" VerticalAlignment="Center"/>
+                            <Panel Width="7" Height="7" VerticalAlignment="Center">
+                                <Ellipse Name="Beacon" Classes="beacon" Fill="{Binding Dot}" Opacity="0" RenderTransformOrigin="50%,50%">
+                                    <Ellipse.RenderTransform>
+                                        <ScaleTransform/>
+                                    </Ellipse.RenderTransform>
+                                </Ellipse>
+                                <Ellipse Fill="{Binding Dot}"/>
+                            </Panel>
                             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"
                                        MaxWidth="280" TextTrimming="CharacterEllipsis"/>
                             <ProgressBar Theme="{StaticResource Meter}" Width="52" Height="4" Value="{Binding Fill}"

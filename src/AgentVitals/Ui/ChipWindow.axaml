@@ -9,6 +9,44 @@
         WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
         ShowInTaskbar="False" Topmost="True" ShowActivated="False">
 
+    <!-- Движение, пока агент работает: класс moving — настройка, on — его сессия работает -->
+    <Window.Styles>
+        <!-- Рябь: от кольца расходится и гаснет круг цвета квоты -->
+        <Style Selector=".moving Ellipse.ripple.on">
+            <Style.Animations>
+                <Animation Duration="0:0:2" IterationCount="Infinite" Easing="SineEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.8"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1.67"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1.67"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <!-- Та же рябь от точки, когда вместо кольца точка -->
+        <Style Selector=".moving Ellipse.beacon.on">
+            <Style.Animations>
+                <Animation Duration="0:0:2" IterationCount="Infinite" Easing="SineEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.8"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="3.2"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="3.2"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </Window.Styles>
+
     <!-- Значок над треем: кольцо квоты, агент и процент; щелчком над ним выезжает панель. Поле — под тень и ореол.
          Панель всегда в разметке, только прозрачна: окно не меняет размер, и панель выезжает плавно, а не выскакивает -->
     <StackPanel Name="Body" Margin="20" Spacing="8">
@@ -49,12 +87,25 @@
                         </Transitions>
                     </StackPanel.Transitions>
                     <Panel Width="22" Height="22" VerticalAlignment="Center" IsVisible="{Binding HasValue}">
+                        <Ellipse Name="Ripple" Classes="ripple" Stroke="{Binding Meter}" StrokeThickness="2" Opacity="0"
+                                 RenderTransformOrigin="50%,50%">
+                            <Ellipse.RenderTransform>
+                                <ScaleTransform/>
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
                         <Ellipse Stroke="{DynamicResource Track}" StrokeThickness="3"/>
                         <Arc Stroke="{Binding Meter}" StrokeThickness="3" StrokeLineCap="Round"
                              StartAngle="-90" SweepAngle="{Binding Sweep}"/>
                     </Panel>
-                    <Ellipse Width="8" Height="8" Fill="{Binding Dot}" VerticalAlignment="Center" Margin="4,0,0,0"
-                             IsVisible="{Binding !HasValue}"/>
+                    <Panel Width="8" Height="8" VerticalAlignment="Center" Margin="4,0,0,0" IsVisible="{Binding !HasValue}">
+                        <Ellipse Name="DotRipple" Classes="beacon" Stroke="{Binding Dot}" StrokeThickness="1.5" Opacity="0"
+                                 RenderTransformOrigin="50%,50%">
+                            <Ellipse.RenderTransform>
+                                <ScaleTransform/>
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+                        <Ellipse Fill="{Binding Dot}"/>
+                    </Panel>
                     <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"
                                MaxWidth="240" TextTrimming="CharacterEllipsis"/>
                     <TextBlock Text="{Binding Value}" FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding HasValue}"/>
@@ -73,6 +124,12 @@
                         <DataTemplate x:DataType="local:WidgetAgent">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Panel Width="22" Height="22" VerticalAlignment="Center">
+                                    <Ellipse Classes="ripple" Classes.on="{Binding Working}" Stroke="{Binding Meter}" StrokeThickness="2"
+                                             Opacity="0" RenderTransformOrigin="50%,50%">
+                                        <Ellipse.RenderTransform>
+                                            <ScaleTransform/>
+                                        </Ellipse.RenderTransform>
+                                    </Ellipse>
                                     <Ellipse Stroke="{DynamicResource Track}" StrokeThickness="3"/>
                                     <Arc Stroke="{Binding Meter}" StrokeThickness="3" StrokeLineCap="Round"
                                          StartAngle="-90" SweepAngle="{Binding Sweep}"/>

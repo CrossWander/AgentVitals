@@ -418,6 +418,24 @@ public class ViewsTests
 			new[] { Widget(agents, [waiting]), Widget(agents, [done], done), Widget(agents), Widget(agents, [working]) }.Select(view => view.Pick(null, _now).Glow));
 	}
 
+	[Fact]
+	public void OnlyTheWorkingAgentMoves() // работает Codex — рябь у Codex, а не у выбранного Claude
+	{
+		var working = new Session("s", SessionState.Working, "Edit", "repo", null, Agent: "Codex");
+		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Codex", snapshot: Quotas(10)), Found("Copilot")], [working]);
+
+		Assert.Equal(new[] { false, true, false }, view.Agents.Select(agent => agent.Working));
+		Assert.Equal((false, true), (view.Pick("Claude", _now).Busy, view.Pick("Codex", _now).Busy));
+	}
+
+	[Fact]
+	public void NothingMovesWhileWaiting() // «ждёт» светится само, движение работы его не перебивает
+	{
+		var view = Widget([Found("Claude", snapshot: Quotas(46))], [new Session("w", SessionState.Waiting, "Bash", "repo", null), new Session("s", SessionState.Working, "Edit", "repo", null)]);
+
+		Assert.False(view.Pick(null, _now).Busy);
+	}
+
 	private static Snapshot Quotas(double used) => new("Max", null, [new(WindowKind.Session, null, used, _now.AddHours(3), Limiting: true)], null);
 
 	private static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session>? sessions = null, Session? finished = null, bool hide = false, PercentMode percent = PercentMode.Used) =>

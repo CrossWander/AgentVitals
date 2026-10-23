@@ -61,6 +61,7 @@ internal partial class SettingsPage : UserControl
 		Select(WidgetKinds, Store.Current.Widget.ToString());
 		Select(NotchRests, Store.Current.NotchPill.ToString());
 		Select(Glows, Store.Current.Glow.ToString());
+		WorkMotionToggle.IsChecked = Store.Current.WorkMotion;
 		ShowWidgetOptions();
 		WaitingSoundToggle.IsChecked = Store.Current.WaitingSound;
 		WaitingSoundToggle.IsEnabled = Store.Current.SessionToasts;
@@ -203,7 +204,7 @@ internal partial class SettingsPage : UserControl
 		NotchRow.IsVisible = Store.Current.Widget == WidgetKind.Notch;
 		NotchAgentRow.IsVisible = NotchRow.IsVisible;
 		ChipRow.IsVisible = Store.Current.Widget == WidgetKind.Chip;
-		WidgetOptions.IsVisible = GlowRow.IsVisible = NotchRow.IsVisible || ChipRow.IsVisible;
+		WidgetOptions.IsVisible = GlowRow.IsVisible = WorkMotionRow.IsVisible = NotchRow.IsVisible || ChipRow.IsVisible;
 	}
 
 	/// <summary>Списки «Агент»: видимые агенты, «По очереди», у значка ещё «Все сразу». Сохранённого среди них нет
@@ -256,6 +257,15 @@ internal partial class SettingsPage : UserControl
 		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string name })
 		{
 			Store.Current.Glow = Enum.Parse<GlowStyle>(name);
+			Store.Save();
+		}
+	}
+
+	private void OnWorkMotion(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading)
+		{
+			Store.Current.WorkMotion = WorkMotionToggle.IsChecked == true;
 			Store.Save();
 		}
 	}

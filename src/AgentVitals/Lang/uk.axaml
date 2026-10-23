@@ -250,6 +250,8 @@
     <x:String x:Key="langGlowHalo">Ореол</x:String>
     <x:String x:Key="langGlowSheen">Відблиск</x:String>
     <x:String x:Key="langGlowWash">Кольором</x:String>
+    <x:String x:Key="langWorkMotion">Рух, поки агент працює</x:String>
+    <x:String x:Key="langWorkMotionHint">Тиха брижа від смужки й значка, маяк біля крапки у плашці — лише в агента, який працює.</x:String>
     <x:String x:Key="langWidgetQuotas">КВОТИ</x:String>
     <x:String x:Key="langSystem">Запуск і оновлення</x:String>
     <x:String x:Key="langSystemNote">автозапуск, версії</x:String>

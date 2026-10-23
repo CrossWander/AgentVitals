@@ -382,6 +382,14 @@
                                         </Border>
                                     </Grid>
                                 </Border>
+                                <Border Name="WorkMotionRow" Classes="row">
+                                    <CheckBox Name="WorkMotionToggle" Theme="{StaticResource Toggle}" IsCheckedChanged="OnWorkMotion">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Classes="name" Text="{DynamicResource langWorkMotion}"/>
+                                            <TextBlock Classes="note" Text="{DynamicResource langWorkMotionHint}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </Border>
                             </StackPanel>
                         </Border>
                         <TextBlock Classes="note" Text="{DynamicResource langWidgetEye}" TextWrapping="Wrap"/>

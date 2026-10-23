@@ -142,6 +142,10 @@ The opened notch or chip: every visible agent and up to three live sessions; a c
 The light of the notch and the chip on an event: a pulse while a session waits, one flash when a turn ends, a slow pulse while the shown agent's quota is Critical; never at rest.
 _Avoid_: animation, highlight
 
+**Work motion**:
+The quiet movement of the notch and the chip while the shown agent has a working live session: a ripple from the strip or the quota ring, a beacon at the dot of the pill; only that agent moves.
+_Avoid_: animation, spinner
+
 **Percent mode**:
 Whether quota percentages everywhere say how much is used or how much is left; thresholds and health still count the used share.
 _Avoid_: display mode

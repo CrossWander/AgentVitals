@@ -59,6 +59,12 @@ internal partial class NotchWindow : WidgetWindow
 		Strip.Background = choice == WidgetView.Turns ? view.LimitMeter ?? shown.Meter : shown.Meter;
 		ShowFace(Top, shown);
 		_glow.Show(Store.Current.Glow, shown.Glow);
+
+		// Работает показанный агент: в покое от полоски расходится рябь, у выехавшей плашки — маяк у точки.
+		Frame.Classes.Set("moving", Store.Current.WorkMotion);
+		Ripple.Background = Strip.Background;
+		Ripple.Classes.Set("on", shown.Busy && _shown == WidgetLook.Rest);
+		Beacon.Classes.Set("on", shown.Busy && _shown != WidgetLook.Rest);
 	}
 
 	protected override void Place(PixelRect anchor) => Placement.PlaceNotch(this, anchor);
@@ -70,6 +76,9 @@ internal partial class NotchWindow : WidgetWindow
 		Body.Opacity = look == WidgetLook.Rest ? 0 : 1;
 		Rows.Opacity = look == WidgetLook.Panel ? 1 : 0;
 		Fit();
+
+		// Рябь у полоски и маяк у точки меняются местами с видом сразу, а не со следующим тиком.
+		ShowAgent();
 	}
 
 	/// <summary>Размеры — числами: «Auto» не анимируется. Окно — с панель, форма — по виду; переход ведут Transitions.</summary>
