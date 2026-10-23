@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Styling;
 using AgentVitals.Core;
 using AgentVitals.Core.Quotas;
 using AgentVitals.Core.Sessions;
@@ -654,12 +655,13 @@ internal static partial class Views
 		SessionState.Waiting => "Blue",
 	};
 
-	internal static IBrush Brush(string key) => Find(key) as IBrush ?? Brushes.Gray;
+	/// <param name="theme">Чья палитра; null — темы приложения.</param>
+	internal static IBrush Brush(string key, ThemeVariant? theme = null) => Find(key, theme) as IBrush ?? Brushes.Gray;
 
 	private static Geometry? Shape(string key) => Find(key) as Geometry;
 
-	private static object? Find(string key) =>
-		Application.Current is { } application && application.TryGetResource(key, application.ActualThemeVariant, out var value)
+	private static object? Find(string key, ThemeVariant? theme = null) =>
+		Application.Current is { } application && application.TryGetResource(key, theme ?? application.ActualThemeVariant, out var value)
 			? value
 			: null;
 }

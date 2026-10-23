@@ -280,7 +280,9 @@ internal sealed class TrayApp
 	private void ShowWidget()
 	{
 		var kind = OperatingSystem.IsWindows() ? Store.Current.Widget : WidgetKind.Off;
-		var view = Views.Widget([.. _poller.Visible], _sessions, _finished, DateTime.UtcNow, Store.Current.Thresholds, Store.Current.Percent, Store.Current.Private);
+		// Плашка всегда чёрная: точки состояния на ней — из тёмной палитры и в светлой теме.
+		var view = Views.Widget([.. _poller.Visible], _sessions, _finished, DateTime.UtcNow, Store.Current.Thresholds, Store.Current.Percent, Store.Current.Private,
+			kind == WidgetKind.Notch ? Avalonia.Styling.ThemeVariant.Dark : null);
 
 		// Снимок до окна: новое окно сразу своего размера.
 		_widget.Render(view, Store.Current.Private);

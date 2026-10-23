@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Media;
+using Avalonia.Styling;
 using AgentVitals.Core;
 using AgentVitals.Core.Quotas;
 using AgentVitals.Core.Sessions;
@@ -153,7 +154,8 @@ internal static partial class Views
 	/// <param name="agents">Видимые агенты в порядке вкладок.</param>
 	/// <param name="finished">Сессия, чей долгий ход закончился меньше 5 с назад; null — такой нет.</param>
 	/// <param name="hide">Показывают экран: проектов, веток и инструментов не видно.</param>
-	internal static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session> sessions, Session? finished, DateTime now, Thresholds levels, PercentMode percent, bool hide)
+	/// <param name="theme">Тема точек состояния: плашка всегда чёрная — тёмная; null — тема приложения.</param>
+	internal static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session> sessions, Session? finished, DateTime now, Thresholds levels, PercentMode percent, bool hide, ThemeVariant? theme = null)
 	{
 		List<string> order = [.. agents.Select(state => state.Agent.Name)];
 		var waiting = sessions
@@ -192,7 +194,7 @@ internal static partial class Views
 			detail,
 			0,
 			Brush("MeterMuted"),
-			Brush(Dot(SessionWatcher.Overall(sessions))),
+			Brush(Dot(SessionWatcher.Overall(sessions)), theme),
 			(waiting ?? finished)?.Agent ?? rows.FirstOrDefault()?.Name,
 			rows,
 			[.. sessions
@@ -202,7 +204,7 @@ internal static partial class Views
 					hide ? session.Agent : session.Folder,
 					hide ? "" : session.Branch ?? "",
 					Text.Session(hide ? session with { Tool = null } : session, now),
-					Brush(Dot(session.State)),
+					Brush(Dot(session.State), theme),
 					session))],
 			// Как у значка в трее: самое узкое окно всех агентов.
 			Brush("Meter" + Level(Poller.Health(agents, now, levels))),
