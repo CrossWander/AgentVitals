@@ -362,7 +362,7 @@
                                                   SelectionChanged="OnWidgetAgent"/>
                                     </Grid>
                                 </Border>
-                                <Border Name="GlowRow" Classes="row">
+                                <Border Classes="row">
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                         <StackPanel VerticalAlignment="Center" Spacing="2">
                                             <TextBlock Classes="name" Text="{DynamicResource langGlow}"/>
@@ -382,7 +382,7 @@
                                         </Border>
                                     </Grid>
                                 </Border>
-                                <Border Name="WorkMotionRow" Classes="row">
+                                <Border Classes="row">
                                     <CheckBox Name="WorkMotionToggle" Theme="{StaticResource Toggle}" IsCheckedChanged="OnWorkMotion">
                                         <StackPanel Spacing="2">
                                             <TextBlock Classes="name" Text="{DynamicResource langWorkMotion}"/>

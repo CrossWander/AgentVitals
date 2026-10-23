@@ -204,7 +204,7 @@ internal partial class SettingsPage : UserControl
 		NotchRow.IsVisible = Store.Current.Widget == WidgetKind.Notch;
 		NotchAgentRow.IsVisible = NotchRow.IsVisible;
 		ChipRow.IsVisible = Store.Current.Widget == WidgetKind.Chip;
-		WidgetOptions.IsVisible = GlowRow.IsVisible = WorkMotionRow.IsVisible = NotchRow.IsVisible || ChipRow.IsVisible;
+		WidgetOptions.IsVisible = NotchRow.IsVisible || ChipRow.IsVisible;
 	}
 
 	/// <summary>Списки «Агент»: видимые агенты, «По очереди», у значка ещё «Все сразу». Сохранённого среди них нет

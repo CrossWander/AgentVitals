@@ -111,10 +111,10 @@ internal sealed record WidgetView(
 		return known.Count == 0 ? null : known[(int)(now.Ticks / _turn.Ticks % known.Count)];
 	}
 
-	/// <summary>Тот же снимок с этим агентом в шапке; «мало квоты» — по самому агенту.</summary>
+	/// <summary>Тот же снимок с этим агентом в шапке; «мало квоты» — по самому агенту: у снимка его не бывает.</summary>
 	internal WidgetView With(WidgetAgent agent) => this with
 	{
-		State = agent.Low ? WidgetState.Low : State == WidgetState.Low ? WidgetState.Idle : State,
+		State = agent.Low ? WidgetState.Low : State,
 		Title = agent.Name,
 		Value = agent.Known ? agent.Value : "",
 		Detail = agent.Known ? agent.Resets : Localization.Get("langWidgetNoData"),
