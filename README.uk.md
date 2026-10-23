@@ -10,6 +10,8 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D4.svg)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
+<p align="center"><img src="docs/demo.gif" alt="Плашка вгорі розгортається в панель і синіє, коли Claude просить дозволу; далі вікно біля трею, налаштування віджета, де плашка перемикається на Codex, значок над треєм, картка на робочому столі й тост про те, що сесію Claude майже вичерпано"></p>
+
 Програма в треї Windows для Claude Code, Codex, GitHub Copilot і Cursor. Вона показує, скільки
 лишилося від квоти кожного агента і коли її буде скинуто, що просто зараз робить кожна сесія
 Claude Code чи Codex, скільки сьогоднішня робота коштувала б за цінами API і чи працює сервіс агента.

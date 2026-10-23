@@ -10,6 +10,8 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D4.svg)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
+<p align="center"><img src="docs/demo.gif" alt="The notch at the top opens into a pill and a panel and turns blue when Claude asks for permission; then the tray window, the widget settings switching the pill to Codex, the chip by the tray, the desktop card and a toast that the Claude session is almost used up"></p>
+
 A Windows tray app for Claude Code, Codex, GitHub Copilot and Cursor. It shows how much of each
 agent's quota is left and when it resets, what each Claude Code or Codex session is doing right now,
 what today's work would cost at API prices, and whether the agent's service is up. A toast warns you
