@@ -64,20 +64,20 @@ internal sealed record WidgetView(
 	public bool Busy => !Loud && Agents.Any(agent => agent.Name == Agent && agent.Working);
 
 	/// <summary>Настройка «Агент»: по очереди.</summary>
-	public const string Turns = "turns";
+	public const string Rotation = "rotation";
 
 	/// <summary>Настройка «Агент» у значка: все сразу в ряд.</summary>
 	public const string All = "all";
 
 	// «По очереди»: столько показывается один агент.
-	private static readonly TimeSpan _turn = TimeSpan.FromSeconds(6);
+	private static readonly TimeSpan _slot = TimeSpan.FromSeconds(6);
 
 	// Агент с квотой на исходе чередуется с выбранным: столько показывается каждый.
 	private static readonly TimeSpan _alarm = TimeSpan.FromSeconds(10);
 
 	/// <summary>Что показать по настройке «Агент»: выбранного (нет такого — первого), а у кого квота «критично» — по
 	/// очереди с ним каждые 10 с; «По очереди» — всех с данными по 6 с; «Все сразу» — ряд. «Ждёт» и «закончил» — как есть.</summary>
-	/// <param name="choice">Имя агента, <see cref="Turns"/>, <see cref="All"/>; null — первый.</param>
+	/// <param name="choice">Имя агента, <see cref="Rotation"/>, <see cref="All"/>; null — первый.</param>
 	public WidgetView Pick(string? choice, DateTime now)
 	{
 		if (Loud || Agents.Count == 0)
@@ -90,9 +90,9 @@ internal sealed record WidgetView(
 			return Agents.Any(agent => agent.Low) ? this with { State = WidgetState.Low } : this;
 		}
 
-		if (choice == Turns)
+		if (choice == Rotation)
 		{
-			return Turn(now) is { } turn ? With(turn) : this;
+			return Rotate(now) is { } next ? With(next) : this;
 		}
 
 		var chosen = Agents.FirstOrDefault(agent => agent.Name == choice) ?? Agents[0];
@@ -103,11 +103,11 @@ internal sealed record WidgetView(
 
 	/// <summary>Агент «по очереди»: каждые 6 с следующий из тех, у кого есть данные; квота «критично» смену не останавливает —
 	/// агент под 100% неделями держал бы её. Без данных ни у кого — null.</summary>
-	public WidgetAgent? Turn(DateTime now)
+	public WidgetAgent? Rotate(DateTime now)
 	{
 		List<WidgetAgent> known = [.. Agents.Where(agent => agent.Known)];
 
-		return known.Count == 0 ? null : known[(int)(now.Ticks / _turn.Ticks % known.Count)];
+		return known.Count == 0 ? null : known[(int)(now.Ticks / _slot.Ticks % known.Count)];
 	}
 
 	/// <summary>Тот же снимок с этим агентом в шапке; «мало квоты» — по самому агенту: у снимка его не бывает.</summary>

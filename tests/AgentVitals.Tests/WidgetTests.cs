@@ -18,7 +18,7 @@ public class WidgetTests
 		var hover = new WidgetHover();
 
 		Assert.Equal(
-			new[] { WidgetLook.Rest, WidgetLook.Rest, WidgetLook.Peek, WidgetLook.Peek },
+			new[] { WidgetLook.Rest, WidgetLook.Rest, WidgetLook.Pill, WidgetLook.Pill },
 			new[] { hover.Next(true, _t), hover.Next(true, At(200)), hover.Next(true, At(300)), hover.Next(true, At(5000)) });
 	}
 
@@ -31,7 +31,7 @@ public class WidgetTests
 		var open = hover.Next(true, At(400));
 		hover.Click();
 
-		Assert.Equal((WidgetLook.Panel, WidgetLook.Peek), (open, hover.Next(true, At(500))));
+		Assert.Equal((WidgetLook.Panel, WidgetLook.Pill), (open, hover.Next(true, At(500))));
 	}
 
 	[Fact]
@@ -42,7 +42,7 @@ public class WidgetTests
 
 		hover.Click();
 
-		Assert.Equal(WidgetLook.Peek, hover.Next(true, At(300)));
+		Assert.Equal(WidgetLook.Pill, hover.Next(true, At(300)));
 	}
 
 	[Fact]
@@ -77,7 +77,7 @@ public class WidgetTests
 
 		made!.Click();
 
-		Assert.Equal(new[] { (WidgetLook.Rest, false), (WidgetLook.Peek, true), (WidgetLook.Panel, true) }, made.Looks);
+		Assert.Equal(new[] { (WidgetLook.Rest, false), (WidgetLook.Pill, true), (WidgetLook.Panel, true) }, made.Looks);
 	}
 
 	[Fact]
@@ -123,7 +123,7 @@ public class WidgetTests
 
 		host.Tick(new PixelPoint(10, 500), _t);
 
-		Assert.Equal((WidgetLook.Peek, false), made!.Looks[^1]);
+		Assert.Equal((WidgetLook.Pill, false), made!.Looks[^1]);
 	}
 
 	[Fact]
@@ -168,7 +168,7 @@ public class WidgetTests
 
 		host.Render(View(WidgetState.Waiting), hide: false);
 		host.Tick(new PixelPoint(10, 500), DateTime.UtcNow);
-		Assert.Equal((WidgetLook.Peek, false), made!.Looks[^1]);
+		Assert.Equal((WidgetLook.Pill, false), made!.Looks[^1]);
 
 		host.Render(View(WidgetState.Idle), hide: false);
 		host.Tick(new PixelPoint(10, 500), DateTime.UtcNow);

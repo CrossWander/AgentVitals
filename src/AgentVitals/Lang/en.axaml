@@ -239,11 +239,11 @@
     <x:String x:Key="langNotchPill">Pill</x:String>
     <x:String x:Key="langNotchAgent">Agent</x:String>
     <x:String x:Key="langNotchAgentHint">Who the pill shows. An agent low on quota takes turns with it every 10 seconds. In turn: each for 6 seconds. Every agent is in the panel by click.</x:String>
-    <x:String x:Key="langNotchTurns">In turn</x:String>
+    <x:String x:Key="langNotchRotation">In turn</x:String>
     <x:String x:Key="langChipAgents">Agent</x:String>
     <x:String x:Key="langChipAgentsHint">All in a row, one, or each in turn for 6 seconds. An agent low on quota takes turns with the chosen one every 10 seconds.</x:String>
     <x:String x:Key="langChipRow">All at once</x:String>
-    <x:String x:Key="langChipTurns">In turn</x:String>
+    <x:String x:Key="langChipRotation">In turn</x:String>
     <x:String x:Key="langGlow">Glow</x:String>
     <x:String x:Key="langGlowHint">When an agent waits, finishes or runs low on quota. Halo: light around it, sheen: a glint runs across, tint: it takes the colour.</x:String>
     <x:String x:Key="langGlowOff">Off</x:String>

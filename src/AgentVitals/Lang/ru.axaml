@@ -239,11 +239,11 @@
     <x:String x:Key="langNotchPill">Плашка</x:String>
     <x:String x:Key="langNotchAgent">Агент</x:String>
     <x:String x:Key="langNotchAgentHint">Кого показывать в плашке. У кого квота на исходе — чередуется с ним каждые 10 секунд. По очереди — каждый на 6 секунд. Все агенты — в панели по щелчку.</x:String>
-    <x:String x:Key="langNotchTurns">По очереди</x:String>
+    <x:String x:Key="langNotchRotation">По очереди</x:String>
     <x:String x:Key="langChipAgents">Агент</x:String>
     <x:String x:Key="langChipAgentsHint">Все в ряд, один или по очереди на 6 секунд. У кого квота на исходе — чередуется с выбранным каждые 10 секунд.</x:String>
     <x:String x:Key="langChipRow">Все сразу</x:String>
-    <x:String x:Key="langChipTurns">По очереди</x:String>
+    <x:String x:Key="langChipRotation">По очереди</x:String>
     <x:String x:Key="langGlow">Свечение</x:String>
     <x:String x:Key="langGlowHint">Когда агент ждёт, закончил или квота на исходе. Ореол — свет вокруг, блик — пробегает отблеск, цветом — подкрашивается.</x:String>
     <x:String x:Key="langGlowOff">Выключено</x:String>

@@ -26,7 +26,7 @@ internal enum GlowStyle
 internal enum WidgetLook
 {
 	Rest,
-	Peek,
+	Pill,
 	Panel,
 }
 
@@ -51,7 +51,7 @@ internal sealed class WidgetHover
 	/// <summary>Раскрыт ли виджет мышью: тогда он нажимается, пока курсор над ним.</summary>
 	public bool Armed => _armed;
 
-	public WidgetLook Look => !_armed ? WidgetLook.Rest : _panel ? WidgetLook.Panel : WidgetLook.Peek;
+	public WidgetLook Look => !_armed ? WidgetLook.Rest : _panel ? WidgetLook.Panel : WidgetLook.Pill;
 
 	public WidgetLook Next(bool over, DateTime now)
 	{
@@ -234,7 +234,7 @@ internal sealed class WidgetHost(Func<WidgetKind, IWidgetWindow> make)
 
 		if (look == WidgetLook.Rest && (Pinned || _view is { Loud: true }))
 		{
-			look = WidgetLook.Peek;
+			look = WidgetLook.Pill;
 		}
 
 		window.Show(look, _over && _hover.Armed);

@@ -61,7 +61,7 @@ internal partial class NotchWindow : WidgetWindow
 
 		var choice = Store.Current.NotchAgent;
 		var shown = view.Pick(choice, DateTime.UtcNow);
-		Strip.Background = choice == WidgetView.Turns ? view.LimitMeter ?? shown.Meter : shown.Meter;
+		Strip.Background = choice == WidgetView.Rotation ? view.LimitMeter ?? shown.Meter : shown.Meter;
 		ShowFace(Top, shown);
 		_glow.Show(Store.Current.Glow, shown);
 
@@ -92,8 +92,8 @@ internal partial class NotchWindow : WidgetWindow
 		Header.Measure(Size.Infinity);
 		Rows.Measure(Size.Infinity);
 
-		var peek = new Size(Math.Max(_stripWidth, Header.DesiredSize.Width + _sides), _headerHeight);
-		var panel = new Size(Math.Max(peek.Width, Rows.DesiredSize.Width + _sides), _headerHeight + Rows.DesiredSize.Height);
+		var pill = new Size(Math.Max(_stripWidth, Header.DesiredSize.Width + _sides), _headerHeight);
+		var panel = new Size(Math.Max(pill.Width, Rows.DesiredSize.Width + _sides), _headerHeight + Rows.DesiredSize.Height);
 
 		// Содержимое — в полную ширину панели: пока форма растёт, текст не переносится и не обрезается троеточием.
 		Body.Width = panel.Width;
@@ -103,7 +103,7 @@ internal partial class NotchWindow : WidgetWindow
 		var size = _shown switch
 		{
 			WidgetLook.Rest => new Size(_stripWidth, _stripHeight),
-			WidgetLook.Peek => peek,
+			WidgetLook.Pill => pill,
 			WidgetLook.Panel => panel,
 		};
 

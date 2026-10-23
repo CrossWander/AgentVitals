@@ -129,6 +129,9 @@ The widget as a black shape at the top centre of the screen with the tray; it re
 **Strip**:
 The notch at rest: a thin line in the colour of the shown agent's quota; clicks go through it to the window below.
 
+**Pill**:
+The notch out of the strip: the shown agent's name, quota and reset, or what a waiting or finished session says.
+
 **Chip**:
 The widget in the corner of the screen next to the tray: every agent in a row, or one agent.
 
@@ -137,6 +140,13 @@ The widget under all windows, seen on the desktop: a column for every visible ag
 
 **Panel**:
 The opened notch or chip: every visible agent and up to three live sessions; a click on the notch or the chip opens and closes it.
+
+**Shown agent**:
+The agent the notch or the chip shows: the one chosen in the settings or the one whose slot it is in the rotation; an agent whose quota is Critical alternates with the chosen one every ten seconds.
+
+**Rotation**:
+The notch or the chip showing every agent with data in order, six seconds each; a Critical quota does not stop it.
+_Avoid_: turns (a turn is the agent's work on one prompt)
 
 **Glow**:
 The light of the notch and the chip on an event: a pulse while a session waits, one flash when a turn ends, a slow pulse while the shown agent's quota is Critical; never at rest.

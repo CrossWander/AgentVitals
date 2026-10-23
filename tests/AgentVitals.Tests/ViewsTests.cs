@@ -366,44 +366,44 @@ public class ViewsTests
 	}
 
 	[Fact]
-	public void TurnsSkipAgentsWithoutData()
+	public void RotationSkipsAgentsWithoutData()
 	{
 		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Copilot"), Found("Codex", snapshot: Quotas(10))]);
 
-		var shown = Enumerable.Range(0, 4).Select(slot => view.Turn(_now.AddSeconds(6 * slot))!.Name).ToList();
+		var shown = Enumerable.Range(0, 4).Select(slot => view.Rotate(_now.AddSeconds(6 * slot))!.Name).ToList();
 
 		Assert.Equal(new[] { "Claude", "Codex" }, shown.Distinct().Order());
 		Assert.NotEqual(shown[0], shown[1]);
 	}
 
 	[Fact]
-	public void TurnsDoNotStopOnALowAgent() // агент под 100% неделями не должен останавливать смену
+	public void RotationDoesNotStopOnALowAgent() // агент под 100% неделями не должен останавливать смену
 	{
 		var view = Widget([Found("Claude", snapshot: Quotas(10)), Found("Codex", snapshot: Quotas(95))]);
 
-		Assert.Equal(new[] { "Claude", "Codex" }, new[] { view.Pick(WidgetView.Turns, _now).Title, view.Pick(WidgetView.Turns, _now.AddSeconds(6)).Title }.Order());
+		Assert.Equal(new[] { "Claude", "Codex" }, new[] { view.Pick(WidgetView.Rotation, _now).Title, view.Pick(WidgetView.Rotation, _now.AddSeconds(6)).Title }.Order());
 	}
 
 	[Fact]
-	public void NoTurnWithoutData() => Assert.Null(Widget([Found("Claude")]).Turn(_now));
+	public void NoRotationWithoutData() => Assert.Null(Widget([Found("Claude")]).Rotate(_now));
 
 	[Fact]
 	public void TurnShowsTheAgentOfItsTurn()
 	{
 		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Codex", snapshot: Quotas(10))]);
 
-		var shown = new[] { view.Pick(WidgetView.Turns, _now), view.Pick(WidgetView.Turns, _now.AddSeconds(6)) };
+		var shown = new[] { view.Pick(WidgetView.Rotation, _now), view.Pick(WidgetView.Rotation, _now.AddSeconds(6)) };
 
 		Assert.Equal(new[] { "Claude", "Codex" }, shown.Select(turned => turned.Title).Order());
 		Assert.All(shown, turned => Assert.Equal(view.Agents.Single(agent => agent.Name == turned.Title).Value, turned.Value));
 	}
 
 	[Fact]
-	public void WaitingDoesNotTurn()
+	public void WaitingDoesNotRotate()
 	{
 		var view = Widget([Found("Claude", snapshot: Quotas(46)), Found("Codex", snapshot: Quotas(10))], [new Session("s", SessionState.Waiting, "Bash", "repo", null)]);
 
-		Assert.Same(view, view.Pick(WidgetView.Turns, _now.AddSeconds(6)));
+		Assert.Same(view, view.Pick(WidgetView.Rotation, _now.AddSeconds(6)));
 	}
 
 	[Fact]

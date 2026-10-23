@@ -213,8 +213,8 @@ internal partial class SettingsPage : UserControl
 	{
 		var loading = _loading;
 		_loading = true;
-		Fill(NotchAgents, Store.Current.NotchAgent, [(Localization.Get("langNotchTurns"), WidgetView.Turns)]);
-		Fill(ChipAgents, Store.Current.ChipAgent, [(Localization.Get("langChipTurns"), WidgetView.Turns), (Localization.Get("langChipRow"), WidgetView.All)]);
+		Fill(NotchAgents, Store.Current.NotchAgent, [(Localization.Get("langNotchRotation"), WidgetView.Rotation)]);
+		Fill(ChipAgents, Store.Current.ChipAgent, [(Localization.Get("langChipRotation"), WidgetView.Rotation), (Localization.Get("langChipRow"), WidgetView.All)]);
 		_loading = loading;
 	}
 
