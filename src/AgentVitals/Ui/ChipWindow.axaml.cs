@@ -26,12 +26,6 @@ internal partial class ChipWindow : WidgetWindow
 	// Закрытая панель прозрачна, но место в окне занимает: мышь над ним — не над значком.
 	protected override Visual Hit => _open ? Body : Face;
 
-	public override void Tick()
-	{
-		base.Tick();
-		ShowAgents();
-	}
-
 	protected override void Rendered() => ShowAgents();
 
 	protected override void Place(PixelRect anchor) => Placement.PlaceChip(this, anchor, _margin);

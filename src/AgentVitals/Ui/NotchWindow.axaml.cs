@@ -40,12 +40,6 @@ internal partial class NotchWindow : WidgetWindow
 
 	protected override Visual Hit => Shape;
 
-	public override void Tick()
-	{
-		base.Tick();
-		ShowAgent();
-	}
-
 	protected override void Rendered() => ShowAgent();
 
 	/// <summary>Шапка — агент из настроек или по очереди. Полоска «по очереди» — цвет ближе всех к лимиту: со сменой агента
