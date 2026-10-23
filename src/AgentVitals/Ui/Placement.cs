@@ -83,40 +83,27 @@ internal static class Placement
 		}
 	}
 
-	public static void Place(Window window, PixelRect icon)
-	{
-		if (Screen(window, icon) is { } screen)
-		{
-			window.Position = Near(icon, screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling));
-		}
-	}
+	public static void Place(Window window, PixelRect icon) => Put(window, icon, (work, size, _) => Near(icon, work, size));
 
 	/// <summary>В угол того экрана, где значок.</summary>
 	/// <param name="margin">Отступ от угла в точках интерфейса.</param>
-	public static void PlaceInCorner(Window window, PixelRect icon, double margin)
-	{
-		if (Screen(window, icon) is { } screen)
-		{
-			window.Position = Corner(screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling), (int)Math.Round(margin * screen.Scaling));
-		}
-	}
+	public static void PlaceInCorner(Window window, PixelRect icon, double margin) =>
+		Put(window, icon, (work, size, scaling) => Corner(work, size, (int)Math.Round(margin * scaling)));
 
 	/// <summary>Плашка — по центру верхнего края рабочей области экрана со значком трея.</summary>
-	public static void PlaceNotch(Window window, PixelRect icon)
-	{
-		if (Screen(window, icon) is { } screen)
-		{
-			window.Position = Notch(screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling));
-		}
-	}
+	public static void PlaceNotch(Window window, PixelRect icon) => Put(window, icon, (work, size, _) => Notch(work, size));
 
 	/// <summary>Значок над треем — в углу рабочей области у значка трея.</summary>
 	/// <param name="margin">Отступ от угла в точках интерфейса.</param>
-	public static void PlaceChip(Window window, PixelRect icon, double margin)
+	public static void PlaceChip(Window window, PixelRect icon, double margin) =>
+		Put(window, icon, (work, size, scaling) => Chip(icon, work, size, (int)Math.Round(margin * scaling)));
+
+	/// <summary>Окно — на экране значка: его рабочая область, размер окна в точках этого экрана и его масштаб.</summary>
+	private static void Put(Window window, PixelRect icon, Func<PixelRect, PixelSize, double, PixelPoint> at)
 	{
 		if (Screen(window, icon) is { } screen)
 		{
-			window.Position = Chip(icon, screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling), (int)Math.Round(margin * screen.Scaling));
+			window.Position = at(screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling), screen.Scaling);
 		}
 	}
 
