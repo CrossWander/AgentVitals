@@ -10,7 +10,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <!-- Сборка релиза на GitHub берёт версию из тега; эта — для сборок у себя. Одна на все сборки:
          по ней и номер в настройках, и User-Agent запросов агентов. -->
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <Authors>Dykalo Pavlo</Authors>
     <Copyright>© 2026 Dykalo Pavlo</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

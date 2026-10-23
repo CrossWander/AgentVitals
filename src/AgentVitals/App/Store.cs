@@ -35,6 +35,32 @@ internal static class Store
 		// Глаз в окне: почта аккаунта и запросы сессий скрыты — экран показывают другим.
 		public bool Private { get; set; }
 
+		// Что значат проценты квот везде: израсходовано или осталось. Пороги хранятся израсходованными в любом режиме.
+		public PercentMode Percent { get; set; } = PercentMode.Used;
+
+		// Виджет на экране кроме значка в трее; по умолчанию его нет — как до 1.5.0.
+		public WidgetKind Widget { get; set; } = WidgetKind.Off;
+
+		// Плашка в покое видна целиком, а не полоской; щелчки всё равно проходят насквозь, пока мышь не задержится.
+		public bool NotchPill { get; set; }
+
+		// Кого показывает плашка: имя агента, «rotation» — по очереди; null — первого. У кого квота на исходе — чередуется с ним.
+		public string? NotchAgent { get; set; }
+
+		// То же для значка над треем; ещё «all» — все сразу в ряд, как до этой настройки.
+		public string? ChipAgent { get; set; } = WidgetView.All;
+
+		// Свечение плашки и значка на события: ждёт, закончил, мало квоты.
+		public GlowStyle Glow { get; set; } = GlowStyle.Halo;
+
+		// Пока агент работает, плашка и значок тихо движутся: рябь у полоски и кольца, маяк у точки.
+		public bool WorkMotion { get; set; } = true;
+
+		// Где оставили виджет на рабочем столе — верхний левый угол в точках экрана; null — не двигали.
+		public int? WidgetX { get; set; }
+
+		public int? WidgetY { get; set; }
+
 		// Пороги квоты, %: с них тосты «важно» и «критично», жёлтый и красный.
 		public int ImportantAt { get; set; } = 75;
 

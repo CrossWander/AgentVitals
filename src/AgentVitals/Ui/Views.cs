@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Styling;
 using AgentVitals.Core;
 using AgentVitals.Core.Quotas;
 using AgentVitals.Core.Sessions;
@@ -157,6 +158,13 @@ internal enum ChartMode
 	Models,
 }
 
+/// <summary>Что значат проценты квот: сколько израсходовано или сколько осталось. Одинаково во всей программе.</summary>
+internal enum PercentMode
+{
+	Used,
+	Left,
+}
+
 /// <summary>Слой столбика: высота в точках и цвет.</summary>
 internal sealed record BarPart(double Height, IBrush Brush);
 
@@ -204,7 +212,7 @@ internal sealed record Vitals(
 }
 
 /// <summary>Собирает представления из данных опроса и сессий. Кисти — из палитры текущей темы.</summary>
-internal static class Views
+internal static partial class Views
 {
 	/// <param name="agents">Установленные агенты.</param>
 	/// <param name="hooks">Подключены ли hooks — по агентам, у которых они есть.</param>
@@ -213,7 +221,8 @@ internal static class Views
 	/// <param name="levels">Пороги из настроек.</param>
 	/// <param name="hide">Показывают экран: почты аккаунтов и запросов сессий не видно.</param>
 	/// <param name="names">Свои имена аккаунтов: «агент/ключ» → имя.</param>
-	public static Vitals Build(IReadOnlyList<AgentState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false, IReadOnlyDictionary<string, string>? names = null)
+	/// <param name="percent">Что значат проценты: израсходовано или осталось.</param>
+	public static Vitals Build(IReadOnlyList<AgentState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false, IReadOnlyDictionary<string, string>? names = null, PercentMode percent = PercentMode.Used)
 	{
 		// Значок и карточка по наведению — по худшему агенту; шапка окна — по выбранной вкладке.
 		var badge = Badge(agents, now, levels);
@@ -224,7 +233,7 @@ internal static class Views
 		return new(
 			badge.Text,
 			badge.Brush,
-			[.. agents.Select(state => Agent(state, now, levels, hooks.TryGetValue(state.Agent.Name, out var link) ? link : null, sessions, hide, names))],
+			[.. agents.Select(state => Agent(state, now, levels, hooks.TryGetValue(state.Agent.Name, out var link) ? link : null, sessions, hide, names, percent))],
 			status.Text,
 			Brush(Level(status.Health)),
 			focus is null ? "" : Text.Live(focus),
@@ -269,16 +278,17 @@ internal static class Views
 	/// <param name="hooks">Подключены ли hooks агента; null — у агента их нет.</param>
 	/// <param name="hide">Показывают экран: почты аккаунта и запросов сессий не видно.</param>
 	/// <param name="names">Свои имена аккаунтов: «агент/ключ» → имя.</param>
-	internal static AgentView Agent(AgentState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null, bool hide = false, IReadOnlyDictionary<string, string>? names = null)
+	/// <param name="percent">Что значат проценты: израсходовано или осталось.</param>
+	internal static AgentView Agent(AgentState state, DateTime now, Thresholds levels, HookLink? hooks = null, IReadOnlyList<Session>? sessions = null, bool hide = false, IReadOnlyDictionary<string, string>? names = null, PercentMode percent = PercentMode.Used)
 	{
-		var cards = Cards(state.Snapshot, state.Windows(now), now, levels);
+		var cards = Cards(state.Snapshot, state.Windows(now), now, levels, percent);
 		var accounts = state.Accounts;
 		var named = Names(state.Agent.Name, accounts, names ?? new Dictionary<string, string>(), hide);
 
 		// Аккаунт в работе — первым, остальные — в порядке появления: строки не прыгают.
 		List<AccountView> rows = accounts.Count < 2 ? [] : [.. accounts
 			.OrderBy(account => account.Key == state.Key ? 0 : 1)
-			.Select(account => Account(state, account, named[account.Key], now, levels))];
+			.Select(account => Account(state, account, named[account.Key], now, levels, percent))];
 
 		// Один аккаунт: «Аккаунт 1» ничего не говорит — под глазом своё имя или ничего.
 		var custom = state.Key is { } key ? names?.GetValueOrDefault($"{state.Agent.Name}/{key}") : null;
@@ -337,7 +347,7 @@ internal static class Views
 	}
 
 	/// <summary>Аккаунты агента для окна «Агенты»: аккаунт в работе первым, как в карточке на вкладке.</summary>
-	internal static IReadOnlyList<AccountEditView> AccountEdits(AgentState state, IReadOnlyDictionary<string, string> custom, bool hide, DateTime now)
+	internal static IReadOnlyList<AccountEditView> AccountEdits(AgentState state, IReadOnlyDictionary<string, string> custom, bool hide, DateTime now, PercentMode percent = PercentMode.Used)
 	{
 		var plain = Names(state.Agent.Name, state.Accounts, new Dictionary<string, string>(), hide);
 
@@ -351,7 +361,7 @@ internal static class Views
 				account.Snapshot?.Plan ?? "",
 				[.. account.Windows(now).Where(window => window.Limiting).Select(window => new AccountNumber(
 					Text.Title(window),
-					Math.Round(window.Used).ToString(CultureInfo.InvariantCulture) + "%",
+					Percent(window.Used, percent),
 					Math.Round(window.Used) >= 100))],
 				Text.Age(account.Updated, now),
 				account.Key != state.Key && account.Availability(now) is (Availability.Busy, { } blocker) ? Text.Frees(blocker, now) : null,
@@ -359,9 +369,9 @@ internal static class Views
 	}
 
 	/// <summary>Карточки квот снимка: окна на этот момент и доплата сверх тарифа.</summary>
-	private static List<CardView> Cards(Snapshot? snapshot, IReadOnlyList<QuotaWindow> windows, DateTime now, Thresholds levels)
+	private static List<CardView> Cards(Snapshot? snapshot, IReadOnlyList<QuotaWindow> windows, DateTime now, Thresholds levels, PercentMode percent)
 	{
-		List<CardView> cards = [.. windows.Select(window => Card(window, now, levels))];
+		List<CardView> cards = [.. windows.Select(window => Card(window, now, levels, percent))];
 
 		if (snapshot?.Extra is { } extra)
 		{
@@ -371,7 +381,7 @@ internal static class Views
 		return cards;
 	}
 
-	private static AccountView Account(AgentState state, Account account, string name, DateTime now, Thresholds levels)
+	private static AccountView Account(AgentState state, Account account, string name, DateTime now, Thresholds levels, PercentMode percent)
 	{
 		var inUse = account.Key == state.Key;
 		var pending = inUse && state.Pending;
@@ -387,8 +397,8 @@ internal static class Views
 			Join(plan, pending ? Localization.Get("langAgeUpdating") : Text.Age(account.Updated, now)),
 			inUse ? Localization.Get("langAccountInUse") : Text.AccountBadge(availability, blocker, now),
 			Brush(!inUse && availability == Availability.Busy ? "BadgeBad" : "BadgeGood"),
-			[.. windows.Where(window => window.Limiting).Select(window => Card(window, now, levels) with { Title = Text.Title(window) })],
-			Cards(account.Snapshot, windows, now, levels),
+			[.. windows.Where(window => window.Limiting).Select(window => Card(window, now, levels, percent) with { Title = Text.Title(window) })],
+			Cards(account.Snapshot, windows, now, levels, percent),
 			plan,
 			Join(name, Localization.Get(inUse ? "langInUse" : "langRemembered")),
 			pending ? Localization.Get("langUpdating") : Text.Ago(account.Updated, now),
@@ -559,7 +569,14 @@ internal static class Views
 			+ (days.Any(day => day.Saved is not null) ? " · " + Localization.Format("langCacheSaved", Text.Cost(days.Sum(day => day.Saved ?? 0))) : ""),
 	};
 
-	private static CardView Card(QuotaWindow window, DateTime now, Thresholds levels)
+	/// <summary>Процент для показа: израсходованный или остаток, не меньше нуля. Уровни и цвета считаются по израсходованному.</summary>
+	internal static double Shown(double used, PercentMode percent) => percent == PercentMode.Left ? Math.Max(0, 100 - used) : used;
+
+	/// <summary>«46%» — как процент читается везде: в виджете, в окне «Агенты», у порогов в настройках.</summary>
+	internal static string Percent(double used, PercentMode percent) =>
+		Math.Round(Shown(used, percent)).ToString(CultureInfo.InvariantCulture) + "%";
+
+	private static CardView Card(QuotaWindow window, DateTime now, Thresholds levels, PercentMode percent)
 	{
 		var health = Quota.Rate(window.Used, levels);
 		var (icon, tint) = window.Kind switch
@@ -581,14 +598,16 @@ internal static class Views
 			Brush(tint),
 			Text.Badge(window.Used, levels),
 			Brush("Badge" + Level(health)),
-			Math.Round(window.Used).ToString(CultureInfo.InvariantCulture),
+			Math.Round(Shown(window.Used, percent)).ToString(CultureInfo.InvariantCulture),
 			"%",
-			Localization.Get("langUsed"),
-			Math.Min(window.Used, 100),
+			Localization.Get(percent == PercentMode.Left ? "langLeft" : "langUsed"),
+			Math.Min(Shown(window.Used, percent), 100),
 			Brush("Meter" + Level(health)),
 			Text.Until(window.ResetsAt, now),
 			window.Limiting,
-			pace,
+
+			// В режиме «осталось» полоска тает справа налево — и метка ровного темпа зеркальна.
+			pace is { } mark ? Shown(mark, percent) : null,
 			runout is { } at ? Text.Runout(at, now) : word is null ? "" : Localization.Get($"langPace{word}"),
 			Brush(word switch
 			{
@@ -596,7 +615,9 @@ internal static class Views
 				Pace.Spare => "Good",
 				Pace.Even or null => "TextDim",
 			}),
-			pace is { } even ? Localization.Format("langPaceTip", Math.Round(even), Math.Round(window.Used)) : null);
+			pace is { } even
+				? Localization.Format(percent == PercentMode.Left ? "langPaceTipLeft" : "langPaceTip", Math.Round(Shown(even, percent)), Math.Round(Shown(window.Used, percent)))
+				: null);
 	}
 
 	private static CardView Extra(ExtraUsage extra, Thresholds levels)
@@ -634,12 +655,13 @@ internal static class Views
 		SessionState.Waiting => "Blue",
 	};
 
-	internal static IBrush Brush(string key) => Find(key) as IBrush ?? Brushes.Gray;
+	/// <param name="theme">Чья палитра; null — темы приложения.</param>
+	internal static IBrush Brush(string key, ThemeVariant? theme = null) => Find(key, theme) as IBrush ?? Brushes.Gray;
 
 	private static Geometry? Shape(string key) => Find(key) as Geometry;
 
-	private static object? Find(string key) =>
-		Application.Current is { } application && application.TryGetResource(key, application.ActualThemeVariant, out var value)
+	private static object? Find(string key, ThemeVariant? theme = null) =>
+		Application.Current is { } application && application.TryGetResource(key, theme ?? application.ActualThemeVariant, out var value)
 			? value
 			: null;
 }

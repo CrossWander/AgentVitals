@@ -59,6 +59,33 @@ public class TextTests
 	}
 
 	[Fact]
+	public void ShortResetIsTimeLeftWithinADay()
+	{
+		var now = System.DateTime.UtcNow;
+
+		Assert.Equal("langHoursMinutes", Text.Short(now.AddHours(2.8), now));
+		Assert.Equal("langResetDone", Text.Short(now.AddMinutes(-1), now));
+		Assert.Equal("", Text.Short(null, now));
+	}
+
+	[Fact]
+	public void IdleShowsHowLongItRests()
+	{
+		var now = System.DateTime.UtcNow;
+
+		Assert.Equal("langSessionIdle · langMinutes", Text.Session(new Session("s", SessionState.Idle, null, "repo", null, Since: now.AddMinutes(-12)), now));
+	}
+
+	[Fact]
+	public void WaitingCountsFromTheQuestion() // ход шёл 20 мин, разрешения спросили только что — таймера ещё нет
+	{
+		var now = System.DateTime.UtcNow;
+		var session = new Session("s", SessionState.Waiting, "Bash", "repo", null, TurnStarted: now.AddMinutes(-20), Since: now.AddSeconds(-30));
+
+		Assert.Equal("langSessionWaiting", Text.Session(session, now));
+	}
+
+	[Fact]
 	public void TurnShowsHowLongItRuns() // «работает · 3 мин»; первую минуту — без таймера
 	{
 		var now = System.DateTime.UtcNow;
@@ -74,14 +101,41 @@ public class TextTests
 		var now = System.DateTime.UtcNow;
 		var window = new QuotaWindow(WindowKind.Session, null, 60, now.AddHours(2.5), Limiting: true);
 
-		Assert.Equal(("langAlertPace", "langAlertLeft, langPaceRunout, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window, QuotaLevel.Pace), now));
-		Assert.Equal(("langAlertImportant", "langAlertLeft, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window with { Used = 76, ResetsAt = now.AddHours(0.5) }, QuotaLevel.Important), now));
+		Assert.Equal(("langAlertPace", "langAlertLeft, langPaceRunout, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window, QuotaLevel.Pace), now, PercentMode.Left));
+		Assert.Equal(("langAlertImportant", "langAlertLeft, langResetsIn"), Text.QuotaToast(new QuotaAlert("Claude", window with { Used = 76, ResetsAt = now.AddHours(0.5) }, QuotaLevel.Important), now, PercentMode.Left));
 	}
 
 	[Fact]
 	public void ResetToastSaysTheWindowIsBack() =>
 		Assert.Equal(("langAlertReset", "langAlertResetText"),
-			Text.QuotaToast(new QuotaAlert("Claude", new QuotaWindow(WindowKind.Session, null, 0, null, Limiting: true), QuotaLevel.Reset), System.DateTime.UtcNow));
+			Text.QuotaToast(new QuotaAlert("Claude", new QuotaWindow(WindowKind.Session, null, 0, null, Limiting: true), QuotaLevel.Reset), System.DateTime.UtcNow, PercentMode.Left));
+
+	[Fact]
+	public void QuotaToastSpeaksInTheChosenMode() // «использовано 92%» или, как раньше, «осталось 8%»
+	{
+		var alert = new QuotaAlert("Claude", new QuotaWindow(WindowKind.Session, null, 92, null, Limiting: true), QuotaLevel.Critical);
+
+		Assert.Equal("langAlertUsed", Text.QuotaToast(alert, System.DateTime.UtcNow, PercentMode.Used).Message);
+		Assert.Equal("langAlertLeft", Text.QuotaToast(alert, System.DateTime.UtcNow, PercentMode.Left).Message);
+	}
+
+	[Theory]
+	[InlineData(true, "Off", true)]
+	[InlineData(false, "Off", false)]
+	[InlineData(false, "Notch", true)] // тосты выключены, а «закончил» на плашке — по тому же порогу
+	public void TurnLengthStaysWhileTheWidgetUsesIt(bool toasts, string widget, bool enabled) =>
+		Assert.Equal(enabled, SettingsPage.TurnEnabled(toasts, System.Enum.Parse<WidgetKind>(widget)));
+
+	// Режим — строкой: PercentMode внутренний, а метод теста открытый.
+	[Theory]
+	[InlineData(90, "Used", "90%")]
+	[InlineData(90, "Left", "10%")]
+	public void LevelShowsInTheChosenMode(int at, string percent, string expected) => Assert.Equal(expected, Views.Percent(at, System.Enum.Parse<PercentMode>(percent)));
+
+	[Theory]
+	[InlineData(5, "Used", 5)]
+	[InlineData(5, "Left", -5)] // «+» у «осталось 10%» — 15% остатка, то есть 85% израсходованного
+	public void LevelButtonsMoveTheShownNumber(int step, string percent, int expected) => Assert.Equal(expected, SettingsPage.Step(step, System.Enum.Parse<PercentMode>(percent)));
 
 	[Fact]
 	public void SessionToastSaysWhatHappened()

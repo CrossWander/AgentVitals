@@ -164,7 +164,22 @@ internal static class Text
 			: Localization.Format("langAccountFreesIn", title, Span(left));
 	}
 
-	private static string Lower(string text) => text.Length > 0 ? char.ToLower(text[0], Localization.Culture) + text[1..] : text;
+	internal static string Lower(string text) => text.Length > 0 ? char.ToLower(text[0], Localization.Culture) + text[1..] : text;
+
+	/// <summary>Сброс коротко, для виджета: «2 ч 50 мин», дальше суток — «пн 10:00», дальше недели — «1 нояб».</summary>
+	public static string Short(DateTimeOffset? resets, DateTime now)
+	{
+		if (resets is not { } at)
+		{
+			return "";
+		}
+
+		var left = at.UtcDateTime - now;
+
+		return left <= TimeSpan.Zero ? Localization.Get("langResetDone")
+			: left > TimeSpan.FromDays(1) ? at.LocalDateTime.ToString(ResetPattern(left), Localization.Culture)
+			: Span(left);
+	}
 
 	/// <summary>Как переключиться на другой аккаунт агента: у Claude — «/login в Claude Code», у прочих — своя строка или общая.</summary>
 	/// <summary>Как сменить аккаунт агента — для подвала таблицы аккаунтов; `команда` в обратных кавычках.</summary>
@@ -190,16 +205,17 @@ internal static class Text
 	public static string Badge(double used, Thresholds levels) =>
 		Math.Round(used) >= 100 ? Localization.Get("langHealthExhausted") : HealthName(Quota.Rate(used, levels));
 
-	/// <summary>Тост о квоте: заголовок — насколько серьёзно, текст — что, сколько осталось, на сколько хватит и когда сброс.</summary>
-	public static (string Title, string Message) QuotaToast(QuotaAlert alert, DateTime now)
+	/// <summary>Тост о квоте: заголовок — насколько серьёзно, текст — что, сколько израсходовано или осталось, на сколько
+	/// хватит и когда сброс.</summary>
+	/// <param name="percent">Как в окне: «использовано 92%» или «осталось 8%».</param>
+	public static (string Title, string Message) QuotaToast(QuotaAlert alert, DateTime now, PercentMode percent)
 	{
 		if (alert.Level == QuotaLevel.Reset)
 		{
 			return (Localization.Get("langAlertReset"), Localization.Format("langAlertResetText", alert.Agent, Title(alert.Window)));
 		}
 
-		var left = Math.Max(0, 100 - Math.Round(alert.Window.Used));
-		var message = Localization.Format("langAlertLeft", alert.Agent, Title(alert.Window), left);
+		var message = Localization.Format(percent == PercentMode.Left ? "langAlertLeft" : "langAlertUsed", alert.Agent, Title(alert.Window), Math.Round(Views.Shown(alert.Window.Used, percent)));
 
 		if (Quota.Runout(alert.Window, now) is { } runout)
 		{
@@ -235,7 +251,7 @@ internal static class Text
 		Health.Critical => "langHealthCritical",
 	});
 
-	/// <summary>Состояние сессии, а у идущего хода — и сколько он длится: «работает · 3 мин». Первую минуту таймера нет.</summary>
+	/// <summary>Состояние сессии и сколько оно длится: «работает · 3 мин», «простой · 12 мин». Первую минуту таймера нет.</summary>
 	public static string Session(Session session, DateTime now)
 	{
 		var state = session.State switch
@@ -245,7 +261,7 @@ internal static class Text
 			SessionState.Waiting => Localization.Get("langSessionWaiting"),
 		};
 
-		return session.TurnStarted is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
+		return (session.State == SessionState.Working ? session.TurnStarted : session.Since) is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
 	}
 
 	/// <summary>Тост о сессии: заголовок — кто и что, текст — где и сколько ход занял.</summary>

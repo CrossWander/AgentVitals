@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace AgentVitals.Tests;
@@ -35,6 +36,16 @@ public class LangTests
 				Assert.Contains($"x:Key=\"langError{problem}\"", text, StringComparison.Ordinal);
 			}
 		}
+	}
+
+	[Fact]
+	public void EveryKeyIsInEveryLanguage() // забытый перевод показал бы человеку «langPercentLeft»
+	{
+		var keys = Directory.GetFiles(Lang(), "*.axaml")
+			.Select(file => Regex.Matches(File.ReadAllText(file), "x:Key=\"(\\w+)\"").Select(match => match.Groups[1].Value).Order(StringComparer.Ordinal).ToList())
+			.ToList();
+
+		Assert.All(keys, list => Assert.Equal(keys[0], list));
 	}
 
 	private static string Lang() => Path.Combine(Root(), "src", "AgentVitals", "Lang");

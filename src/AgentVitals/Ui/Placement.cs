@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 
@@ -48,6 +50,30 @@ internal static class Placement
 	public static PixelPoint Corner(PixelRect work, PixelSize window, int margin) =>
 		new(work.Right - window.Width - margin, work.Bottom - window.Height - margin);
 
+	/// <summary>Плашка: по центру верхнего края рабочей области — под панелью задач, если та наверху.</summary>
+	public static PixelPoint Notch(PixelRect work, PixelSize window) =>
+		new(work.X + ((work.Width - window.Width) / 2), work.Y);
+
+	/// <summary>Значок над треем: угол рабочей области на стороне значка трея по обеим осям.</summary>
+	public static PixelPoint Chip(PixelRect icon, PixelRect work, PixelSize window, int margin) =>
+		new(icon.Center.X < work.Center.X ? work.X + margin : work.Right - window.Width - margin,
+			icon.Center.Y < work.Center.Y ? work.Y + margin : work.Bottom - window.Height - margin);
+
+	/// <summary>Виджет на рабочем столе: где его оставили, пока тот экран на месте; иначе — правый верхний угол главного.
+	/// Экран ищется по центру окна: у прижатой к краю карточки угол окна с полем под тень — за экраном.</summary>
+	/// <param name="saved">Запомненный верхний левый угол; null — ещё не двигали.</param>
+	/// <param name="screens">Границы всех экранов.</param>
+	public static PixelPoint Desk(PixelPoint? saved, IReadOnlyList<PixelRect> screens, PixelRect primaryWork, PixelSize window, int margin) =>
+		saved is { } place && screens.Any(screen => screen.Contains(new PixelRect(place, window).Center))
+			? place
+			: new(primaryWork.Right - window.Width - margin, primaryWork.Y + margin);
+
+	/// <summary>Тост, который лёг бы на значок над треем, встаёт над ним.</summary>
+	public static PixelPoint Above(PixelPoint at, PixelSize window, PixelRect? obstacle, int margin) =>
+		obstacle is { } over && new PixelRect(at, window).Intersects(over)
+			? new(at.X, over.Y - window.Height - margin)
+			: at;
+
 	/// <summary>Окно не выше рабочей области экрана со значком: что не влезло, прокручивается внутри окна.</summary>
 	public static void Fit(Window window, PixelRect icon)
 	{
@@ -57,23 +83,32 @@ internal static class Placement
 		}
 	}
 
-	public static void Place(Window window, PixelRect icon)
-	{
-		if (Screen(window, icon) is { } screen)
-		{
-			window.Position = Near(icon, screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling));
-		}
-	}
+	public static void Place(Window window, PixelRect icon) => Put(window, icon, (work, size, _) => Near(icon, work, size));
 
 	/// <summary>В угол того экрана, где значок.</summary>
 	/// <param name="margin">Отступ от угла в точках интерфейса.</param>
-	public static void PlaceInCorner(Window window, PixelRect icon, double margin)
+	public static void PlaceInCorner(Window window, PixelRect icon, double margin) =>
+		Put(window, icon, (work, size, scaling) => Corner(work, size, (int)Math.Round(margin * scaling)));
+
+	/// <summary>Плашка — по центру верхнего края рабочей области экрана со значком трея.</summary>
+	public static void PlaceNotch(Window window, PixelRect icon) => Put(window, icon, (work, size, _) => Notch(work, size));
+
+	/// <summary>Значок над треем — в углу рабочей области у значка трея.</summary>
+	/// <param name="margin">Отступ от угла в точках интерфейса.</param>
+	public static void PlaceChip(Window window, PixelRect icon, double margin) =>
+		Put(window, icon, (work, size, scaling) => Chip(icon, work, size, (int)Math.Round(margin * scaling)));
+
+	/// <summary>Окно — на экране значка: его рабочая область, размер окна в точках этого экрана и его масштаб.</summary>
+	private static void Put(Window window, PixelRect icon, Func<PixelRect, PixelSize, double, PixelPoint> at)
 	{
 		if (Screen(window, icon) is { } screen)
 		{
-			window.Position = Corner(screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling), (int)Math.Round(margin * screen.Scaling));
+			window.Position = at(screen.WorkingArea, PixelSize.FromSize(window.ClientSize, screen.Scaling), screen.Scaling);
 		}
 	}
+
+	/// <summary>Рабочая область экрана со значком: переехала панель задач — плашка и значок встают заново.</summary>
+	public static PixelRect? Work(Window window, PixelRect icon) => Screen(window, icon)?.WorkingArea;
 
 	private static Avalonia.Platform.Screen? Screen(Window window, PixelRect icon) =>
 		window.Screens.ScreenFromPoint(icon.Center) ?? window.Screens.Primary;

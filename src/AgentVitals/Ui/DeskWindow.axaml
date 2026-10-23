@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AgentVitals"
+        x:Class="AgentVitals.DeskWindow"
+        x:ClassModifier="internal"
+        x:DataType="local:WidgetView"
+        Title="AgentVitals"
+        SizeToContent="WidthAndHeight" CanResize="False" WindowStartupLocation="Manual"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        ShowInTaskbar="False" ShowActivated="False">
+
+    <!-- На рабочем столе под окнами: колонки агентов и до трёх сессий. Перетаскивается за любое место;
+         нажали и отпустили на месте — щелчок по строке. Поле — под тень -->
+    <Border Classes="window" Margin="8" Padding="16,12" Cursor="Hand" PointerPressed="OnPress">
+        <StackPanel Spacing="10">
+            <TextBlock Classes="label" Text="{DynamicResource langWidgetQuotas}"/>
+
+            <ItemsControl ItemsSource="{Binding Agents}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="18"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:WidgetAgent">
+                        <StackPanel Width="96" Spacing="4" Background="Transparent">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding Value}" FontSize="28" FontWeight="Bold"/>
+                            <ProgressBar Theme="{StaticResource Meter}" Height="4" Value="{Binding Fill}" Foreground="{Binding Meter}"/>
+                            <TextBlock Classes="faint" Text="{Binding Resets}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border Height="1" Background="{DynamicResource CardLine}" IsVisible="{Binding HasSessions}"/>
+
+            <ItemsControl ItemsSource="{Binding Sessions}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:WidgetSession">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Margin="0,2" Background="Transparent">
+                            <Ellipse Width="7" Height="7" Fill="{Binding Dot}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="2" Classes="faint" Text="{Binding State}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+</Window>

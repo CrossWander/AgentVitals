@@ -77,7 +77,7 @@ internal partial class AgentsPage : UserControl
 		HooksCard.IsVisible = target is not null && Directory.Exists(Path.GetDirectoryName(target.File));
 		HooksCard.DataContext = target is null ? null : HookRow.Of(target, target == failed ? error : null);
 
-		var accounts = Views.AccountEdits(state, Store.Current.AccountNames, Store.Current.Private, DateTime.UtcNow);
+		var accounts = Views.AccountEdits(state, Store.Current.AccountNames, Store.Current.Private, DateTime.UtcNow, Store.Current.Percent);
 		AccountsCard.IsVisible = accounts.Count > 0;
 		AccountRows.ItemsSource = accounts;
 		AccountsFoot.Inlines = Code($"{Text.AccountsHow(state.Agent.Name)} {Localization.Get("langAccountsMemo")}");

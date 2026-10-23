@@ -12,8 +12,35 @@ public class SessionWatcherTests
 {
 	private static readonly DateTime _now = new(2026, 10, 7, 12, 0, 0);
 
-	private static void Write(TempDirectory temp, string id, SessionState state, DateTime at, string cwd = @"C:\nowhere") =>
-		File.WriteAllText(temp.File(id + ".json"), JsonSerializer.Serialize(new SessionRecord(state, null, cwd, at.Ticks), HookWriter.Json));
+	private static void Write(TempDirectory temp, string id, SessionState state, DateTime at, string cwd = @"C:\nowhere", string? tool = null) =>
+		File.WriteAllText(temp.File(id + ".json"), JsonSerializer.Serialize(new SessionRecord(state, tool, cwd, at.Ticks), HookWriter.Json));
+
+	[Fact]
+	public void WaitingSessionTellsItsTool()
+	{
+		using var temp = new TempDirectory();
+		Write(temp, "s", SessionState.Waiting, _now.AddMinutes(-1), tool: "Bash");
+
+		Assert.Equal("Bash", SessionWatcher.Read(temp.Path, _now, []).Single().Tool);
+	}
+
+	[Fact]
+	public void IdleSessionTellsSinceWhen() // «простой · 12 мин»: с последнего события
+	{
+		using var temp = new TempDirectory();
+		Write(temp, "s", SessionState.Idle, _now.AddMinutes(-12));
+
+		Assert.Equal(_now.AddMinutes(-12), SessionWatcher.Read(temp.Path, _now, []).Single().Since);
+	}
+
+	[Fact]
+	public void WaitingSessionTellsSinceWhen() // «ждёт разрешения · 1 мин»: с вопроса, а не с начала хода
+	{
+		using var temp = new TempDirectory();
+		File.WriteAllText(temp.File("s.json"), JsonSerializer.Serialize(new SessionRecord(SessionState.Waiting, "Bash", @"C:\nowhere", _now.AddMinutes(-1).Ticks, Turn: _now.AddMinutes(-20).Ticks), HookWriter.Json));
+
+		Assert.Equal(_now.AddMinutes(-1), SessionWatcher.Read(temp.Path, _now, []).Single().Since);
+	}
 
 	[Theory]
 	[InlineData(SessionState.Working, 14, SessionState.Working)]

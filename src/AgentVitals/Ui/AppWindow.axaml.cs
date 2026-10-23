@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -20,7 +21,7 @@ internal partial class AppWindow : Window
 		InitializeComponent();
 
 		Agents = new AgentsPage(poller);
-		Settings = new SettingsPage { IsVisible = false };
+		Settings = new SettingsPage { IsVisible = false, AgentNames = () => poller.Visible.Select(state => state.Agent.Name) };
 
 		foreach (Control page in new Control[] { Agents, Settings })
 		{

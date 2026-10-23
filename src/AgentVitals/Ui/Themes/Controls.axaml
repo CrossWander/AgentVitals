@@ -139,7 +139,7 @@
         </Style>
     </ControlTheme>
 
-    <!-- Сегмент выбора: язык, тема, интервал — вместо выпадающих списков -->
+    <!-- Сегмент выбора: язык, тема, интервал — вместо выпадающих списков, пока варианты умещаются в ряд -->
     <ControlTheme x:Key="Segment" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
         <Setter Property="Background" Value="Transparent"/>
@@ -165,6 +165,85 @@
         <Style Selector="^:checked">
             <Setter Property="Foreground" Value="{DynamicResource Text}"/>
             <Setter Property="Background" Value="{DynamicResource SegmentOn}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+    </ControlTheme>
+
+    <!-- Выпадающий список — где вариантов много или их число меняется, как у агентов. Закрытый — дорожка с одним
+         выбранным сегментом и стрелкой, как соседние сегменты; открытый — подложка окна, строки как в меню -->
+    <ControlTheme x:Key="{x:Type ComboBox}" TargetType="ComboBox">
+        <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MaxDropDownHeight" Value="320"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <Border Name="Background" Background="{DynamicResource Track}" CornerRadius="10" Padding="2">
+                        <Border Background="{DynamicResource SegmentOn}" CornerRadius="8" Padding="11,5,10,5">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  Foreground="{TemplateBinding Foreground}" FontWeight="SemiBold"
+                                                  VerticalAlignment="Center"/>
+                                <!-- Стрелка в своих точках и без класса icon: стиль Path.icon сильнее значений из шаблона,
+                                     его 13×13 с растяжением прижимали стрелку к верху -->
+                                <Path Name="Arrow" Grid.Column="1" Width="10" Height="6" Data="M1,1 L5,5 L9,1"
+                                      StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"
+                                      Stroke="{DynamicResource TextDim}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </Border>
+
+                    <!-- Поле вокруг — под тень: окно списка прозрачное, тень внутри него -->
+                    <Popup Name="PART_Popup" WindowManagerAddShadowHint="False" PlacementTarget="Background"
+                           IsOpen="{TemplateBinding IsDropDownOpen, Mode=TwoWay}" IsLightDismissEnabled="True"
+                           InheritsTransform="True">
+                        <Border Background="{DynamicResource Window}" BorderBrush="{DynamicResource CardLine}" BorderThickness="1"
+                                CornerRadius="12" Padding="4" Margin="10,4,10,16" BoxShadow="0 6 18 0 #40000000"
+                                MinWidth="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}"
+                                MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}"/>
+                            </ScrollViewer>
+                        </Border>
+                    </Popup>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ Path#Arrow">
+            <Setter Property="Stroke" Value="{DynamicResource Text}"/>
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Opacity" Value="0.45"/>
+        </Style>
+    </ControlTheme>
+
+    <!-- Строка выпадающего списка: как строка меню; выбранная — на дорожке и жирнее -->
+    <ControlTheme x:Key="{x:Type ComboBoxItem}" TargetType="ComboBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Name="PART_ContentPresenter"
+                                  Background="{TemplateBinding Background}"
+                                  CornerRadius="{TemplateBinding CornerRadius}"
+                                  Padding="{TemplateBinding Padding}"
+                                  Foreground="{TemplateBinding Foreground}"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                  VerticalContentAlignment="Center"/>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover">
+            <Setter Property="Background" Value="{DynamicResource CardHover}"/>
+        </Style>
+        <Style Selector="^:selected">
+            <Setter Property="Background" Value="{DynamicResource Track}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
     </ControlTheme>

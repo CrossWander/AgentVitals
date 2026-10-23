@@ -1,0 +1,143 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:AgentVitals"
+        x:Class="AgentVitals.NotchWindow"
+        x:ClassModifier="internal"
+        x:DataType="local:WidgetView"
+        Title="AgentVitals"
+        SizeToContent="WidthAndHeight" CanResize="False"
+        WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
+        ShowInTaskbar="False" Topmost="True" ShowActivated="False"
+        RequestedThemeVariant="Dark">
+
+    <!-- Движение, пока показанный агент работает: класс moving — настройка, on — работает и видно -->
+    <Window.Styles>
+        <!-- Рябь: от полоски вниз расходится и гаснет отсвет её цвета — на высоту полоски, не до плашки -->
+        <Style Selector=".moving Border.ripple.on">
+            <Style.Animations>
+                <Animation Duration="0:0:2" IterationCount="Infinite" Easing="SineEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.8"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1.06"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="2"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <!-- Маяк: от точки состояния расходится круг -->
+        <Style Selector=".moving Ellipse.beacon.on">
+            <Style.Animations>
+                <Animation Duration="0:0:1.8" IterationCount="Infinite" Easing="SineEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.7"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0"/>
+                        <Setter Property="ScaleTransform.ScaleX" Value="3.2"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="3.2"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </Window.Styles>
+
+    <!-- Плашка вверху по центру: всегда чёрная, поэтому тёмная тема и для текста, и для панели.
+         Окно — размером с панель и полем под ореол, прозрачное; внутри чёрная форма плавно растёт из полоски 6 px в плашку
+         и в панель: размер окна скачками не анимируется. Содержимое лежит в полную ширину, форма его обрезает и открывает -->
+    <Panel Name="Frame">
+      <!-- Подложка-ореол — того же размера, что форма, под ней: её тень светится на события, сама она не видна -->
+      <Panel HorizontalAlignment="Center" VerticalAlignment="Top">
+        <!-- Рябь — копия полоски под формой, чуть размыта: мягкий отсвет, а не коробка. Цвет и размер из кода, как у полоски -->
+        <Border Name="Ripple" Classes="ripple" Opacity="0"
+                HorizontalAlignment="Center" VerticalAlignment="Top" RenderTransformOrigin="50%,0%" IsHitTestVisible="False">
+            <Border.RenderTransform>
+                <ScaleTransform/>
+            </Border.RenderTransform>
+            <Border.Effect>
+                <BlurEffect Radius="1.5"/>
+            </Border.Effect>
+        </Border>
+        <Border Name="Halo" CornerRadius="{Binding #Shape.CornerRadius}" Background="#000000" Opacity="0"
+                IsHitTestVisible="False"/>
+        <Border Name="Shape" Background="#000000" ClipToBounds="True">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Width" Duration="0:0:0.26" Easing="CubicEaseOut"/>
+                    <DoubleTransition Property="Height" Duration="0:0:0.26" Easing="CubicEaseOut"/>
+                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.26" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Border.Transitions>
+
+            <Panel>
+                <!-- В покое форма — цветная полоска; раскрываясь, она остаётся кромкой сверху и гаснет, а не заливает всю плашку -->
+                <!-- Цвет — из кода: у показанного агента его цвет, «по очереди» — ближе всех к лимиту, чтобы не мигал -->
+                <Border Name="Strip" VerticalAlignment="Top">
+                    <Border.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                        </Transitions>
+                    </Border.Transitions>
+                </Border>
+
+                <!-- Свечение «цветом» и «блик»: заливка и отблеск внутри формы, форма их обрезает -->
+                <Border Name="Wash" Opacity="0" IsHitTestVisible="False"/>
+                <Border Name="Glint" Width="48" HorizontalAlignment="Left" Opacity="0" IsHitTestVisible="False">
+                    <Border.RenderTransform>
+                        <TranslateTransform X="-48"/>
+                    </Border.RenderTransform>
+                </Border>
+
+                <StackPanel Name="Body" Opacity="0" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <StackPanel.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                        </Transitions>
+                    </StackPanel.Transitions>
+
+                    <!-- Шапка во всю ширину — щелчок по ней открывает и закрывает панель со всеми агентами. В шапке один
+                         агент — выбранный в настройках или по очереди; «ждёт» и «закончил» — надпись -->
+                    <Border Name="Top" Height="30" Background="Transparent" Cursor="Hand">
+                        <Border.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                            </Transitions>
+                        </Border.Transitions>
+                        <StackPanel Name="Header" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <Panel Width="7" Height="7" VerticalAlignment="Center">
+                                <Ellipse Name="Beacon" Classes="beacon" Fill="{Binding Dot}" Opacity="0" RenderTransformOrigin="50%,50%">
+                                    <Ellipse.RenderTransform>
+                                        <ScaleTransform/>
+                                    </Ellipse.RenderTransform>
+                                </Ellipse>
+                                <Ellipse Fill="{Binding Dot}"/>
+                            </Panel>
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"
+                                       MaxWidth="280" TextTrimming="CharacterEllipsis"/>
+                            <ProgressBar Theme="{StaticResource Meter}" Width="52" Height="4" Value="{Binding Fill}"
+                                         Foreground="{Binding Meter}" VerticalAlignment="Center" IsVisible="{Binding HasValue}"/>
+                            <TextBlock Text="{Binding Value}" FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding HasValue}"/>
+                            <TextBlock Classes="faint" Text="{Binding Detail}" VerticalAlignment="Center"
+                                       MaxWidth="240" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+
+                    <local:WidgetPanel Name="Rows" Width="400" Opacity="0" Margin="0,2,0,10" HorizontalAlignment="Center">
+                        <local:WidgetPanel.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.22" Easing="CubicEaseOut"/>
+                            </Transitions>
+                        </local:WidgetPanel.Transitions>
+                    </local:WidgetPanel>
+                </StackPanel>
+            </Panel>
+        </Border>
+      </Panel>
+    </Panel>
+</Window>
