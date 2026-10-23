@@ -12,6 +12,8 @@ internal partial class NotchWindow : WidgetWindow
 	private const double _stripHeight = 6;
 	private const double _headerHeight = 30;
 
+	private static readonly CornerRadius _stripCorners = new(0, 0, _stripHeight / 2, _stripHeight / 2);
+
 	// Поля плашки по бокам: содержимое не прижимается к скруглению.
 	private const double _sides = 28;
 
@@ -28,6 +30,12 @@ internal partial class NotchWindow : WidgetWindow
 	public NotchWindow()
 	{
 		InitializeComponent();
+
+		// Полоска — одними константами: форма в покое — она сама, рябь — её копия.
+		Ripple.Width = Shape.Width = _stripWidth;
+		Strip.Height = Ripple.Height = Shape.Height = _stripHeight;
+		Ripple.CornerRadius = Shape.CornerRadius = _stripCorners;
+
 		_glow = new Glow(Halo, Wash, Glint, () => _width);
 		Wire(Rows);
 		Opens(Top);
@@ -101,6 +109,6 @@ internal partial class NotchWindow : WidgetWindow
 
 		_width = Shape.Width = size.Width;
 		Shape.Height = size.Height;
-		Shape.CornerRadius = _shown == WidgetLook.Rest ? new CornerRadius(0, 0, 3, 3) : new CornerRadius(0, 0, 14, 14);
+		Shape.CornerRadius = _shown == WidgetLook.Rest ? _stripCorners : new CornerRadius(0, 0, 14, 14);
 	}
 }

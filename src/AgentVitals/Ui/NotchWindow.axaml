@@ -54,8 +54,8 @@
     <Panel Name="Frame">
       <!-- Подложка-ореол — того же размера, что форма, под ней: её тень светится на события, сама она не видна -->
       <Panel HorizontalAlignment="Center" VerticalAlignment="Top">
-        <!-- Рябь — копия полоски под формой, чуть размыта: мягкий отсвет, а не коробка. Цвет из кода, как у полоски -->
-        <Border Name="Ripple" Classes="ripple" Width="120" Height="6" CornerRadius="0,0,3,3" Opacity="0"
+        <!-- Рябь — копия полоски под формой, чуть размыта: мягкий отсвет, а не коробка. Цвет и размер из кода, как у полоски -->
+        <Border Name="Ripple" Classes="ripple" Opacity="0"
                 HorizontalAlignment="Center" VerticalAlignment="Top" RenderTransformOrigin="50%,0%" IsHitTestVisible="False">
             <Border.RenderTransform>
                 <ScaleTransform/>
@@ -66,7 +66,7 @@
         </Border>
         <Border Name="Halo" CornerRadius="{Binding #Shape.CornerRadius}" Background="#000000" Opacity="0"
                 IsHitTestVisible="False"/>
-        <Border Name="Shape" Width="120" Height="6" Background="#000000" CornerRadius="0,0,3,3" ClipToBounds="True">
+        <Border Name="Shape" Background="#000000" ClipToBounds="True">
             <Border.Transitions>
                 <Transitions>
                     <DoubleTransition Property="Width" Duration="0:0:0.26" Easing="CubicEaseOut"/>
@@ -78,7 +78,7 @@
             <Panel>
                 <!-- В покое форма — цветная полоска; раскрываясь, она остаётся кромкой сверху и гаснет, а не заливает всю плашку -->
                 <!-- Цвет — из кода: у показанного агента его цвет, «по очереди» — ближе всех к лимиту, чтобы не мигал -->
-                <Border Name="Strip" Height="6" VerticalAlignment="Top">
+                <Border Name="Strip" VerticalAlignment="Top">
                     <Border.Transitions>
                         <Transitions>
                             <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
