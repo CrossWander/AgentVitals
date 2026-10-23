@@ -166,8 +166,8 @@ internal partial class SettingsPage : UserControl
 		var left = Store.Current.Percent == PercentMode.Left;
 		ImportantName.Text = Localization.Get(left ? "langLevelImportantLeft" : "langLevelImportant");
 		CriticalName.Text = Localization.Get(left ? "langLevelCriticalLeft" : "langLevelCritical");
-		ImportantValue.Text = Text.Level(Store.Current.ImportantAt, Store.Current.Percent);
-		CriticalValue.Text = Text.Level(Store.Current.CriticalAt, Store.Current.Percent);
+		ImportantValue.Text = Views.Percent(Store.Current.ImportantAt, Store.Current.Percent);
+		CriticalValue.Text = Views.Percent(Store.Current.CriticalAt, Store.Current.Percent);
 	}
 
 	private void OnSessionToasts(object? sender, RoutedEventArgs e)

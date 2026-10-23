@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Avalonia.Media;
 using AgentVitals.Core;
@@ -156,10 +155,6 @@ internal static partial class Views
 	/// <param name="hide">Показывают экран: проектов, веток и инструментов не видно.</param>
 	internal static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session> sessions, Session? finished, DateTime now, Thresholds levels, PercentMode percent, bool hide)
 	{
-		// Правило цвета значка в трее: самое узкое окно; при равенстве — первая вкладка (MaxBy берёт первого).
-		var top = agents.Where(state => state.Tightest(now) is not null).MaxBy(state => state.Tightest(now));
-		var limit = top is null ? Health.Unknown : Quota.Rate(top.Tightest(now)!.Value, levels);
-
 		List<string> order = [.. agents.Select(state => state.Agent.Name)];
 		var waiting = sessions
 			.Where(session => session.State == SessionState.Waiting)
@@ -209,7 +204,8 @@ internal static partial class Views
 					Text.Session(hide ? session with { Tool = null } : session, now),
 					Brush(Dot(session.State)),
 					session))],
-			Brush("Meter" + Level(limit)),
+			// Как у значка в трее: самое узкое окно всех агентов.
+			Brush("Meter" + Level(Poller.Health(agents, now, levels))),
 			waiting,
 			finished);
 
@@ -237,7 +233,4 @@ internal static partial class Views
 			resets,
 			health == Health.Critical);
 	}
-
-	private static string Percent(double used, PercentMode percent) =>
-		Math.Round(Shown(used, percent)).ToString(CultureInfo.InvariantCulture) + "%";
 }

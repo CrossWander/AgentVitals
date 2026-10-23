@@ -360,7 +360,7 @@ internal static partial class Views
 				account.Snapshot?.Plan ?? "",
 				[.. account.Windows(now).Where(window => window.Limiting).Select(window => new AccountNumber(
 					Text.Title(window),
-					Math.Round(Shown(window.Used, percent)).ToString(CultureInfo.InvariantCulture) + "%",
+					Percent(window.Used, percent),
 					Math.Round(window.Used) >= 100))],
 				Text.Age(account.Updated, now),
 				account.Key != state.Key && account.Availability(now) is (Availability.Busy, { } blocker) ? Text.Frees(blocker, now) : null,
@@ -570,6 +570,10 @@ internal static partial class Views
 
 	/// <summary>Процент для показа: израсходованный или остаток, не меньше нуля. Уровни и цвета считаются по израсходованному.</summary>
 	internal static double Shown(double used, PercentMode percent) => percent == PercentMode.Left ? Math.Max(0, 100 - used) : used;
+
+	/// <summary>«46%» — как процент читается везде: в виджете, в окне «Агенты», у порогов в настройках.</summary>
+	internal static string Percent(double used, PercentMode percent) =>
+		Math.Round(Shown(used, percent)).ToString(CultureInfo.InvariantCulture) + "%";
 
 	private static CardView Card(QuotaWindow window, DateTime now, Thresholds levels, PercentMode percent)
 	{

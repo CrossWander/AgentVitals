@@ -130,7 +130,7 @@ public class TextTests
 	[Theory]
 	[InlineData(90, "Used", "90%")]
 	[InlineData(90, "Left", "10%")]
-	public void LevelShowsInTheChosenMode(int at, string percent, string expected) => Assert.Equal(expected, Text.Level(at, System.Enum.Parse<PercentMode>(percent)));
+	public void LevelShowsInTheChosenMode(int at, string percent, string expected) => Assert.Equal(expected, Views.Percent(at, System.Enum.Parse<PercentMode>(percent)));
 
 	[Theory]
 	[InlineData(5, "Used", 5)]
