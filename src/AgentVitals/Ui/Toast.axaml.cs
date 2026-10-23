@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -11,6 +10,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using AgentVitals.Platform;
 
 namespace AgentVitals;
 
@@ -27,11 +27,6 @@ internal partial class Toast : TrayWindow
 
 	// Отступ окна от угла рабочей области; ещё полтора-два десятка точек внутри окна занимает поле под тень.
 	private const double _margin = 6;
-
-	// SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE: только наверх среди окон поверх всех, фокус не трогать.
-	private const uint _keepPlaceAndFocus = 0x1 | 0x2 | 0x10;
-
-	private static readonly IntPtr _topmost = -1;
 
 	private static readonly TimeSpan _rise = TimeSpan.FromMilliseconds(380);
 	private static readonly TimeSpan _fall = TimeSpan.FromMilliseconds(220);
@@ -105,7 +100,7 @@ internal partial class Toast : TrayWindow
 	{
 		if (OperatingSystem.IsWindows() && TryGetPlatformHandle() is { } handle)
 		{
-			SetWindowPos(handle.Handle, _topmost, 0, 0, 0, 0, _keepPlaceAndFocus);
+			WindowStyle.Topmost(handle.Handle);
 		}
 	}
 
@@ -167,8 +162,4 @@ internal partial class Toast : TrayWindow
 
 	// Кнопка гасит щелчок сама: до OnClick карточки он не доходит, и тост просто уезжает.
 	private void OnDismiss(object? sender, RoutedEventArgs e) => Dismiss();
-
-	[LibraryImport("user32.dll")]
-	[return: MarshalAs(UnmanagedType.Bool)]
-	private static partial bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height, uint flags);
 }

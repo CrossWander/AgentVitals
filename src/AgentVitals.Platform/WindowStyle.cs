@@ -47,7 +47,7 @@ public static unsafe partial class WindowStyle
 	/// тогда остаётся то, что глаз прячет в самом снимке.</summary>
 	public static bool Private(nint window, bool hide) => SetWindowDisplayAffinity(window, hide ? _excludeFromCapture : 0);
 
-	/// <summary>Поверх всех окон, без фокуса.</summary>
+	/// <summary>Поверх всех окон, без фокуса: виджет и тост.</summary>
 	public static void Topmost(nint window) => SetWindowPos(window, _topmost, 0, 0, 0, 0, _keepPlaceAndFocus);
 
 	/// <summary>Под всеми окнами: виджет на рабочем столе.</summary>
@@ -88,9 +88,6 @@ public static unsafe partial class WindowStyle
 
 		return new string(name, 0, length) is "WorkerW" or "Progman";
 	}
-
-	/// <summary>Расширенный стиль окна — для журнала проверки.</summary>
-	public static long Styles(nint window) => Get(window);
 
 	private static nint Get(nint window) => GetWindowLongPtrW(window, _exStyle);
 
