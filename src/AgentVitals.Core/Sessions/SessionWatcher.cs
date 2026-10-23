@@ -95,7 +95,7 @@ public static class SessionWatcher
 				session.Cwd,
 				agent,
 				session.Prompt,
-				state == SessionState.Idle ? session.Time : null));
+				state == SessionState.Working ? null : session.Time));
 		}
 
 		return sessions;

@@ -267,7 +267,7 @@ internal static class Text
 			SessionState.Waiting => Localization.Get("langSessionWaiting"),
 		};
 
-		return (session.TurnStarted ?? session.IdleSince) is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
+		return (session.State == SessionState.Working ? session.TurnStarted : session.Since) is { } since && now - since >= TimeSpan.FromMinutes(1) ? $"{state} · {Span(now - since)}" : state;
 	}
 
 	/// <summary>Тост о сессии: заголовок — кто и что, текст — где и сколько ход занял.</summary>

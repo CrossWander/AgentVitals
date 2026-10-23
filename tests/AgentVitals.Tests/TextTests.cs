@@ -73,7 +73,16 @@ public class TextTests
 	{
 		var now = System.DateTime.UtcNow;
 
-		Assert.Equal("langSessionIdle · langMinutes", Text.Session(new Session("s", SessionState.Idle, null, "repo", null, IdleSince: now.AddMinutes(-12)), now));
+		Assert.Equal("langSessionIdle · langMinutes", Text.Session(new Session("s", SessionState.Idle, null, "repo", null, Since: now.AddMinutes(-12)), now));
+	}
+
+	[Fact]
+	public void WaitingCountsFromTheQuestion() // ход шёл 20 мин, разрешения спросили только что — таймера ещё нет
+	{
+		var now = System.DateTime.UtcNow;
+		var session = new Session("s", SessionState.Waiting, "Bash", "repo", null, TurnStarted: now.AddMinutes(-20), Since: now.AddSeconds(-30));
+
+		Assert.Equal("langSessionWaiting", Text.Session(session, now));
 	}
 
 	[Fact]
