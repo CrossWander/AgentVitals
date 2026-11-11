@@ -186,6 +186,15 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void SameEmailWithoutPlanHasNoEmptyPart() // тариф не пришёл: «почта», а не «почта · »; два таких — «почта · 1»
+	{
+		var none = new Dictionary<string, string>();
+
+		Assert.Equal(["a@x.z", "a@x.z · Max"], Views.Names("Claude", [Signed("A", "", "a@x.z"), Signed("B", "Max", "a@x.z")], none, hide: false).Values);
+		Assert.Equal(["a@x.z · 1", "a@x.z · 2"], Views.Names("Claude", [Signed("A", "", "a@x.z"), Signed("B", "", "a@x.z")], none, hide: false).Values);
+	}
+
+	[Fact]
 	public void BusyBadgeNamesLastReset() // дальше суток — день и время, ближе — «через»
 	{
 		QuotaWindow Week(DateTime resets) => new(WindowKind.Week, null, 100, new DateTimeOffset(resets), Limiting: true);

@@ -442,7 +442,8 @@ internal static partial class Views
 		var plan = account.Snapshot?.Plan;
 		List<Account> twins = [.. same.Where(other => other.Snapshot?.Plan == plan)];
 
-		return twins.Count == 1 ? $"{email} · {plan}" : $"{email} · {plan} · {twins.IndexOf(account) + 1}";
+		// Тариф бывает пустым — Join пропускает его вместе с разделителем.
+		return twins.Count == 1 ? Join(email, plan) : Join(email, plan, $"{twins.IndexOf(account) + 1}");
 	}
 
 	private static string Join(params string?[] parts) => string.Join(" · ", parts.Where(part => !string.IsNullOrEmpty(part)));
