@@ -1,0 +1,32 @@
+name: Idea
+description: Something AgentVitals could do or show.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the idea. English, Ukrainian and Russian are all fine.
+  - type: textarea
+    id: moment
+    attributes:
+      label: When do you miss it
+      description: The moment you wished AgentVitals did this, and what you did instead.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help
+      description: What it could look like or how it could work. A sketch or a screenshot of something similar is welcome.
+  - type: dropdown
+    id: agents
+    attributes:
+      label: Agents it's about
+      multiple: true
+      options:
+        - Claude Code
+        - Codex
+        - Gemini CLI
+        - GitHub Copilot
+        - Cursor
+        - A new one
+        - None in particular

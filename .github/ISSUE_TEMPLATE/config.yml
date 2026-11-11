@@ -1,0 +1,4 @@
+contact_links:
+  - name: Security problem
+    url: https://github.com/CrossWander/AgentVitals/security/advisories/new
+    about: A token or a sign-in leaking, or a request going where it shouldn't. Report it privately, not in an issue.

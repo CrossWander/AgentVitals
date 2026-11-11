@@ -1,0 +1,61 @@
+name: Bug report
+description: Something doesn't work or shows the wrong thing.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. English, Ukrainian and Russian are all fine.
+        A security problem (a token or a sign-in leaking)? Don't file it here — send a [private report](https://github.com/CrossWander/AgentVitals/security/advisories/new) instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected to see instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen
+      placeholder: |
+        1. Open the tray window
+        2. Switch to the Codex tab
+        3. …
+  - type: dropdown
+    id: agents
+    attributes:
+      label: Agents involved
+      multiple: true
+      options:
+        - Claude Code
+        - Codex
+        - Gemini CLI
+        - GitHub Copilot
+        - Cursor
+        - None in particular
+  - type: input
+    id: version
+    attributes:
+      label: AgentVitals version
+      description: Settings → About.
+      placeholder: "1.6.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
+  - type: textarea
+    id: log
+    attributes:
+      label: Lines from log.txt
+      description: |
+        `log.txt` is next to `AgentVitals.exe`, or in `%LOCALAPPDATA%\AgentVitals` if that folder is read-only. Paste the lines from around the time it happened, and check them for anything you'd rather not share.
+      render: text
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Turn on the eye at the end of the plan line first, so emails and session prompts stay hidden.
