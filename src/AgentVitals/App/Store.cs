@@ -83,13 +83,14 @@ internal static class Store
 		public string? LastVersion { get; set; }
 
 		// Свои имена аккаунтов из окна «Агенты»: «Claude/<ключ аккаунта>» → имя; без имени — почта.
-		public Dictionary<string, string> AccountNames { get; set; } = [];
+		// У списков null из файла, поправленного руками, — пустой список: иначе запуск падает ещё до значка в трее.
+		public Dictionary<string, string> AccountNames { get; set => field = value ?? []; } = [];
 
 		// Порядок вкладок по именам агентов; кого нет в списке — после, в порядке каталога.
-		public List<string> AgentOrder { get; set; } = [];
+		public List<string> AgentOrder { get; set => field = value ?? []; } = [];
 
 		// Выключенные агенты: за ними не следят.
-		public List<string> SwitchedOff { get; set; } = [];
+		public List<string> SwitchedOff { get; set => field = value ?? []; } = [];
 
 		// В файле — два числа, как их правит человек; правилам — одной парой.
 		[JsonIgnore]
@@ -136,13 +137,16 @@ internal static class Store
 		}
 	}
 
+	/// <summary>Настройки из текста config.json; чего в нём нет — по умолчанию.</summary>
+	internal static Data Parse(string json) => JsonSerializer.Deserialize<Data>(json, _format) ?? new Data();
+
 	private static Data Read()
 	{
 		try
 		{
 			if (File.Exists(_path))
 			{
-				return JsonSerializer.Deserialize<Data>(File.ReadAllText(_path), _format) ?? new Data();
+				return Parse(File.ReadAllText(_path));
 			}
 		}
 		catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
