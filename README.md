@@ -35,9 +35,10 @@ and [claude-status-bar](https://github.com/m1ckc3s/claude-status-bar), which do 
    Codex and press **Connect** under *Live sessions*.
 
 Hover the icon for a quick card, click it for the full window, right-click for the menu. The window
-stays open while you work in other windows: close it with ✕, another click on the icon or Esc.
-On a small screen it stays within the screen: the header and the buttons stay put and the middle
-scrolls.
+closes on its own three seconds after the mouse leaves it and the icon, and any time with ✕, another
+click on the icon or Esc; a click in another window does not close it. While the mouse stays where it
+was when the window opened, the window waits. On a small screen it stays within the screen: the
+header and the buttons stay put and the middle scrolls.
 
 ## What it covers
 
@@ -61,8 +62,9 @@ scrolls.
 
 The gear button at the bottom of the window, or *Settings* in the right-click menu, opens the
 AgentVitals window on its *Settings* tab. It is laid out like the [Agents tab](#agents-tab): sections on
-the left, their rows on the right. *General* holds the language, theme, how often to check quotas and
-*Quota percentages*: *Used* or *Left*, the same in the window, the widget, toasts and thresholds;
+the left, their rows on the right. *General* holds the language, theme, how often to check quotas, when
+to *Close the tray window* (*By hand*, 3, 5 or 10 seconds) and *Quota percentages*: *Used* or *Left*, the
+same in the window, the widget, toasts and thresholds;
 *Notifications* — the *important* and *critical* levels, session toasts and their two sounds;
 *Widget* — which [widget](#widget) to show and how; *Startup and updates* — start with Windows and
 updates; *About* — the author, the version and links.

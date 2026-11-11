@@ -38,6 +38,9 @@ internal static class Store
 		// Что значат проценты квот везде: израсходовано или осталось. Пороги хранятся израсходованными в любом режиме.
 		public PercentMode Percent { get; set; } = PercentMode.Used;
 
+		// Окно у трея закрывается само через столько секунд после ухода мыши; 0 — только ✕, значок или Esc, как было раньше.
+		public int PopoverCloseSeconds { get; set; } = 3;
+
 		// Виджет на экране кроме значка в трее; по умолчанию его нет — как до 1.5.0.
 		public WidgetKind Widget { get; set; } = WidgetKind.Off;
 

@@ -32,6 +32,9 @@
     <x:String x:Key="langMinutes5">5 мин</x:String>
     <x:String x:Key="langMinutes10">10 мин</x:String>
     <x:String x:Key="langMinutes15">15 мин</x:String>
+    <x:String x:Key="langSeconds3">3 с</x:String>
+    <x:String x:Key="langSeconds5">5 с</x:String>
+    <x:String x:Key="langSeconds10">10 с</x:String>
     <x:String x:Key="langAnyTurn">любой</x:String>
     <x:String x:Key="langUpdatedNow">Обновлено только что</x:String>
     <x:String x:Key="langUpdatedAgo">Обновлено {0} назад</x:String>
@@ -105,6 +108,9 @@
     <x:String x:Key="langPercentHint">Одинаково везде: окно, виджет, тосты и пороги</x:String>
     <x:String x:Key="langPercentUsed">Использовано</x:String>
     <x:String x:Key="langPercentLeft">Осталось</x:String>
+    <x:String x:Key="langPopoverClose">Закрывать окно у трея</x:String>
+    <x:String x:Key="langPopoverCloseHint">Когда мышь ушла от окна и значка. Вручную — только ✕, повторный щелчок по значку или Esc</x:String>
+    <x:String x:Key="langPopoverCloseByHand">Вручную</x:String>
     <x:String x:Key="langAutostart">Запускать вместе с Windows</x:String>
     <x:String x:Key="langNotifications">Уведомления</x:String>
     <x:String x:Key="langChartModels">Модели</x:String>

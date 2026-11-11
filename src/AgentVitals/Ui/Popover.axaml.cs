@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Controls.Shapes;
@@ -17,9 +18,17 @@ using AgentVitals.Core.Usage;
 namespace AgentVitals;
 
 /// <summary>Окно по щелчку на значке: квоты, статус и сессии выбранного агента и настройки.
-/// Щелчок в другое окно его не закрывает — только ✕, повторный щелчок по значку или Esc.</summary>
+/// Щелчок в другое окно его не закрывает — только ✕, повторный щелчок по значку, Esc или уход мыши (AutoClose).</summary>
 internal partial class Popover : TrayWindow
 {
+	// Windows не говорит, что мышь ушла от окна в другое приложение: пока окно открыто, курсор опрашивается, как у карточки.
+	private readonly AutoClose _autoClose = new();
+	private readonly DispatcherTimer _closeWatch = new()
+	{
+		Interval = TimeSpan.FromMilliseconds(150),
+	};
+
+	private PixelRect _icon;
 	private Vitals? _vitals;
 	private string? _selected;
 
@@ -43,6 +52,7 @@ internal partial class Popover : TrayWindow
 		// бы верх и вкладки под мышью на полэкрана. Поэтому окно не становится ниже, чем уже было.
 		// ponytail: самая высокая вкладка, открытая впервые, ещё раз поднимет окно; потом — ни скачка.
 		Resized += (_, e) => MinHeight = Math.Max(MinHeight, Math.Min(e.ClientSize.Height, MaxHeight));
+		_closeWatch.Tick += (_, _) => WatchClose();
 	}
 
 	public event Action? RefreshRequested;
@@ -77,12 +87,49 @@ internal partial class Popover : TrayWindow
 		// Другой экран бывает ниже: MinHeight сильнее MaxHeight, а середина окна и так прокручивается.
 		Placement.Fit(this, anchor);
 		MinHeight = Math.Min(MinHeight, MaxHeight);
+
+		// Погасшее в прошлый раз окно открывается сразу целиком, а не проявляется.
+		Frame.Transitions = null;
+		Frame.Opacity = 1;
 		ShowAt(anchor);
 		Activate();
+
+		if (OperatingSystem.IsWindows())
+		{
+			_icon = anchor;
+			_autoClose.Open(Tray.Cursor());
+			_closeWatch.Start();
+		}
+	}
+
+	private void WatchClose()
+	{
+		if (!IsVisible || !OperatingSystem.IsWindows())
+		{
+			_closeWatch.Stop();
+
+			return;
+		}
+
+		var window = new PixelRect(Position, PixelSize.FromSize(ClientSize, RenderScaling));
+		var step = _autoClose.Next(Tray.Cursor(), window, _icon, DateTime.UtcNow, Store.Current.PopoverCloseSeconds);
+
+		if (step == AutoCloseStep.Close)
+		{
+			Hide();
+
+			return;
+		}
+
+		// Гаснет плавно; мышь вернулась, пока гаснет, — так же плавно проявляется обратно.
+		Frame.Transitions ??= [new DoubleTransition { Property = OpacityProperty, Duration = AutoClose.Fading }];
+		Frame.Opacity = step == AutoCloseStep.Fade ? 0 : 1;
 	}
 
 	protected override void OnKeyDown(KeyEventArgs e)
 	{
+		_autoClose.Touch();
+
 		if (e.Key == Key.Escape)
 		{
 			Hide();

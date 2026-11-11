@@ -51,6 +51,7 @@ internal partial class SettingsPage : UserControl
 		Select(Themes, Store.Current.Theme.ToString());
 		Select(Intervals, Store.Current.IntervalSeconds.ToString(CultureInfo.InvariantCulture));
 		Select(Percents, Store.Current.Percent.ToString());
+		Select(PopoverCloses, Store.Current.PopoverCloseSeconds.ToString(CultureInfo.InvariantCulture));
 		Select(TurnMinutes, Store.Current.TurnMinutes.ToString(CultureInfo.InvariantCulture));
 		ShowLevels();
 		SessionToastsToggle.IsChecked = Store.Current.SessionToasts;
@@ -68,7 +69,8 @@ internal partial class SettingsPage : UserControl
 
 		LowSoundToggle.IsChecked = Store.Current.LowSound;
 
-		// Звук играет только Windows (winmm).
+		// Звук играет только Windows (winmm); курсор для автозакрытия окна спрашивается у неё же.
+		PopoverCloseRow.IsVisible = OperatingSystem.IsWindows();
 		WaitingSoundRow.IsVisible = OperatingSystem.IsWindows();
 		LowSoundRow.IsVisible = OperatingSystem.IsWindows();
 		AutostartCard.IsVisible = OperatingSystem.IsWindows();
@@ -129,6 +131,15 @@ internal partial class SettingsPage : UserControl
 		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string seconds })
 		{
 			Store.Current.IntervalSeconds = int.Parse(seconds, CultureInfo.InvariantCulture);
+			Store.Save();
+		}
+	}
+
+	private void OnPopoverClose(object? sender, RoutedEventArgs e)
+	{
+		if (!_loading && sender is RadioButton { IsChecked: true, Tag: string seconds })
+		{
+			Store.Current.PopoverCloseSeconds = int.Parse(seconds, CultureInfo.InvariantCulture);
 			Store.Save();
 		}
 	}

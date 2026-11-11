@@ -10,7 +10,7 @@
         ShowInTaskbar="False" Topmost="True">
 
     <!-- Внешние поля — место для тени: окно прозрачное, и тень рисуется внутри него -->
-    <Border Classes="window" Margin="16,12,16,20" Padding="16,14">
+    <Border Name="Frame" Classes="window" Margin="16,12,16,20" Padding="16,14">
         <!-- Шапка и низ на месте, середина прокручивается: на малом экране окно не выше рабочей области -->
         <Grid RowDefinitions="Auto,*,Auto">
             <StackPanel Spacing="12">

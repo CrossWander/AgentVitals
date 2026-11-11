@@ -32,6 +32,9 @@
     <x:String x:Key="langMinutes5">5 хв</x:String>
     <x:String x:Key="langMinutes10">10 хв</x:String>
     <x:String x:Key="langMinutes15">15 хв</x:String>
+    <x:String x:Key="langSeconds3">3 с</x:String>
+    <x:String x:Key="langSeconds5">5 с</x:String>
+    <x:String x:Key="langSeconds10">10 с</x:String>
     <x:String x:Key="langAnyTurn">будь-який</x:String>
     <x:String x:Key="langUpdatedNow">Оновлено щойно</x:String>
     <x:String x:Key="langUpdatedAgo">Оновлено {0} тому</x:String>
@@ -105,6 +108,9 @@
     <x:String x:Key="langPercentHint">Однаково всюди: вікно, віджет, тости й пороги</x:String>
     <x:String x:Key="langPercentUsed">Використано</x:String>
     <x:String x:Key="langPercentLeft">Залишилось</x:String>
+    <x:String x:Key="langPopoverClose">Закривати вікно біля трею</x:String>
+    <x:String x:Key="langPopoverCloseHint">Коли миша пішла від вікна й значка. Вручну — лише ✕, повторне клацання по значку або Esc</x:String>
+    <x:String x:Key="langPopoverCloseByHand">Вручну</x:String>
     <x:String x:Key="langAutostart">Запускати разом з Windows</x:String>
     <x:String x:Key="langNotifications">Сповіщення</x:String>
     <x:String x:Key="langChartModels">Моделі</x:String>

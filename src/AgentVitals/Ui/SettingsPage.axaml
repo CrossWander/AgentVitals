@@ -203,6 +203,27 @@
                                     </Border>
                                 </Grid>
                             </Border>
+                            <!-- Окно у трея закрывается само, когда мышь ушла; Tag — секунды, 0 — только вручную -->
+                            <Border Name="PopoverCloseRow" Classes="row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Classes="name" Text="{DynamicResource langPopoverClose}"/>
+                                        <TextBlock Classes="note" Text="{DynamicResource langPopoverCloseHint}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Classes="track" VerticalAlignment="Center">
+                                        <StackPanel Name="PopoverCloses" Orientation="Horizontal">
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="popoverClose" Tag="0"
+                                                         Content="{DynamicResource langPopoverCloseByHand}" IsCheckedChanged="OnPopoverClose"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="popoverClose" Tag="3"
+                                                         Content="{DynamicResource langSeconds3}" IsCheckedChanged="OnPopoverClose"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="popoverClose" Tag="5"
+                                                         Content="{DynamicResource langSeconds5}" IsCheckedChanged="OnPopoverClose"/>
+                                            <RadioButton Theme="{StaticResource Segment}" GroupName="popoverClose" Tag="10"
+                                                         Content="{DynamicResource langSeconds10}" IsCheckedChanged="OnPopoverClose"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
                         </StackPanel>
                     </Border>
 
