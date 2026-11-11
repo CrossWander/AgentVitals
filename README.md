@@ -104,8 +104,9 @@ and you can see when it frees up.
 
 - **The account in use** is the one whose sign-in the agent holds now. Only it gets fresh numbers,
   colours the tray icon and the header and gets quota toasts. After `/login` AgentVitals sees the new
-  account within seconds, marks it *updating the numbers…* and asks the server at once; the wait after
-  a 429 belongs to each account, so the previous one does not hold the new one back.
+  account within seconds — within a minute for Copilot and for Claude when it keeps its sign-in in
+  Windows Credential Manager — marks it *updating the numbers…* and asks the server at once; the wait
+  after a 429 belongs to each account, so the previous one does not hold the new one back.
 - **The Accounts card** appears under the quota cards once an agent has two accounts or more: the
   account in use first, the others in the order they appeared, each with its plan, the age of its
   numbers and a bar per limit. Three are visible, the rest scroll inside the card.
