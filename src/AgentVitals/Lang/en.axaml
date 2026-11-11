@@ -98,6 +98,17 @@
     <x:String x:Key="langRefresh">Refresh</x:String>
     <x:String x:Key="langSettings">Settings</x:String>
     <x:String x:Key="langExit">Exit</x:String>
+    <x:String x:Key="langQuiet">Do not disturb</x:String>
+    <x:String x:Key="langQuietHalfHour">30 min</x:String>
+    <x:String x:Key="langQuietHour">1 h</x:String>
+    <x:String x:Key="langQuietMorning">Until morning</x:String>
+    <x:String x:Key="langQuietForever">Until I turn it off</x:String>
+    <x:String x:Key="langQuietNote">Forget to turn off “Until I turn it off” and you won't see a single toast or hear a sound</x:String>
+    <x:String x:Key="langQuietMenu">Quiet until {0}</x:String>
+    <x:String x:Key="langQuietMenuForever">Quiet until you turn it off</x:String>
+    <x:String x:Key="langQuietStop">Turn off</x:String>
+    <x:String x:Key="langQuietLine">Do not disturb until {0}</x:String>
+    <x:String x:Key="langQuietLineForever">Do not disturb until you turn it off</x:String>
     <x:String x:Key="langLanguage">Language</x:String>
     <x:String x:Key="langTheme">Appearance</x:String>
     <x:String x:Key="langThemeAuto">System</x:String>

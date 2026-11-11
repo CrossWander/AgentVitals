@@ -98,6 +98,17 @@
     <x:String x:Key="langRefresh">Обновить</x:String>
     <x:String x:Key="langSettings">Настройки</x:String>
     <x:String x:Key="langExit">Выход</x:String>
+    <x:String x:Key="langQuiet">Не беспокоить</x:String>
+    <x:String x:Key="langQuietHalfHour">30 мин</x:String>
+    <x:String x:Key="langQuietHour">1 ч</x:String>
+    <x:String x:Key="langQuietMorning">До утра</x:String>
+    <x:String x:Key="langQuietForever">Пока не выключу</x:String>
+    <x:String x:Key="langQuietNote">Если забудете выключить «Пока не выключу», не увидите ни одного тоста и не услышите звука</x:String>
+    <x:String x:Key="langQuietMenu">Тихо до {0}</x:String>
+    <x:String x:Key="langQuietMenuForever">Тихо, пока не выключите</x:String>
+    <x:String x:Key="langQuietStop">Выключить</x:String>
+    <x:String x:Key="langQuietLine">Не беспокоить до {0}</x:String>
+    <x:String x:Key="langQuietLineForever">Не беспокоить, пока не выключите</x:String>
     <x:String x:Key="langLanguage">Язык</x:String>
     <x:String x:Key="langTheme">Оформление</x:String>
     <x:String x:Key="langThemeAuto">Как в системе</x:String>

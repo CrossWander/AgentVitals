@@ -98,6 +98,17 @@
     <x:String x:Key="langRefresh">Оновити</x:String>
     <x:String x:Key="langSettings">Налаштування</x:String>
     <x:String x:Key="langExit">Вихід</x:String>
+    <x:String x:Key="langQuiet">Не турбувати</x:String>
+    <x:String x:Key="langQuietHalfHour">30 хв</x:String>
+    <x:String x:Key="langQuietHour">1 год</x:String>
+    <x:String x:Key="langQuietMorning">До ранку</x:String>
+    <x:String x:Key="langQuietForever">Поки не вимкну</x:String>
+    <x:String x:Key="langQuietNote">Якщо забудете вимкнути «Поки не вимкну», не побачите жодного тосту й не почуєте звуку</x:String>
+    <x:String x:Key="langQuietMenu">Тихо до {0}</x:String>
+    <x:String x:Key="langQuietMenuForever">Тихо, поки не вимкнете</x:String>
+    <x:String x:Key="langQuietStop">Вимкнути</x:String>
+    <x:String x:Key="langQuietLine">Не турбувати до {0}</x:String>
+    <x:String x:Key="langQuietLineForever">Не турбувати, поки не вимкнете</x:String>
     <x:String x:Key="langLanguage">Мова</x:String>
     <x:String x:Key="langTheme">Вигляд</x:String>
     <x:String x:Key="langThemeAuto">Як у системі</x:String>

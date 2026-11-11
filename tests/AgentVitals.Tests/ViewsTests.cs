@@ -293,6 +293,21 @@ public class ViewsTests
 	}
 
 	[Fact]
+	public void QuietWidgetNeitherComesOutNorGlows() // «Не беспокоить»: ни «ждёт», ни «закончил», ни красного пульса; чередование остаётся
+	{
+		var waiting = new Session("w", SessionState.Waiting, "Bash", "repo", "main", Agent: "Codex");
+		var view = Views.Widget([Found("Claude", snapshot: Quotas(46)), Found("Copilot", snapshot: Quotas(95))], [waiting], waiting with { Id = "f", State = SessionState.Idle },
+			_now, _levels, PercentMode.Used, hide: false, quiet: true);
+		var shown = new[] { view.Pick("Claude", _now), view.Pick("Claude", _now.AddSeconds(10)), view.Pick(WidgetView.All, _now) };
+
+		Assert.False(view.Loud);
+		Assert.Null(view.Waiting);
+		Assert.Null(view.Finished);
+		Assert.Equal(new[] { "Claude", "Copilot" }, shown.Take(2).Select(picked => picked.Title).Order());
+		Assert.DoesNotContain(WidgetState.Low, shown.Select(picked => picked.State));
+	}
+
+	[Fact]
 	public void WaitingFollowsTheTabOrder() // ждут двое — плашка о том, чья вкладка первая, а не о первом файле
 	{
 		var view = Widget([Found("Claude", snapshot: Quotas(40)), Found("Codex", snapshot: Quotas(10))],

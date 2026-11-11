@@ -236,11 +236,25 @@ internal static class Text
 	}
 
 	/// <summary>«хватит до 13:40», а не сегодня — «хватит до чт 13:40».</summary>
-	public static string Runout(DateTime at, DateTime now)
+	public static string Runout(DateTime at, DateTime now) => Localization.Format("langPaceRunout", Clock(at, now));
+
+	/// <summary>«Не беспокоить до 15:40» — в карточке у значка и в шапке окна; тишины нет — "".</summary>
+	/// <param name="until">Конец тишины из настроек, UTC.</param>
+	public static string QuietLine(DateTime? until, DateTime now) =>
+		!Quiet.On(until, now) ? ""
+		: until == Quiet.Forever ? Localization.Get("langQuietLineForever")
+		: Localization.Format("langQuietLine", Clock(until!.Value, now));
+
+	/// <summary>«Тихо до 15:40» — строка меню у значка, пока тишина включена.</summary>
+	public static string QuietMenu(DateTime until, DateTime now) =>
+		until == Quiet.Forever ? Localization.Get("langQuietMenuForever") : Localization.Format("langQuietMenu", Clock(until, now));
+
+	/// <summary>Время по местным часам: сегодня — «13:40», в другой день — «чт 13:40».</summary>
+	private static string Clock(DateTime at, DateTime now)
 	{
 		var local = at.ToLocalTime();
 
-		return Localization.Format("langPaceRunout", local.ToString(local.Date == now.ToLocalTime().Date ? "HH:mm" : "ddd HH:mm", Localization.Culture));
+		return local.ToString(local.Date == now.ToLocalTime().Date ? "HH:mm" : "ddd HH:mm", Localization.Culture);
 	}
 
 	public static string HealthName(Health health) => Localization.Get(health switch

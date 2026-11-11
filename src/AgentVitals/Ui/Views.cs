@@ -206,9 +206,13 @@ internal sealed record Vitals(
 	string StatusText,
 	IBrush StatusBrush,
 	string LiveText,
-	IBrush LiveBrush)
+	IBrush LiveBrush,
+	string QuietText = "")
 {
 	public bool NoAgents => Agents.Count == 0;
+
+	/// <summary>Включено «Не беспокоить»: строка «до 15:40» в карточке у значка и в шапке окна.</summary>
+	public bool Quiet => QuietText.Length > 0;
 }
 
 /// <summary>Собирает представления из данных опроса и сессий. Кисти — из палитры текущей темы.</summary>
@@ -222,7 +226,8 @@ internal static partial class Views
 	/// <param name="hide">Показывают экран: почты аккаунтов и запросов сессий не видно.</param>
 	/// <param name="names">Свои имена аккаунтов: «агент/ключ» → имя.</param>
 	/// <param name="percent">Что значат проценты: израсходовано или осталось.</param>
-	public static Vitals Build(IReadOnlyList<AgentState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false, IReadOnlyDictionary<string, string>? names = null, PercentMode percent = PercentMode.Used)
+	/// <param name="quiet">Конец «Не беспокоить» из настроек; null — не включали.</param>
+	public static Vitals Build(IReadOnlyList<AgentState> agents, IReadOnlyDictionary<string, HookLink> hooks, IReadOnlyList<Session> sessions, DateTime now, Thresholds levels, bool hide = false, IReadOnlyDictionary<string, string>? names = null, PercentMode percent = PercentMode.Used, DateTime? quiet = null)
 	{
 		// Значок и карточка по наведению — по худшему агенту; шапка окна — по выбранной вкладке.
 		var badge = Badge(agents, now, levels);
@@ -237,7 +242,8 @@ internal static partial class Views
 			status.Text,
 			Brush(Level(status.Health)),
 			focus is null ? "" : Text.Live(focus),
-			Brush(Dot(live)));
+			Brush(Dot(live)),
+			Text.QuietLine(quiet, now));
 	}
 
 	/// <summary>Плашка по самому узкому окну агентов: исчерпано оно — «исчерпано», как на его карточке.</summary>

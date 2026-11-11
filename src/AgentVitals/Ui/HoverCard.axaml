@@ -23,6 +23,9 @@
                 </Border>
             </Grid>
 
+            <!-- «Не беспокоить»: до какого времени молчат тосты и звуки -->
+            <TextBlock Classes="caption" Text="{Binding QuietText}" IsVisible="{Binding Quiet}" TextWrapping="Wrap"/>
+
             <TextBlock Classes="caption" Text="{DynamicResource langNoAgents}" TextWrapping="Wrap"
                        IsVisible="{Binding NoAgents}"/>
 

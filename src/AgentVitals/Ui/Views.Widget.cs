@@ -31,6 +31,7 @@ internal enum WidgetState
 /// <param name="LimitMeter">Цвет агента ближе всех к лимиту — полоска плашки «по очереди»: она не мигает со сменой агента.</param>
 /// <param name="Waiting">Сессия, о которой «ждёт разрешения»: щелчок по плашке — сразу её окно; null — никто не ждёт.</param>
 /// <param name="Finished">Сессия, о которой «закончил»: другая — новая вспышка, даже с той же надписью; null — такой нет.</param>
+/// <param name="Quiet">«Не беспокоить»: квота «критично» не светится красным, хотя агент по-прежнему чередуется.</param>
 internal sealed record WidgetView(
 	WidgetState State,
 	string Title,
@@ -44,7 +45,8 @@ internal sealed record WidgetView(
 	IReadOnlyList<WidgetSession> Sessions,
 	IBrush? LimitMeter = null,
 	Session? Waiting = null,
-	Session? Finished = null)
+	Session? Finished = null,
+	bool Quiet = false)
 {
 	/// <summary>Плашка раскрывается сама; «мало квоты» и «работает» — только цветом полоски: квота бывает критичной
 	/// часами, и раскрытая плашка всё это время закрывала бы вкладки.</summary>
@@ -88,7 +90,7 @@ internal sealed record WidgetView(
 
 		if (choice == All)
 		{
-			return Agents.Any(agent => agent.Low) ? this with { State = WidgetState.Low } : this;
+			return !Quiet && Agents.Any(agent => agent.Low) ? this with { State = WidgetState.Low } : this;
 		}
 
 		if (choice == Rotation)
@@ -114,7 +116,7 @@ internal sealed record WidgetView(
 	/// <summary>Тот же снимок с этим агентом в шапке; «мало квоты» — по самому агенту: у снимка его не бывает.</summary>
 	internal WidgetView With(WidgetAgent agent) => this with
 	{
-		State = agent.Low ? WidgetState.Low : State,
+		State = agent.Low && !Quiet ? WidgetState.Low : State,
 		Title = agent.Name,
 		Value = agent.Known ? agent.Value : "",
 		Detail = agent.Known ? agent.Resets : Localization.Get("langWidgetNoData"),
@@ -155,11 +157,15 @@ internal static partial class Views
 	/// <param name="finished">Сессия, чей долгий ход закончился меньше 5 с назад; null — такой нет.</param>
 	/// <param name="hide">Показывают экран: проектов, веток и инструментов не видно.</param>
 	/// <param name="theme">Тема точек состояния: плашка всегда чёрная — тёмная; null — тема приложения.</param>
-	internal static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session> sessions, Session? finished, DateTime now, Thresholds levels, PercentMode percent, bool hide, ThemeVariant? theme = null)
+	/// <param name="quiet">«Не беспокоить»: виджет сам не раскрывается и не светится.</param>
+	internal static WidgetView Widget(IReadOnlyList<AgentState> agents, IReadOnlyList<Session> sessions, Session? finished, DateTime now, Thresholds levels, PercentMode percent, bool hide, ThemeVariant? theme = null, bool quiet = false)
 	{
 		List<string> order = [.. agents.Select(state => state.Agent.Name)];
+
+		// «Не беспокоить»: ни «ждёт», ни «закончил» плашку не выдвигают — сессии видны в панели и точкой.
+		finished = quiet ? null : finished;
 		var waiting = sessions
-			.Where(session => session.State == SessionState.Waiting)
+			.Where(session => !quiet && session.State == SessionState.Waiting)
 			.OrderBy(session => order.IndexOf(session.Agent) is >= 0 and var place ? place : int.MaxValue)
 			.FirstOrDefault();
 
@@ -209,7 +215,8 @@ internal static partial class Views
 			// Как у значка в трее: самое узкое окно всех агентов.
 			Brush("Meter" + Level(Poller.Health(agents, now, levels))),
 			waiting,
-			finished);
+			finished,
+			quiet);
 
 		// Снимок — с первым агентом; «мало квоты» решает выбор в Pick, а не снимок.
 		return view.Loud || rows.Count == 0 ? view : view.With(rows[0]) with { State = state };

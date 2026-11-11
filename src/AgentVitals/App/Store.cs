@@ -41,6 +41,9 @@ internal static class Store
 		// Окно у трея закрывается само через столько секунд после ухода мыши; 0 — только ✕, значок или Esc, как было раньше.
 		public int PopoverCloseSeconds { get; set; } = 3;
 
+		// «Не беспокоить» до этого момента, UTC; «пока не выключу» — Quiet.Forever; null — не включали. Переживает перезапуск.
+		public DateTime? QuietUntil { get; set; }
+
 		// Виджет на экране кроме значка в трее; по умолчанию его нет — как до 1.5.0.
 		public WidgetKind Widget { get; set; } = WidgetKind.Off;
 

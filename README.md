@@ -40,6 +40,11 @@ click on the icon or Esc; a click in another window does not close it. While the
 was when the window opened, the window waits. On a small screen it stays within the screen: the
 header and the buttons stay put and the middle scrolls.
 
+*Do not disturb* in the menu silences AgentVitals for 30 minutes, an hour, until 8 in the morning or
+until you turn it off: no toasts, no sounds, and the widget neither comes out by itself nor glows. The
+colours, the tray icon and its blue dot stay, the hover card and the window say until when, and what
+happened meanwhile is not shown later. Forget *Until I turn it off*, and you won't see a single toast.
+
 ## What it covers
 
 | Area | What you get |

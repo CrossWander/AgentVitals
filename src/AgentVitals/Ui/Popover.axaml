@@ -54,6 +54,8 @@
                         <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" VerticalAlignment="Center"/>
                         <TextBlock Classes="faint" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
+                    <!-- «Не беспокоить»: до какого времени молчат тосты и звуки -->
+                    <TextBlock Classes="faint" Text="{Binding QuietText}" IsVisible="{Binding Quiet}" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
             </StackPanel>
 

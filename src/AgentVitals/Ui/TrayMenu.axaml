@@ -3,7 +3,7 @@
         x:Class="AgentVitals.TrayMenu"
         x:ClassModifier="internal"
         Title="AgentVitals"
-        Width="264" SizeToContent="Height" CanResize="False"
+        Width="284" SizeToContent="Height" CanResize="False"
         WindowDecorations="None" TransparencyLevelHint="Transparent" Background="Transparent"
         ShowInTaskbar="False" Topmost="True">
 
@@ -27,6 +27,32 @@
                     <TextBlock Text="{DynamicResource langSettings}"/>
                 </StackPanel>
             </Button>
+            <Border Classes="rule" Margin="10,4"/>
+            <!-- «Не беспокоить»: выключено — сроки (переносятся по длине подписей) и сноска; включено — до какого времени и
+                 «Выключить». Tag — QuietSpan, без Tag — выключить -->
+            <StackPanel Name="QuietChoices" Margin="12,6,12,4" Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Path Classes="icon" Data="{StaticResource IconMoon}" Stroke="{DynamicResource Text}"/>
+                    <TextBlock Text="{DynamicResource langQuiet}" FontSize="13"/>
+                </StackPanel>
+                <WrapPanel>
+                    <Button Theme="{StaticResource Pill}" Padding="10,5" FontSize="12" Margin="0,0,6,6" Tag="HalfHour"
+                            Content="{DynamicResource langQuietHalfHour}" Click="OnQuiet"/>
+                    <Button Theme="{StaticResource Pill}" Padding="10,5" FontSize="12" Margin="0,0,6,6" Tag="Hour"
+                            Content="{DynamicResource langQuietHour}" Click="OnQuiet"/>
+                    <Button Theme="{StaticResource Pill}" Padding="10,5" FontSize="12" Margin="0,0,6,6" Tag="Morning"
+                            Content="{DynamicResource langQuietMorning}" Click="OnQuiet"/>
+                    <Button Theme="{StaticResource Pill}" Padding="10,5" FontSize="12" Margin="0,0,6,6" Tag="Forever"
+                            Content="{DynamicResource langQuietForever}" Click="OnQuiet"/>
+                </WrapPanel>
+                <TextBlock Classes="faint" Text="{DynamicResource langQuietNote}" TextWrapping="Wrap" Margin="0,-6,0,0"/>
+            </StackPanel>
+            <Grid Name="QuietActive" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="12,6,12,6" IsVisible="False">
+                <Path Classes="icon" Data="{StaticResource IconMoon}" Stroke="{DynamicResource Text}" VerticalAlignment="Center"/>
+                <TextBlock Name="QuietUntil" Grid.Column="1" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                <Button Grid.Column="2" Theme="{StaticResource Pill}" Padding="10,5" FontSize="12" VerticalAlignment="Center"
+                        Content="{DynamicResource langQuietStop}" Click="OnQuiet"/>
+            </Grid>
             <Border Classes="rule" Margin="10,4"/>
             <Button Theme="{StaticResource MenuRow}" Click="OnExit">
                 <StackPanel Orientation="Horizontal" Spacing="10">

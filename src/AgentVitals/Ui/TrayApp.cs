@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using AgentVitals.Agents;
@@ -115,6 +116,8 @@ internal sealed class TrayApp
 		_popover.AgentsRequested += () => OpenWindow(WindowPage.Agents);
 		_popover.SettingsRequested += () => OpenWindow(WindowPage.Settings);
 		_menu.ExitRequested += Exit;
+		_menu.QuietChosen += span => SetQuiet(span is { } chosen ? Quiet.Until(chosen, DateTime.UtcNow) : null);
+		RenderWhenQuietEnds();
 		_hover.Tick += (_, _) => OnHoverTick();
 		_watch.Tick += (_, _) => OnWatchTick();
 		_sessionTimer.Tick += (_, _) => ReadSessions();
@@ -202,7 +205,7 @@ internal sealed class TrayApp
 		{
 			Store.Current.UpdateAnnounced = version.ToString();
 			Store.Save();
-			_toast.Say(Localization.Get("langToastUpdateText"), Anchor(), Localization.Format("langToastUpdate", version), life: Toast.Long,
+			Say(Localization.Get("langToastUpdateText"), Localization.Format("langToastUpdate", version), life: Toast.Long,
 				click: () => OpenWindow(WindowPage.Settings));
 			Journal.Add($"toast: update {version} available");
 		}
@@ -215,7 +218,7 @@ internal sealed class TrayApp
 
 		if (Updates.Upgraded(Store.Current.LastVersion, Updates.Current))
 		{
-			_toast.Say(Localization.Get("langToastUpdatedText"), Anchor(), Localization.Format("langToastUpdated", current), life: Toast.Long,
+			Say(Localization.Get("langToastUpdatedText"), Localization.Format("langToastUpdated", current), life: Toast.Long,
 				click: () => _ = _toast.Launcher.LaunchUriAsync(new Uri($"{Updates.Releases}/tag/v{current}")));
 			Journal.Add($"updated to {current}");
 		}
@@ -282,7 +285,7 @@ internal sealed class TrayApp
 		var kind = OperatingSystem.IsWindows() ? Store.Current.Widget : WidgetKind.Off;
 		// Плашка всегда чёрная: точки состояния на ней — из тёмной палитры и в светлой теме.
 		var view = Views.Widget([.. _poller.Visible], _sessions, _finished, DateTime.UtcNow, Store.Current.Thresholds, Store.Current.Percent, Store.Current.Private,
-			kind == WidgetKind.Notch ? Avalonia.Styling.ThemeVariant.Dark : null);
+			kind == WidgetKind.Notch ? Avalonia.Styling.ThemeVariant.Dark : null, Quiet.On(Store.Current.QuietUntil, DateTime.UtcNow));
 
 		// Снимок до окна: новое окно сразу своего размера.
 		_widget.Render(view, Store.Current.Private);
@@ -310,7 +313,8 @@ internal sealed class TrayApp
 			Store.Current.Thresholds,
 			Store.Current.Private,
 			Store.Current.AccountNames,
-			Store.Current.Percent);
+			Store.Current.Percent,
+			Store.Current.QuietUntil);
 
 	private void ReadSessions()
 	{
@@ -369,11 +373,11 @@ internal sealed class TrayApp
 				QuotaLevel.Critical => "Bad",
 			};
 
-			_toast.Say(message, Anchor(), title, Views.Brush(brush), Toast.Long, () => OpenPopover());
+			Say(message, title, Views.Brush(brush), Toast.Long, () => OpenPopover());
 
 			if (QuotaAlarm.Knocks(alert, Store.Current.LowSound))
 			{
-				Sound.Play(Sound.Low);
+				Play(Sound.Low);
 			}
 
 			// Тост живёт секунды: по журналу видно, был ли он, если человек отошёл от экрана.
@@ -385,7 +389,7 @@ internal sealed class TrayApp
 			var title = Localization.Get("langAccountBackTitle");
 			var message = Localization.Format("langAccountBackText", back.Agent, name, Text.Login(back.Agent));
 
-			_toast.Say(message, Anchor(), title, Views.Brush("Good"), Toast.Long, () => OpenPopover(back.Agent, back.Key));
+			Say(message, title, Views.Brush("Good"), Toast.Long, () => OpenPopover(back.Agent, back.Key));
 
 			// В тексте тоста — почта, а журнал прикладывают к отчётам об ошибках: в него — только агент.
 			Journal.Add($"toast: {title}: {back.Agent}");
@@ -401,7 +405,7 @@ internal sealed class TrayApp
 
 			if (_indicators.TryGetValue(state.Agent.Name, out var previous) && previous != status.Indicator)
 			{
-				_toast.Say(Text.StatusToast(status), Anchor(), click: () => OpenPopover());
+				Say(Text.StatusToast(status), click: () => OpenPopover());
 			}
 
 			_indicators[state.Agent.Name] = status.Indicator;
@@ -430,12 +434,12 @@ internal sealed class TrayApp
 		}
 
 		var (title, message) = Text.SessionToast(alert);
-		_toast.Say(message, Anchor(), title, Views.Brush(alert.Waiting ? "Blue" : "Good"), Toast.Long, () => GoTo(alert.Session));
+		Say(message, title, Views.Brush(alert.Waiting ? "Blue" : "Good"), Toast.Long, () => GoTo(alert.Session));
 		Journal.Add($"toast: {title}: {message}");
 
 		if (SessionAlarm.Chimes(alert, Store.Current.WaitingSound, alert.Session is { Pid: { } pid, Cwd: { } cwd } && HostWindow.InFront(pid, cwd)))
 		{
-			Sound.Play(Sound.Chime);
+			Play(Sound.Chime);
 		}
 	}
 
@@ -560,7 +564,7 @@ internal sealed class TrayApp
 	{
 		HideGlance();
 		_popover.Hide();
-		_menu.Open(Anchor());
+		_menu.Open(Anchor(), Store.Current.QuietUntil);
 
 		if (OperatingSystem.IsWindows())
 		{
@@ -576,6 +580,43 @@ internal sealed class TrayApp
 	}
 
 	private void Refresh() => _ = _poller.RefreshAsync();
+
+	/// <summary>Тост, если не включено «Не беспокоить»; в тишине событие пропадает — тревоги его уже отметили.</summary>
+	private void Say(string message, string? title = null, IBrush? accent = null, TimeSpan? life = null, Action? click = null)
+	{
+		if (!Quiet.On(Store.Current.QuietUntil, DateTime.UtcNow))
+		{
+			_toast.Say(message, Anchor(), title, accent, life, click);
+		}
+	}
+
+	/// <summary>Звук к тосту — тоже только без «Не беспокоить».</summary>
+	private static void Play(byte[] wave)
+	{
+		if (!Quiet.On(Store.Current.QuietUntil, DateTime.UtcNow))
+		{
+			Sound.Play(wave);
+		}
+	}
+
+	/// <summary>«Не беспокоить» включили или выключили: виджет, карточка и окно перерисовываются сразу.</summary>
+	private void SetQuiet(DateTime? until)
+	{
+		Store.Current.QuietUntil = until;
+		Store.Save();
+		Journal.Add(until is null ? "quiet off" : until == Quiet.Forever ? "quiet until turned off" : $"quiet until {until:u}");
+		Render();
+		RenderWhenQuietEnds();
+	}
+
+	// Тишина кончилась сама: строки «Не беспокоить» уходят и виджет снова может выехать сразу, а не с опросом через минуту.
+	private void RenderWhenQuietEnds()
+	{
+		if (Store.Current.QuietUntil is { } until && until != Quiet.Forever && until > DateTime.UtcNow)
+		{
+			DispatcherTimer.RunOnce(Render, until - DateTime.UtcNow + TimeSpan.FromSeconds(1));
+		}
+	}
 
 	private void Exit()
 	{
