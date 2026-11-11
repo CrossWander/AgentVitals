@@ -121,6 +121,9 @@ internal abstract class WidgetWindow : TrayWindow, IWidgetWindow
 		{
 			ShowAt(_anchor);
 			WindowStyle.Topmost(handle.Handle);
+
+			// Показанное снова окно с глазом снимки берут чёрным прямоугольником, пока режим не выставить заново.
+			WindowStyle.Private(handle.Handle, _hidden);
 		}
 
 		// Панель задач переехала или сменился масштаб: о рабочей области Screens.Changed может промолчать.

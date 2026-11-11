@@ -45,7 +45,17 @@ public static unsafe partial class WindowStyle
 
 	/// <summary>Глаз: окно не попадает на снимки и в демонстрацию экрана. На Windows старше 10 2004 вызов не проходит —
 	/// тогда остаётся то, что глаз прячет в самом снимке.</summary>
-	public static bool Private(nint window, bool hide) => SetWindowDisplayAffinity(window, hide ? _excludeFromCapture : 0);
+	/// <remarks>Окно, спрятанное и показанное снова, на снимках выходит чёрным прямоугольником, хотя режим тот же; то же
+	/// значение Windows молча пропускает — поэтому сперва сброс. После повторного показа звать снова.</remarks>
+	public static void Private(nint window, bool hide)
+	{
+		SetWindowDisplayAffinity(window, 0);
+
+		if (hide)
+		{
+			SetWindowDisplayAffinity(window, _excludeFromCapture);
+		}
+	}
 
 	/// <summary>Поверх всех окон, без фокуса: виджет и тост.</summary>
 	public static void Topmost(nint window) => SetWindowPos(window, _topmost, 0, 0, 0, 0, _keepPlaceAndFocus);
